@@ -1,0 +1,19 @@
+rsapiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: rs1
+  labels:
+    fail: never
+spec:
+  template:
+    metadata:
+      labels:
+        fail: never
+    spec:
+      containers:
+      - name: nginx-rs
+        image: nginx
+  replicas: 3
+  selector:
+    matchLabels:
+      fail: never
