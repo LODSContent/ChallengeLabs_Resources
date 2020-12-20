@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webserver
+spec:
+  selector:
+    matchLabels:
+      run: webserver
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: webserver
+    spec:
+      containers:
+      - name: webserver
+        image: nginx
+        ports:
+        - containerPort: 80
+
