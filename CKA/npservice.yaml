@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:  
+  name: npservice
+spec:
+  selector:    
+    app: webserver
+  type: NodePort
+  ports:  
+  - targetPort: 80
+    port: 80
+    nodePort: 30001
+    protocol: TCP
+
