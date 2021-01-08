@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  selector:
+    matchLabels:
+      run: db
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        run: db
+    spec:
+      containers:
+      - name: db
+        image: redis
+        ports:
+        - containerPort: 80
+      tolerations:
+        - key: "memory"
+          operator: "Equal"
+          value: "large"
+          effect: "NoSchedule"
