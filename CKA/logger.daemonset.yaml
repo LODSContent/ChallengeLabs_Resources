@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: logger
+spec:
+  selector:
+      matchLabels:
+        name: logger 
+  template:
+    metadata:
+      labels:
+        name: logger 
+    spec:
+      
+      tolerations:
+      # allow daemonset pod to run on a master node. 
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+
+      containers:
+      - name: fluentd
+        image: gcr.io/google-containers/fluentd-elasticsearch:1.20
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
