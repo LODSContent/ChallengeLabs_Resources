@@ -1,0 +1,35 @@
+﻿In this challenge you will use the following files:
+- Models/MySQLContext.cs: You will add code to this file to interact with a private blob storage container.
+- web.config: You will set the testType app setting to 8 in this file.
+
+You will reference the following objects in your code:
+- CSSTDModels.IMySQLContext: You will implement this interface for the MySQLContext class.
+	IMySQLContext has the following members:
+
+		//The ConnectionString holds the, well, connection string
+	    string ConnectionString { get; set; }
+
+		//Create the vendors table
+        void CreateTable();
+
+		//Load sample data into the vendor table
+        void LoadData(List<VendorData> vendors);
+
+		//Retrieve a list of vendors
+        List<VendorData> GetData();
+
+- CSSTDModels.VendorData: This class is used by the evaluation engine.  VendorData objects will be passed into and out of methods you implement by this class.
+
+    [Description("Simple class representing basic vendor data for an Azure database for MySQL")]
+    public class VendorData
+    {
+        [Description("Arbitrary primary key")]
+        [Key]
+        public int ID { get; set; }
+
+        [Description("Vendor name")]
+        public string Name { get; set; }
+
+        [Description("Industry designation, currently 'Training' or 'Swimming'")]
+        public string Industry { get; set; }
+    }

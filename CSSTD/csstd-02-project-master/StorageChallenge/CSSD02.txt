@@ -1,0 +1,32 @@
+﻿In this challenge you will use the following files:
+- Models/StorageContext.cs: You will add code to this file to interact with a private blob storage container.
+- web.config: You will set the testType app setting to 2 in this file.
+
+You will reference the following objects in your code:
+- CSSTDModels.IStorageContext: You will implement this interface for the StorageContext class.
+	IStorageContext has the following members:
+		//List the blobs in the container
+		List<BlobFileData> GetFileList(string containerName, bool isPrivate) 
+
+	   //Generate a SAS token for the private container
+       string GetSAS(string containerName) 
+
+	   //Upload a list of blobs to the container
+       void UploadFile(string containerName, BlobFileData fileData, bool isPrivate)  
+
+- CSSTDModels.BlobFileData: This class is used by the evaluation engine.  BlobFileData objects will be passed into and out of methods you implement by this class.
+	BlobFileData has the following members:
+	    [Description("Blob name.  Used for data in and data out.")]
+        public string Name { get; set; }
+
+        [Description("Full Blob URL including SAS if appropriate. Used for data out.")]
+        public string URL { get; set; }
+
+        [Description("SAS token.  Used for data out.")]
+        public string SAS { get; set; }
+
+        [Description("Binary file contents used for upload.")]
+        public byte[] Contents { get; set; }
+
+        [Description("Blob metadata used for advanced and expert challenges.")]
+        public List<string> Tags { get; set; }

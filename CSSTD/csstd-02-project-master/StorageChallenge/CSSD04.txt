@@ -1,0 +1,29 @@
+﻿In this challenge you will use the following files:
+- Models/SQLServerContext.cs: You will add code to this file to interact with an Azure SQL Server database.
+- web.config: You will set the testType app setting to 4 in this file.
+
+You will reference the following objects in your code:
+- CSSTDModels.ISQLServerContext: You will implement this interface for the SQLServerContext class.
+	ISQLServerContext has the following members:
+		//Connection string for database
+        string ConnectionString { get; set; } 
+
+		//Method to create the Customers table
+        void CreateTable() 
+
+		//Method to retrieve customer data
+        List<CustomerData> GetData() 
+
+		//Method to load a list of customers into the Customers table
+        void LoadData(List<CustomerData> customers) 
+
+- CSSTDModels.CustomerData: This class is used by the evaluation engine.  CustomerData objects will be passed into and out of methods you implement by this class.
+	CustomerData has the following members:
+	    [Description("Arbitrary primary key")]
+        public int ID { get; set; }
+
+        [Description("Customer name")]
+        public string Name { get; set; }
+
+        [Description("Customer postal/zip code")]
+        public string PostalCode { get; set; }
