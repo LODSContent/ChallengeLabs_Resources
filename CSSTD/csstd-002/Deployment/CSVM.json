@@ -155,7 +155,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               "fileUris": [
-                "https://raw.githubusercontent.com/LODSContent/LODSOC_csstd-002/master/Deployment/CustomScripts/projectClone.ps1"
+                "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/CSSTD/csstd-002/Deployment/CustomScripts/projectClone.ps1"
               ],
               "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('projectCloneScriptFileName'))]"
             }
