@@ -1,0 +1,335 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LabInstanceId": {
+      "type": "string",
+      "defaultValue": "12345abcxyz321"
+    },
+    "Password": {
+      "type": "string",
+      "defaultValue": "12345"
+    },
+    "TestType": {
+      "type": "int",
+      "defaultValue": 4
+    }
+
+  },
+  "variables": {
+    "webAppName": "[concat('wa',parameters('LabInstanceId'))]",
+    "storageName": "[concat('sa',parameters('LabInstanceId'))]",
+    "sqlServerName": "[concat('sql',parameters('LabInstanceId'))]",
+    "sqlFirewallName": "[concat(variables('sqlServerName'),'/serviceFirewall')]",
+    "sqlDatabaseName": "[concat(variables('sqlServerName'),'/customers')]",
+    "mySQLServerName": "[concat('mysql',parameters('LabInstanceId'))]",
+    "cosmosDbSqlName": "[concat('cdbs',parameters('LabInstanceId'))]",
+    "cosmosDbTableName": "[concat('cdbt',parameters('LabInstanceId'))]",
+    "testWebName": "[concat('lods',parameters('LabInstanceId'))]",
+    "testWebAspName": "testWeb-ASP",
+    "mySqlDatabaseName": "vendors",
+    "mySqlFamily": "Gen5",
+    "mySqlVersion": "5.7",
+    "mySqlSkuTier": "Basic",
+    "mySqlSkuSize": "5120",
+    "mySqlSkuName": "B_Gen5_2",
+    "mySqlDTU": "2",
+    "adminPassword": "[concat('Azure!',parameters('Password'))]",
+    "adminUser": "student",
+    "testWebASPSku": "S1",
+    "deployStorage": "[bool(or(or(or(equals(parameters('TestType'),1),equals(parameters('TestType'),2)),equals(parameters('TestType'),3)),greater(parameters('TestType'),48)))]",
+    "deploySQL": "[bool(or(or(equals(parameters('TestType'),4),equals(parameters('TestType'),12)),greater(parameters('TestType'),48)))]",
+    "deployMySQL": "[bool(or(or(equals(parameters('TestType'),8),equals(parameters('TestType'),12)),greater(parameters('TestType'),48)))]",
+    "deployCDBDocument": "[bool(or(or(equals(parameters('TestType'),16),equals(parameters('TestType'),48)),greater(parameters('TestType'),48)))]",
+    "deployCDBTable": "[bool(or(or(equals(parameters('TestType'),32),equals(parameters('TestType'),48)),greater(parameters('TestType'),48)))]",
+    "deployTestWeb": "[bool(or(or(equals(parameters('TestType'),3),equals(parameters('TestType'),12)),greater(parameters('TestType'),47)))]"
+
+  },
+  "resources": [
+    /* Storage Account */
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "name": "[variables('storageName')]",
+      "apiVersion": "2018-02-01",
+      "location": "[resourceGroup().location]",
+      "condition": "[variables('deployStorage')]",
+      "tags": {
+        "displayName": "Storage Account"
+      },
+      "scale": null,
+      "properties": {
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "virtualNetworkRules": [],
+          "ipRules": [],
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": false,
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        },
+        "accessTier": "Hot"
+      },
+      "dependsOn": []
+    },
+
+    /* SQL Server */
+    {
+      "type": "Microsoft.Sql/servers",
+      "kind": "v12.0",
+      "name": "[variables('sqlServerName')]",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[resourceGroup().location]",
+      "condition": "[variables('deploySQL')]",
+      "scale": null,
+      "properties": {
+        "administratorLogin": "[variables('adminUser')]",
+        "administratorLoginPassword": "[variables('adminPassword')]",
+
+        "version": "12.0"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "SQL Server"
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Sql/servers/firewallRules",
+          "kind": "v12.0",
+          "name": "[variables('sqlFirewallName')]",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[resourceGroup().location]",
+          "scale": null,
+          "condition": "[variables('deploySQL')]",
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('sqlServerName'))]"
+          ]
+        },
+        {
+          "type": "Microsoft.Sql/servers/databases",
+          "kind": "v12.0,user",
+          "name": "[variables('sqlDatabaseName')]",
+          "apiVersion": "2014-04-01-preview",
+          "location": "[resourceGroup().location]",
+          "condition": "[variables('deploySQL')]",
+          "scale": null,
+          "tags": {
+            "displayName": "Azure SQL Database"
+          },
+          "properties": {
+            "edition": "Basic",
+            "serviceLevelObjective": "Basic",
+            "collation": "SQL_Latin1_General_CP1_CI_AS",
+            "maxSizeBytes": "2147483648",
+            "requestedServiceObjectiveId": "dd6d99bb-f193-4ec1-86f2-43d3bccbc49c",
+            "requestedServiceObjectiveName": "Basic",
+            "defaultSecondaryLocation": "West US",
+            "elasticPoolName": null,
+            "containmentState": 2,
+            "readScale": "Disabled",
+            "failoverGroupId": null,
+            "zoneRedundant": false,
+            "isUpgradeRequested": false
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('sqlServerName'))]"
+          ]
+        }
+      ]
+    },
+
+    /* MySQL */
+    {
+      "apiVersion": "2017-12-01-preview",
+      "kind": "",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('mySQLServerName')]",
+      "condition": "[variables('deployMySQL')]",
+      "tags": {
+        "displayName": "MySQL Server"
+      },
+      "properties": {
+        "version": "[variables('mysqlVersion')]",
+        "administratorLogin": "[variables('adminUser')]",
+        "administratorLoginPassword": "[variables('adminPassword')]",
+        "storageProfile": {
+          "storageMB": "[variables('mySqlSkuSize')]",
+          "backupRetentionDays": "7",
+          "geoRedundantBackup": "Disabled"
+        },
+        "sslEnforcement": "Disabled"
+      },
+      "sku": {
+        "name": "[variables('mysqlSkuName')]",
+        "tier": "[variables('mysqlSkuTier')]",
+        "capacity": "[variables('mysqlDTU')]",
+        "size": "[variables('mySqlSkuSize')]",
+        "family": "[variables('mySqlFamily')]"
+      },
+      "type": "Microsoft.DBforMySQL/servers",
+      "resources": [
+        {
+          "type": "firewallrules",
+          "apiVersion": "2017-12-01-preview",
+          "dependsOn": [
+            "[concat('Microsoft.DBforMySQL/servers/', variables('mySQLServerName'),'/databases/' , variables('mySqlDatabaseName'))]",
+            "[concat('Microsoft.DBforMySQL/servers/', variables('mySQLServerName'))]"
+          ],
+          "condition": "[variables('deployMySQL')]",
+          "location": "[resourceGroup().location]",
+          "name": "AllowAzureIPs",
+          "tags": {
+            "displayName": "MySQL Firewall"
+          },
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        },
+        {
+          "name": "[variables('mySqlDatabaseName')]",
+          "type": "databases",
+          "apiVersion": "2017-12-01-preview",
+          "tags": {
+            "displayName": "MySQL Database"
+          },
+          "condition": "[variables('deployMySQL')]",
+          "properties": {
+            "charset": "utf8",
+            "collation": "utf8_general_ci"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.DBforMySQL/servers/', variables('mySqlServerName'))]"
+          ]
+        }
+      ]
+    },
+
+    /* Cosmos DB DocumentDB (SQL) API */
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "kind": "GlobalDocumentDB",
+      "name": "[variables('cosmosDbSqlName')]",
+      "apiVersion": "2015-04-08",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "defaultExperience": "DocumentDB",
+        "displayName": "Cosmos DB - Document DB"
+      },
+      "scale": null,
+      "condition": "[variables('deployCDBDocument')]",
+      "properties": {
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "Session",
+          "maxIntervalInSeconds": 5,
+          "maxStalenessPrefix": 100
+        },
+        "name": "[variables('cosmosDbSqlName')]"
+      },
+      "dependsOn": []
+    },
+
+    /* Cosmos DB Table API */
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts",
+      "kind": "GlobalDocumentDB",
+      "name": "[variables('cosmosDbTableName')]",
+      "apiVersion": "2020-04-01",
+      "location": "East US",
+      "condition": "[variables('deployCDBTable')]",
+      "tags": {
+        "defaultExperience": "Azure Table",
+        "hidden-cosmos-mmspecial": "",
+        "CosmosAccountType": "Non-Production"
+      },
+      "properties": {
+        "publicNetworkAccess": "Enabled",
+        "enableAutomaticFailover": false,
+        "enableMultipleWriteLocations": false,
+        "isVirtualNetworkFilterEnabled": false,
+        "virtualNetworkRules": [],
+        "disableKeyBasedMetadataWriteAccess": false,
+        "enableFreeTier": false,
+        "enableAnalyticalStorage": false,
+        "databaseAccountOfferType": "Standard",
+        "consistencyPolicy": {
+          "defaultConsistencyLevel": "BoundedStaleness",
+          "maxIntervalInSeconds": 86400,
+          "maxStalenessPrefix": 1000000
+        },
+        "locations": [
+          {
+            "locationName": "East US",
+            "failoverPriority": 0,
+            "isZoneRedundant": false
+          }
+        ],
+        "capabilities": [
+          {
+            "name": "EnableTable"
+          }
+        ],
+        "ipRules": []
+      }
+    },
+
+    /*  Test Web app ASP */
+    {
+      "name": "[variables('testWebAspName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "condition": "[variables('deployTestWeb')]",
+      "sku": {
+        "name": "[variables('testWebASPSku')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "testweb-ASP"
+      },
+      "properties": {
+        "name": "[variables('testWebAspName')]",
+        "numberOfWorkers": 1
+      }
+    },
+
+    /* Test web app  */
+    {
+      "name": "[variables('testWebName')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "condition": "[variables('deployTestWeb')]",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('testWebAspName'))]"
+      ],
+      "tags": {
+        "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', variables('testWebAspName')))]": "Resource",
+        "displayName": "testWeb"
+      },
+      "properties": {
+        "name": "[variables('testWebName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('testWebAspName'))]"
+      }
+    }
+
+  ]
+}
