@@ -1,0 +1,40 @@
+﻿In this challenge you will use the following files:
+- Models/CosmosDBSQLContext.cs: You will add code to this file to interact with a private blob storage container.
+- web.config: You will set the testType app setting to 16 in this file.
+
+You will reference the following objects in your code:
+- CSSTDModels.ICosmosDBSQLContext: You will implement this interface for the CosmosDBSQLContext class.
+   You will implement the following members:
+
+		//Create a database and document collection.  This uses async methods.
+        Task CreateCollection();
+
+		//Retrieve all documents
+        List<ProductDocument> GetDocuments();
+
+		//Retrieve a filtered list of documents
+        List<ProductDocument> GetDocuments( string industry);
+
+		//Upload a list of documents
+        Task UploadDocuments( List<ProductDocument> documents);
+
+
+- CSSTDModels.ProductDocument: This class is used by the evaluation engine.  ProductDocument objects will be passed into and out of methods you implement by this class.
+    public class ProductDocument
+    {
+        [Description("Arbitrary key - set to a GUID")]
+        public string ID { get; set; }
+
+        [Description("Industry designation, currently 'Training' or 'Swimming'")]
+        public string Industry { get; set; }
+
+        [Description("Name of the product")]
+        public string Name { get; set; }
+
+        [Description("Pricing tier, currently 'Basic' or 'Premium'")]
+        public string Tier { get; set; }
+
+        [Description("Product description, primarily in Latin with a little English embedded for searching.")]
+        public string Description { get; set; }
+
+    }
