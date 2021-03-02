@@ -1,2 +1,2 @@
-# Files to support CSSD storage challenges
+# Files to support CSSD and CSST storage challenges
 
