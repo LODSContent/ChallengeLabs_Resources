@@ -1,0 +1,31 @@
+﻿[
+  {
+    "ID": 1,
+    "Industry": "Training",
+    "Name": "Expert Challenge",
+    "Tier": "Premium",
+    "Description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi justo odio, euismod id dui nec, venenatis pulvinar mauris. Fusce sit amet nulla vitae sem accumsan tincidunt eu ut dui. Vivamus a dui odio. Ut elit lacus, tristique a leo eget, sodales mollis ligula. Nullam ex felis, lacinia sit amet massa sit amet, vehicula volutpat neque. Nullam eu turpis vestibulum velit porta elementum in non augue. Maecenas nisi dui, consequat ut pharetra non, aliquet ac sapien. Duis quis egestas magna. Duis vulputate sagittis nunc, ut dignissim mauris. >> These challenges are for advanced IT professionals. << Fusce commodo, mi sed faucibus pharetra, metus velit volutpat tellus, nec placerat enim ex eu ante. Mauris malesuada lectus fermentum dolor malesuada aliquet. Sed et consectetur nibh. Quisque iaculis mi eu ligula elementum porttitor. Nulla sed quam feugiat neque imperdiet molestie ultrices quis leo. Etiam lectus dolor, ornare non lobortis vitae, dictum a lectus. "
+  },
+  {
+    "ID": 2,
+    "Industry": "Training",
+    "Name": "Guided Challenge",
+    "Tier": "Basic",
+    "Description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ut nisl commodo, rutrum ex non, venenatis orci. Sed vestibulum nisl lectus, nec faucibus eros placerat id. Sed vel risus mattis, viverra risus id, sagittis sapien. Aliquam erat volutpat. Nulla id tempus dui. Donec gravida arcu a iaculis sagittis. Aenean posuere velit a facilisis cursus. Fusce accumsan sollicitudin dapibus.>> This product is for People breaking in to IT. << Duis convallis augue et dictum semper. Maecenas at lacus porttitor, convallis augue nec, rhoncus diam. Sed posuere ante id fringilla euismod. Quisque tempus orci at ex posuere condimentum. Donec tellus elit, ultrices vel purus ut, iaculis fringilla quam. In viverra, est ac finibus interdum, velit dui viverra arcu, quis tincidunt lacus mauris tincidunt lectus. Curabitur condimentum tristique risus eu mattis.  "
+  },
+  {
+    "ID": 3,
+    "Industry": "Swimming",
+    "Name": "Floaties",
+    "Tier": "Basic",
+    "Description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi justo odio, euismod id dui nec, venenatis pulvinar mauris. Fusce sit amet nulla vitae sem accumsan tincidunt eu ut dui. Vivamus a dui odio. Ut elit lacus, tristique a leo eget, sodales mollis ligula. Nullam ex felis, lacinia sit amet massa sit amet, vehicula volutpat neque. Nullam eu turpis vestibulum velit porta elementum in non augue. Maecenas nisi dui, consequat ut pharetra non, aliquet ac sapien. Duis quis egestas magna. Duis vulputate sagittis nunc, ut dignissim mauris. >> These floaties are for little kids. << Fusce commodo, mi sed faucibus pharetra, metus velit volutpat tellus, nec placerat enim ex eu ante. Mauris malesuada lectus fermentum dolor malesuada aliquet. Sed et consectetur nibh. Quisque iaculis mi eu ligula elementum porttitor. Nulla sed quam feugiat neque imperdiet molestie ultrices quis leo. Etiam lectus dolor, ornare non lobortis vitae, dictum a lectus. "
+  },
+  {
+    "ID": 4,
+    "Industry": "Swimming",
+    "Name": "Goggles",
+    "Tier": "Premium",
+    "Description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi justo odio, euismod id dui nec, venenatis pulvinar mauris. Fusce sit amet nulla vitae sem accumsan tincidunt eu ut dui. Vivamus a dui odio. Ut elit lacus, tristique a leo eget, sodales mollis ligula. Nullam ex felis, lacinia sit amet massa sit amet, vehicula volutpat neque. Nullam eu turpis vestibulum velit porta elementum in non augue. Maecenas nisi dui, consequat ut pharetra non, aliquet ac sapien. Duis quis egestas magna. Duis vulputate sagittis nunc, ut dignissim mauris. >> These goggles are for advanced IT professionals. << Fusce commodo, mi sed faucibus pharetra, metus velit volutpat tellus, nec placerat enim ex eu ante. Mauris malesuada lectus fermentum dolor malesuada aliquet. Sed et consectetur nibh. Quisque iaculis mi eu ligula elementum porttitor. Nulla sed quam feugiat neque imperdiet molestie ultrices quis leo. Etiam lectus dolor, ornare non lobortis vitae, dictum a lectus. "
+  }
+
+]

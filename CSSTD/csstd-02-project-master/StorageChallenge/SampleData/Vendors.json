@@ -1,0 +1,28 @@
+﻿[
+  {
+    "ID": 1,
+    "Name": "US East Coast Training",
+    "Industry": "Training"
+  },
+  {
+    "ID": 2,
+    "Name": "US West Coast Training",
+    "Industry": "Training"
+  },
+  {
+    "ID": 3,
+    "Name": "Canadian Swimming",
+    "Industry": "Swimming"
+  },
+  {
+    "ID": 4,
+    "Name": "Northern Europe Swimming",
+    "Industry": "Swimming"
+  },
+  {
+    "ID": 5,
+    "Name": "Southeast Asia Training",
+    "Industry": "Training"
+  }
+
+]
