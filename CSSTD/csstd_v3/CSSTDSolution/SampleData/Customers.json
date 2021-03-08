@@ -1,0 +1,28 @@
+﻿[
+  {
+    "ID": 1,
+    "Name": "US East Coast Customer",
+    "PostalCode": "10001"
+  },
+  {
+    "ID": 2,
+    "Name": "US West Coast Customer",
+    "PostalCode": "98101"
+  },
+  {
+    "ID": 3,
+    "Name": "Canadian Customer",
+    "PostalCode": "M4W 1A1"
+  },
+  {
+    "ID": 4,
+    "Name": "Northern Europe Customer",
+    "PostalCode": "101001"
+  },
+  {
+    "ID": 5,
+    "Name": "Southeast Asia Customer",
+    "PostalCode": "339696"
+  }
+
+]
