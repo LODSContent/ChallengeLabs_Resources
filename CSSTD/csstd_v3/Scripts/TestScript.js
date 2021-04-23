@@ -98,7 +98,7 @@
 
     }
     function processError(errorInfo, title) {
-        var text = errorInfo.statusText ?? errorInfo;
+        var text = errorInfo.statusText || errorInfo;
         var result = "<tr><td>Error</td><td><h3>" + title + "</h3><p>" + text + "</p></td></tr>";
         $('#results').append(result);
     }
