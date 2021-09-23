@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: LODS - Use CloudFormation and Infrastructure as Code to Deploy AWS Resources.  Starting template with VPC.
+Parameters:
+  ChallengeVPCCIDR:
+    Description:  The CIDR value for the new VPC to be created
+    Type: String
+    Default: 10.10.0.0/16
+    AllowedValues:
+      - 10.10.0.0/16
+  PublicSubnet1Parameter:
+    Description:  The Public Subnet 1 CIDR
+    Type: String
+    Default: 10.10.0.0/24
+    AllowedValues:
+      - 10.10.0.0/24
+  PublicSubnet2Parameter:
+    Description:  The Public Subnet 2 CIDR
+    Type: String
+    Default: 10.10.1.0/24
+    AllowedValues:
+      - 10.10.1.0/24
+Resources:
+  ChallengeVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref ChallengeVPCCIDR
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value:  LODS-Challenge-VPC
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref ChallengeVPC
+      InternetGatewayId: !Ref InternetGateway
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ChallengeVPC
+      CidrBlock: !Ref PublicSubnet1Parameter
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select 
+        - 0
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Public Subnet 1
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ChallengeVPC
+      CidrBlock: !Ref PublicSubnet2Parameter
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select 
+        - 1
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Public Subnet 2
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref ChallengeVPC
+      Tags:
+      - Key: Name
+        Value: PublicRouteTable
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+  NoIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "no-ingress-sg"
+      GroupDescription: "Security group with no ingress rule"
+      VpcId: !Ref ChallengeVPC
+Outputs:
+  ChallengeVPC:
+    Description: A reference to the new VPC
+    Value: !Ref ChallengeVPC
+
+  PublicSubnets:
+    Description: A list of the public subnets
+    Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2 ]]
+
+  PublicSubnet1:
+    Description: A reference to the public subnet in the 1st Availability Zone
+    Value: !Ref PublicSubnet1
+
+  PublicSubnet2:
+    Description: A reference to the public subnet in the 2nd Availability Zone
+    Value: !Ref PublicSubnet2
+
+  NoIngressSecurityGroup:
+    Description: Security group with no ingress rule
+    Value: !Ref NoIngressSecurityGroup
