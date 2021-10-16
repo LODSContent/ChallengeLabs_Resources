@@ -1,0 +1,10 @@
+SAM,Fname,Lname,DisplayName,Department,City,State,Title
+User1,User1,One,User1,IT,Seattle,WA,ITPro
+User2,User2,Two,User2,HR,Boston,MA,Manager
+User3,User3,Three,User3,Finance,Seattle,WA,Accountant
+User4,User4,Four,User4,IT,Seattle,WA,Manager
+User5,User5,Five,User5,HR,Boston,MA,Manager
+User6,User6,Six,User6,Finance,Boston,MA,Accountant
+User7,User7,Seven,User7,IT,Boston,MA,ITPro
+User8,User8,Eight,User8,HR,Boston,MA,Support
+User9,User9,Nine,User9,Finance,Boston,MA,Manager
