@@ -2,7 +2,7 @@ Steps to configure and launch VS Emulator for Android
 
 //NOTE: This file appears on the desktop because of an LCA configured on the lab profile. To prevent this file from appearing, remove or disable the LCA.
 
-The Visual Studio Emulator for Android needs to be flashed with a new ROM image after signing in with a Google account and attempting launch the Google Play Store. Because of the requirement for a Google account sign in, it is not possible to complete this configuration ahead of time. 
+The device image used by Visual Studio Emulator for Android needs to be flashed with a new ROM image after signing in with a Google account and attempting launch the Google Play Store. Because of the requirement for a Google account sign in, it is not possible to complete this configuration ahead of time. 
 
 
 1. From the Start menu, launch the Visual Studio Emulator for Android.
