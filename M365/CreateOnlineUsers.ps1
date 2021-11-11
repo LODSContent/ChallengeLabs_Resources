@@ -19,7 +19,7 @@ New-AzureADGroup -DisplayName "Managers" -MailEnabled $false -SecurityEnabled $t
 New-AzureADGroup -DisplayName "Regular Employees" -MailEnabled $false -SecurityEnabled $true -MailNickName "RegularEmployees"
 
 
-#Pause for 30 seconds to ensure Azure AD objects are properly populated
+#Pause for 90 seconds to ensure Azure AD objects are properly populated
 
 sleep -Seconds 90
 
