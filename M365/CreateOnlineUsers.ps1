@@ -21,7 +21,7 @@ New-AzureADGroup -DisplayName "Regular Employees" -MailEnabled $false -SecurityE
 
 #Pause for 30 seconds to ensure Azure AD objects are properly populated
 
-sleep -Seconds 30
+sleep -Seconds 90
 
 # Get group Object ID Guids and place them in variables
 
