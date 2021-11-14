@@ -41,7 +41,7 @@ If ($ipmsg1 -ne $null){
         Write-host ""
         Write-host "Changing IP address to 172.16.0.21/24"
         Remove-NetIPAddress -InterfaceIndex $ifindex -Confirm:$false
-        New-NetIPAddress -InterfaceIndex $ifindex -IPAddress 172.16.0.21 -PrefixLength $pf -DefaultGateway $dg
+        New-NetIPAddress -InterfaceIndex $ifindex -IPAddress 172.16.0.21 -PrefixLength $pf -DefaultGateway 172.16.0.254
         $NewDNS = Set-DnsClientServerAddress -InterfaceIndex $ifindex -ServerAddresses 172.16.0.1
         $ipconfig = Get-NetIPConfiguration
         $ip = $ipconfig.Ipv4Address.IPaddress
@@ -66,7 +66,7 @@ If ($ipmsg1 -ne $null){
         Write-host ""
         Write-host "Changing IP address to 192.168.10.21/24"
         Remove-NetIPAddress -InterfaceIndex $ifindex -Confirm:$false
-        New-NetIPAddress -InterfaceIndex $ifindex -IPAddress 192.168.10.21 -PrefixLength $pf -DefaultGateway $dg
+        New-NetIPAddress -InterfaceIndex $ifindex -IPAddress 192.168.10.21 -PrefixLength $pf -DefaultGateway 192.168.10.1
         $NewDNS = Set-DnsClientServerAddress -InterfaceIndex $ifindex -ServerAddresses 192.168.10.10
         $ipconfig = Get-NetIPConfiguration
         $ip = $ipconfig.Ipv4Address.IPaddress
