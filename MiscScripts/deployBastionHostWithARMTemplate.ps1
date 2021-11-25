@@ -43,6 +43,6 @@ $params = @{
     publicIPaddressName = "bastion-pub-IP"
 }
 
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateParameterObject $params -TemplateUri 
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateParameterObject $params -TemplateUri https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/ARMTemplates/createBastionHost.json
 
 
