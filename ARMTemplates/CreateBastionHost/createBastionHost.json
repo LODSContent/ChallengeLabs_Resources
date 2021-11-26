@@ -8,7 +8,7 @@
         },
         "resourceGroup": {
             "type": "string",
-            "defaultValue": "[resourceGroup().resourcegroupname]"
+            "defaultValue": "[resourceGroup().name]"
         },        
         "publicIpAddressName": {
             "type": "string",
