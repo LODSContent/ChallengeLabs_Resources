@@ -1,6 +1,6 @@
 # Create a Bastion Host
 
-This template will deploy a bastion host into an existing virtual network. 
+This template will deploy a [bastion host](https://docs.microsoft.com/en-us/azure/bastion/bastion-overview"What is Azure Bastion?") into an existing virtual network. 
 
 A bastion host provides secure RDP or SSH access to Azure Virtual Machines (VMs). With a bastion host,
 you can securely gain remote access to Azure VMs through the Azure Portal. Direct RDP or SSH access to the Azure VMs 
