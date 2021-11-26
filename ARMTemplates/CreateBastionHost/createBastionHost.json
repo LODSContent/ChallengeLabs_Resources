@@ -11,27 +11,27 @@
         },
         "resourceGroup": {
             "type": "string",
-            metadata": {
+            "metadata": {
             "description": "The resource group name. If deploying the template resource by using the Azure portal, this value will be filled automatically by selecting the resource group in the portal UI."
                 },
             "defaultValue": "[resourceGroup().name]"
         },        
         "publicIpAddressName": {
             "type": "string",
-            metadata": {
+            "metadata": {
             "description": "The bastion host requires a public IP address with a named value. The value default is 'bastion-pub-ip'."
                 },
             "defaultValue": "bastion-pub-ip"
         },
         "existingVNETName": {
             "type": "string",
-             metadata": {
+             "metadata": {
             "description": "The bastion host must be deployed into an existing virtual network. Supply the name of the virtual network here."
                 }
         },
         "subnetAddressPrefix": {
             "type": "string",
-             metadata": {
+             "metadata": {
             "description": "The bastion host must be deployed into a new subnet of the virtual network. Provide the new subnet address prefix here."
                 }
         }
