@@ -9,7 +9,8 @@ from Internet hosts is not permitted when you configure a bastion host in the sa
 Deploy the bastion host into a virtual network that has Azure VMs you want to protect from 
 brute-force and dictionary password attacks and unauthorized access. 
 
-**NOTE:** This template requires an existing resource group and virtual network. 
+**REQUIREMENTS:** This template requires an existing resource group and virtual network. You must provide the name for the virtual network
+and the address prefix for the new subnet in the virtual network where you want to deploy the bastion host.
 
 To deploy the bastion host, click the button below.
 
