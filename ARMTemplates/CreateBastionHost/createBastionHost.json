@@ -5,14 +5,14 @@
         "location": {
             "type": "string",
             "metadata": {
-            "description": "The region where you want to deploy the bastion host. By default, is the same region as the resource group."
+            "description": "The region where you want to deploy the bastion host. By default, the region is the same as the resource group's region."
                 },
             "defaultValue": "[resourceGroup().location]"
         },
         "resourceGroup": {
             "type": "string",
             "metadata": {
-            "description": "The resource group name. If deploying the template resource by using the Azure portal, this value will be filled automatically by selecting the resource group in the portal UI."
+            "description": "The resource group name. If you are deploying the template resource by using the Azure portal, this value will be filled automatically by selecting the resource group in the portal UI."
                 },
             "defaultValue": "[resourceGroup().name]"
         },        
