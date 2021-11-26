@@ -57,6 +57,5 @@ $params = @{
 
 # Deploy the ARM template
 
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateParameterObject $params -TemplateUri https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/ARMTemplates/createBastionHost.json
-
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateParameterObject $params -TemplateUri https://github.com/LODSContent/ChallengeLabs_Resources/blob/master/ARMTemplates/CreateBastionHost/createBastionHost.json
 
