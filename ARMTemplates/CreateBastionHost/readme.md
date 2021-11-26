@@ -3,8 +3,8 @@
 This template will deploy a bastion host into an existing virtual network. 
 
 A bastion host provides secure RDP or SSH access to Azure Virtual Machines (VMs). With a bastion host,
-you can access the Azure VM through the Azure Portal. Direct RDP or SSH access from Internet hosts
-is not allowed.
+you can securely gain remote access to Azure VMs through the Azure Portal. Direct RDP or SSH access to the Azure VMs 
+from Internet hosts is not permitted when you configure a bastion host in the same virtual network as the Azure VMs.
 
 Deploy the bastion host into a virtual network that has Azure VMs you want to protect from 
 brute-force and dictionary password attacks and unauthorized access. 
