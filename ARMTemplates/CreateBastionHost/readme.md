@@ -13,4 +13,4 @@ brute-force and dictionary password attacks and unauthorized access.
 
 To deploy the bastion host, click the button below.
 
-[![Deploy To Azure](https://raw.githubusercontent.com/az140mp/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Faz140mp%2Fazure-quickstart-templates%2Fmaster%2Fapplication-workloads%2Factive-directory%2Factive-directory-new-domain%2Fazuredeploy.json)
+[![Deploy To Azure](https://raw.githubusercontent.com/az140mp/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/deploytoazure.svg?sanitize=true)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FLODSContent%2FChallengeLabs_Resources%2Fmaster%2FARMTemplates%2FCreateBastionHost%2FcreateBastionHost.json)
