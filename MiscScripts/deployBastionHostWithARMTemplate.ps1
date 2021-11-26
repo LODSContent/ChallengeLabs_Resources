@@ -2,10 +2,10 @@
 # This script can be used to deploy a Bastion Host into an existing virtual network. 
 #
 # The script gets and creates some values that are necessary to pass into the ARM template as parameters.
-# It then uses those value to deploy the ARM Template for the Bastion Host.
+# It then uses those values to deploy the ARM Template for the Bastion Host.
 #
 # To use this script, please replace the value for the $RGName variable with a valid resource group name.
-# Before running the script, you need to ensure that you have created at a virtual network with at least one subnet.
+# Before running the script, you need to ensure that you have created a virtual network with at least one subnet.
 #
 # NOTE: This script assumes that the resource group contains only one virtual network. If you have more than one virtual network,
 # you will need to modify the get-azvirtualnetwork command to include the name of the virtual network that you want to 
