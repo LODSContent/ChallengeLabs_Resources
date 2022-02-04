@@ -5,7 +5,7 @@ namespace CSPlanets
 {
     class CsvReader {
         public static void FillArrays(string[,] thePlanetsStringData, int[] thePlanetsIntegerData, decimal[,] thePlanetsDecimalData ) {
-            string path = @"D:\labfiles\ArrayDataFiller\ICS-016 Data.csv";
+            string path = @"ICS-016 Data.csv";
             string[] theFields = new string[8];
 
             using (TextFieldParser csvParser = new TextFieldParser(path))
