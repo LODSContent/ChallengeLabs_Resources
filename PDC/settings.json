@@ -1,0 +1,7 @@
+{
+    "sqlHost":"127.0.0.1",
+    "sqlPort":"3306",
+    "database":"classicmodels",
+    "user":"root",
+    "password":"Passw0rd!"
+}
