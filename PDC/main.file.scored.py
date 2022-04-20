@@ -24,7 +24,6 @@ if noTest:
 #Set up globals
 
 basepath = "/home/coder/challenge"
-basepath = "C:\challenge-files-github\python-data"
 dataPath = basepath + "/data"
 #JSON -> dictionary test
 success = False
