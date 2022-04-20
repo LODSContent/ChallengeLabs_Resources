@@ -22,15 +22,6 @@ if noTest:
 
 #Set up globals
 
-with open('settings.json') as sFile:
-    settings = json.load(sFile)
-host = settings["mongoHost"]
-port = settings["mongoPort"]
-database = settings["database"]
-user=settings["user"]
-password=settings["password"]
-collection = "orders"
-
 dataPath = "/home/coder/challenge/data"
 
 #JSON -> dictionary test

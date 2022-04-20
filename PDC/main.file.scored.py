@@ -16,19 +16,22 @@ else:
     except:
         noTest = True
 if noTest:
-    print("Invalid test specification.\nUsage: python3 main.py [test #]\nWhere [test #] is the test you want to run:\n1 - Test JSON record\n2 - Test JSON list\n3 - Test CSV handing")
-    sys.exit()
+    test = 4
+    #print("Invalid test specification.")
+    #sys.exit()
 
 
 #Set up globals
 
-
-dataPath = "/home/coder/challenge/data"
-
+basepath = "/home/coder/challenge"
+basepath = "C:\challenge-files-github\python-data"
+dataPath = basepath + "/data"
 #JSON -> dictionary test
 success = False
+writeFail = False
 if test <= 4:
     try:
+        outputFile = basepath + "/output1.json"
         fileName = "customer.json"
         customer = fileCode.readCustomer(dataPath,fileName)
         if type(customer) == dict:
@@ -40,12 +43,20 @@ if test <= 4:
                 success = "processCenter" in customer
             else:
                 success = customer["processCenter"] == "LODS"
+        if test == 4:
+            try:
+                f = open(outputFile,'w')
+                f.write(json.dumps(customer))
+                f.close
+            except:
+                writeFail = True
     except Exception as ex:
         success = False
 elif test <= 9:
     try:
         fileName = "products.json"
         products = fileCode.readProducts(dataPath, fileName)
+        outputFile = basepath + "/output2.json"
         if type(products) == list:
             if test == 5:
                 success = True
@@ -59,12 +70,20 @@ elif test <= 9:
                         success = "MSRP" in products[0]
                     else:
                         success = type(products[0]["MSRP"]) == float
+        if test == 9:
+            try:
+                f = open(outputFile,'w')
+                f.write(json.dumps(products))
+                f.close
+            except:
+                writeFail = True
     except Exception as ex:
         success = False
 else:
     try:
         path = "/home/coder/challenge/data/*.csv"
         result = fileCode.generateOrdersReport(path)
+        outputFile = basepath + "/output3.json"
         if type(result) == list:
             if test == 10:
                 success = True
@@ -90,6 +109,15 @@ else:
                             orderCorrect = False
                         lastValue = result[i][4]
                     success = orderCorrect
+        if test == 14:
+            try:
+                f = open(outputFile,'w')
+                f.write(json.dumps(result))
+                f.close
+            except:
+                writeFail = True
     except Exception as ex:
         success = False
+if writeFail:
+    print("Results could not be written to a file.")
 print(success)
