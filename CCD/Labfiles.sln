@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Labfiles.Files", "CCD-001\Labfiles.Files.csproj", "{13C7B2F8-A343-457A-91E6-C188DFEA488E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Labfiles.MySQL", "CCD-002\Labfiles.MySQL.csproj", "{098C97CE-3AB2-4B4A-9E8B-54CBE28527ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Labfiles.Mongo", "CCD-003\Labfiles.Mongo.csproj", "{4C0D5106-315C-410A-85FC-AC9C31EF8E41}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{13C7B2F8-A343-457A-91E6-C188DFEA488E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13C7B2F8-A343-457A-91E6-C188DFEA488E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13C7B2F8-A343-457A-91E6-C188DFEA488E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13C7B2F8-A343-457A-91E6-C188DFEA488E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{098C97CE-3AB2-4B4A-9E8B-54CBE28527ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{098C97CE-3AB2-4B4A-9E8B-54CBE28527ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{098C97CE-3AB2-4B4A-9E8B-54CBE28527ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{098C97CE-3AB2-4B4A-9E8B-54CBE28527ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C0D5106-315C-410A-85FC-AC9C31EF8E41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C0D5106-315C-410A-85FC-AC9C31EF8E41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C0D5106-315C-410A-85FC-AC9C31EF8E41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C0D5106-315C-410A-85FC-AC9C31EF8E41}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
