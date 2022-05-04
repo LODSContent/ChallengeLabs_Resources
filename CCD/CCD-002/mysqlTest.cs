@@ -192,8 +192,8 @@ namespace labfiles.mysql
             var customer = await testObject.retrieveCustomerByNumber(conn, testCustomerNumber + 1000000);
             
             return customer.Item1 == null
-                ? (true, "\tYou have successfully handled an empty result set." , null)
-                : (false, "\tYou have not handled an empty result set.", customer );
+                ? (true, "You have successfully handled an empty result set." , null)
+                : (false, "You have not handled an empty result set.", customer );
         }
         
         static async Task<(bool success, string message, object data)> TestInsertExceptionHandling()
