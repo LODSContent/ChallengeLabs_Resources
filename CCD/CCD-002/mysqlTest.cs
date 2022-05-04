@@ -201,7 +201,7 @@ namespace labfiles.mysql
             var testObject = new MysqlCode();
             var conn = await testObject.getConnection(Settings.mysqlHost, Settings.mysqlPort, Settings.database, Settings.user, Settings.password);
             
-            await testObject.insertProductLine(conn, null, testProductLineDescription);
+            await testObject.insertProductLine(conn, testProductLine, testProductLineDescription);
             var duplicate = await testObject.insertProductLine(conn, testProductLine, testProductLineDescription);
 
             return duplicate == 0 
