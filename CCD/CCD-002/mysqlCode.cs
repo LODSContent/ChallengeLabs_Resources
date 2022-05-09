@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace labfiles.mysql
 {
-    public class mysqlCode
+    public class MysqlCode
     {
         public async Task<MySqlConnection> getConnection(string host, string port, string database, string user, string password) {
            await Task.CompletedTask;
