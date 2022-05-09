@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-namespace Labfiles
+namespace labfiles
 {
     internal delegate (bool success, string message, object data) TestFunction();
 
@@ -110,7 +110,7 @@ namespace Labfiles
 
             if (products == null) return (false, "Your code did not return a List of Product objects", null);
 
-            return products[0].msrp == testProduct.msrp
+            return products[0].MSRP == testProduct.MSRP
                 ? (true, "You have successfully returned product data.", products)
                 : (false, "Your code did not return the correct Product data", products);
         }

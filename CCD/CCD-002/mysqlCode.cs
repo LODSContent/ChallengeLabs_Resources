@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-namespace csharp_data
+namespace labfiles.mysql
 {
     public class mysqlCode
     {
