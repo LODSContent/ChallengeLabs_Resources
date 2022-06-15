@@ -1,0 +1,49 @@
+resources:
+- name: challenge-vpc
+  type: compute.v1.network
+  properties:
+    routeingConfig:
+      routingMode: REGIONAL
+    autoCreateSubnetworks: false
+- name: challenge-subnet-1
+  type: compute.v1.subnetwork
+  properties:
+    region: us-central1
+    network: $(ref.challenge-vpc.selfLink)
+    ipCidrRange: 192.168.10.0/24
+- name: challenge-subnet-2
+  type: compute.v1.subnetwork
+  properties:
+    region: us-central1
+    network: $(ref.challenge-vpc.selfLink)
+    ipCidrRange: 192.168.20.0/24
+- name: challenge-vm-1
+  type: compute.v1.instance
+  properties:
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/n1-standard-2
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/debian-cloud/global/images/family/debian-9
+    networkInterfaces:
+    - subnetwork: $(ref.challenge-subnet-1.selfLink)
+- name: challenge-vm-2
+  type: compute.v1.instance
+  properties:
+    zone: us-central1-b
+    machineType: zones/us-central1-b/machineTypes/n1-standard-2
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/debian-cloud/global/images/family/debian-9
+    networkInterfaces:
+    - subnetwork: $(ref.challenge-subnet-2.selfLink)
+      accessConfigs:
+      - type: ONE_TO_ONE_NAT
