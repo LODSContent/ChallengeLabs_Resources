@@ -47,3 +47,19 @@ resources:
     - subnetwork: $(ref.challenge-subnet-2.selfLink)
       accessConfigs:
       - type: ONE_TO_ONE_NAT
+- name: challenge-vm-3
+  type: compute.v1.instance
+  properties:
+    zone: us-central1-b
+    machineType: zones/us-central1-b/machineTypes/n1-standard-2
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: projects/windows-cloud/global/images/windows-server-2022-dc-v20220513
+    networkInterfaces:
+    - subnetwork: $(ref.challenge-subnet-2.selfLink)
+      accessConfigs:
+      - type: ONE_TO_ONE_NAT
