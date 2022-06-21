@@ -1,74 +1,16 @@
 resources:
 - name: "cluster-1"
-    masterAuth:
-      clientCertificateConfig:
-    network: "projects/tracyssandbox/global/networks/default"
-    addonsConfig:
-      httpLoadBalancing:
-      horizontalPodAutoscaling:
-      kubernetesDashboard:
-        disabled: true
-      dnsCacheConfig: 
-      gcePersistentDiskCsiDriverConfig:
-        enabled: true
-    subnetwork: "projects/tracyssandbox/regions/us-central1/subnetworks/default"
-    nodePools: 
-    - name: "default-pool"
-      config: 
-          machineType: "e2-small"
-          diskSizeGb: 100
+  type: "container.v1.cluster"
+  properties:
+    zone: "us-central1-a"
+    cluster:
+      name: "cluster-1"
+      initialNodeCount: 3
+      nodeConfig:
           oauthScopes:
           - "https://www.googleapis.com/auth/devstorage.read_only"
           - "https://www.googleapis.com/auth/logging.write"
           - "https://www.googleapis.com/auth/monitoring"
           - "https://www.googleapis.com/auth/servicecontrol"
-          - "https://www.googleapis.com/auth/service.management.readonly",
+          - "https://www.googleapis.com/auth/service.management.readonly"
           - "https://www.googleapis.com/auth/trace.append"
-          metadata: 
-            disable-legacy-endpoints: "true"
-          imageType: "COS_CONTAINERD"
-          diskType: "pd-standard"
-          shieldedInstanceConfig:
-            enableIntegrityMonitoring: true
-        initialNodeCount: 3
-        autoscaling:
-        management:
-          autoUpgrade: true
-          autoRepair: true
-        maxPodsConstraint:
-          maxPodsPerNode: "110"
-        networkConfig:
-        upgradeSettings:
-          maxSurge: 1
-    locations":
-    - "us-central1-c"
-    networkPolicy:
-    ipAllocationPolicy:
-      useIpAliases: true
-    masterAuthorizedNetworksConfig:
-    binaryAuthorization:
-    autoscaling:
-    networkConfig:
-      datapathProvider: "LEGACY_DATAPATH"
-    defaultMaxPodsConstraint:
-      maxPodsPerNode: "110"
-    authenticatorGroupsConfig:
-    databaseEncryption:
-      state: "DECRYPTED"
-    shieldedNodes:
-      enabled: true
-    releaseChannel:
-      channel: "REGULAR"
-    notificationConfig:
-      pubsub:
-    initialClusterVersion: "1.22.8-gke.202"
-    location: "us-central1-c"
-    loggingConfig:
-      componentConfig:
-        enableComponents:
-        - "SYSTEM_COMPONENTS"
-        - "WORKLOADS"
-    monitoringConfig:
-      componentConfig:
-        enableComponents:
-        - "SYSTEM_COMPONENTS"
