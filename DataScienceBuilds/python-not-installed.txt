@@ -1,0 +1,2 @@
+jupyter-client2
+prompt-toolkit8

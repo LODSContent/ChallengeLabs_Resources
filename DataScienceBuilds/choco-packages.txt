@@ -1,0 +1,19 @@
+|Package|Version|
+|:---|:---|
+|Chocolatey                      |v0.11.1|
+|anaconda3                       |2021.11|
+|awscli                          |2.2.39|
+|DotNet                          |4.5.2 4.5.2.20140902|
+|DotNet                          |4.6.1 4.6.01055.20170308|
+|gcloudsdk                       |0.0.0.20210318|
+|git                             |2.33.0.2|
+|mysql                           |8.0.28|
+|mysql.workbench                 |8.0.28|
+|nodejs                          |16.9.1|
+|notepadplusplus                 |8.1.4|
+|python                          |3.9.7|
+|python3                         |3.9.7|
+|sql-server-express              |2019.20200409|
+|sql-server-management-studio    |15.0.18390.0|
+|SQLite                          |3.37.2|
+|vscode                          |1.60.1|
