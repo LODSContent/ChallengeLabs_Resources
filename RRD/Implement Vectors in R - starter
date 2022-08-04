@@ -1,0 +1,49 @@
+---
+title: 'Implement Vectors in R'
+date: "15/08/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE, error=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements #
+
+## Create a simple R vector ##
+```{r Create a simple R vector, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+```
+
+## Create a multi-element vector ##
+```{r Create a multi-element vector, include=TRUE, error=FALSE, warning= FALSE}
+
+
+
+
+
+```
+
+## Access the elements of a vector ##
+```{r Access the elements of a vector, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+```
+## Calculate the mean and median of a vector ##
+```{r Calculate the mean and median of a vector, include=T, error=F, warning=F}
+
+
+
+```
+
+## Delete a vector ##
+```{r Delete a vector, include=T, error=F, warning=F}
+
+
+
+
+```
+
