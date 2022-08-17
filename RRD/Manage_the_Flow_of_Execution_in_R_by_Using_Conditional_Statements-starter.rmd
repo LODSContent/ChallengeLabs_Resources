@@ -1,0 +1,111 @@
+---
+title: Manage the Flow of Execution in R by Using Conditional Statements
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+
+
+## Evaluate a condition by using an if statement
+```{r Evaluate a condition by using an if statement, include=T, error=F, warning=F}
+
+
+
+
+
+
+```
+
+## Evaluate a condition in an if statement by using the any() function
+```{r Evaluate a condition in an if statement by using the any() function, include=T, error=F, warning=F}
+
+
+
+
+
+
+```
+
+## Evaluate a condition in an if statement by using the all() function
+```{r Evaluate a condition in an if statement by using the all() function, include=T, error=F, warning=F}
+
+
+
+
+
+
+```
+
+## Control the flow of execution by using an if...else statement
+```{r Control the flow of execution by using an if...else statement, include=T, error=F, warning=F}
+
+
+
+
+
+
+```
+## Evaluate a condition by using the ifelse() function
+```{r Evaluate a condition by using the ifelse() function, include=T, error=F, warning=F}
+
+
+
+
+
+
+```
+
+## Evaluate multiple conditions by using a nested if statement
+```{r Evaluate multiple conditions by using a nested if statement, include=T, error=F, warning=F}
+
+
+
+
+
+
+```
+
+## Control the flow of execution by using a switch statement
+```{r Control the flow of execution by using a switch statement, include=T, error=F, warning=F}
+
+
+
+
+
+
+```
+
+
+
+
+
+
+# The switch statement
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

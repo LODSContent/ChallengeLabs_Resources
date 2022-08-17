@@ -1,0 +1,52 @@
+---
+title: "Implement a Matrix in R"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+
+
+
+## Create an simple matrix
+```{r Create a simple matrix, include= T, warning=F, error=F}
+
+
+
+
+
+
+```
+
+## Create an simple matrix by row
+```{r Create a simple matrix by row, include= T, warning=F, error=F}
+
+
+
+
+
+
+```
+
+## Access elements of a matrix by using indexing
+```{r Access elements of a matrix by using indexing, include=T, error=T, warning=T}
+
+
+
+
+
+
+```
+
+# Modify a matrix
+```{r Modify a matrix, include=T, warning=F, error=F}
+
+
+
+
+
+
+```

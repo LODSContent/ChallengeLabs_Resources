@@ -1,0 +1,57 @@
+---
+title: "Manage Categorical and Nominal Data in R"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+## Create a factor
+```{r Create a factor, include=T, error=F, warning=F}
+
+
+
+
+
+
+
+```
+
+## Examine the contents of a factor
+```{r Examine the contents of a factor, include=T, error=F, warning=FALSE}
+
+
+
+
+
+
+
+```
+
+## Create a factor by using the levels attribute
+```{r Create a factor by using the levels attribute, include=T, error=F, warning=F}
+
+
+
+
+
+
+
+```
+
+## Implement factors in a data frame
+```{r Implement factors in a data frame, include= T, error= F, warning=F}
+
+
+
+
+
+
+
+```
+
+
+
+

@@ -1,0 +1,77 @@
+---
+title: "Create Functions in R"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+
+
+## Create a function
+```{r Create a function, include= T, warning=F, error=F}
+
+
+
+
+
+
+
+```
+## Declare a variable in a function
+```{r Declare a variable in a function, include=T, warning=F, error=F}
+
+
+
+
+
+
+
+```
+## Create a function that takes an argument
+```{r Create a function that takes an argument, include=T, warning=F,error=F}
+
+
+
+
+
+
+
+```
+
+## Create a default argument
+```{r Create a default argument, include=T, warning=F, error=F}
+
+
+
+
+
+
+
+```
+
+
+## Retrieve the body and the argument list of a function
+```{r Retrieve the body and the argument list of a function, include = T, error = F, warning = F }
+
+
+
+
+
+
+
+```
+
+## Return an implicit and explicit value from a function
+```{r Return an implicit and an explicit value from a function, include=T, error=F, warning=T}
+
+
+
+
+
+
+
+```
+

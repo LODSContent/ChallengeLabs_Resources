@@ -1,0 +1,72 @@
+---
+title: "Create Flow Control Statements in R"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+
+
+## Manage the flow of execution by using a for loop
+```{r Manage the flow of execution by using a for loop, include=TRUE, error=F, warning=F}
+
+
+
+
+
+
+
+```
+## Create a for loop that retrieves a value by using integer indexing
+```{r Create a for loop that retrieves a value by using integer indexing, include=T, warning=F, error=F}
+
+
+
+
+
+
+
+```
+
+
+## Manage the flow of execution by using a nested for loop
+```{r Manage the flow of execution by using a nested for loop, include=TRUE, error=F, warning=F}
+
+
+
+
+
+
+
+```
+
+## Manage the flow of execution by using a while loop
+```{r Manage the flow of execution by using a while loop, include=T, error=F, warning=F}
+
+
+
+
+
+
+
+```
+
+## Create an implicit loop by using the apply function
+```{r Create an implicit loop by using the apply function, include=T, warning=F, error=F}
+
+
+
+
+
+
+
+```
+
+
+
+
+
+

@@ -1,0 +1,54 @@
+---
+title: "Implement a List Data Structure in R"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements#
+
+## Create a list object in R
+```{r Create a list object in R, include= T, warning=F, error=F}
+
+
+
+
+
+
+```
+
+## Access elements in a list
+```{r Access elements in a list, include=T, error=F, warning=F}
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

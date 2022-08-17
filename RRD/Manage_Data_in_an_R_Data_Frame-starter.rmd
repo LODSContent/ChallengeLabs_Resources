@@ -1,0 +1,58 @@
+---
+title: "Manage Data in an R Data Frame"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Requirements
+
+
+## Create a data frame
+```{r Create a data frame, include=T, warning=F, error=T}
+
+
+
+
+
+
+
+```
+
+## Examine the shape and structure of a data frame
+```{r Examine the shape and structure of a data frame, include=T, warning=F, error=T}
+
+
+
+
+
+
+
+```
+
+## Extract data from a data frame
+```{r Extract data from a data frame, include=T, error = T, warring = T}
+
+
+
+
+
+
+
+```
+
+## Modify a data frame
+```{r Modify a data frame, include= T, error= F , warning= F}
+
+
+
+
+
+
+
+```
+
+
+
