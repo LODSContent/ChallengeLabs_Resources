@@ -1,0 +1,214 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-012-Implement Conditional Statements using R [Guided]
+
+### Notes: Conditional Statements
+- if statement:
+  - Checks the conditional for a **single** logical variable 
+  - Basic syntax:
+    ```
+    if(condition) {
+      ## Execute if the condition evaluates to TRUE
+    }
+    ```
+  - Single-line if statement without curry braces {}
+    ```
+      if(condition) ## Execute if TRUE
+    ```
+      - The line after a single-line if statement is not considered apart of the if statement and will run unconditionally
+      ```
+      if(condition) ## Do something if TRUE
+      ## ALWAYS Do something
+      ```
+  - Curly braces {} are optional if there is a single statement after the if condition
+  - All three examples function identically without regard for syntax
+    - Example: 
+    ```
+      if( var1 == 9) 'Var1 equals 9'
+    
+      if ( var1 == 9) { 'Do something if TRUE' }
+      
+      if (var1 == 9) {
+        'Do something if TRUE'
+      }
+      
+    ```
+  - Curly braces {} are **recommend** to make code easier to read, debug, and understand
+  
+- if-else statement:
+  - If statements **only** run when the condition is TRUE. 
+  - Else statements run when the the condition is FALSE
+  - Syntax:
+  ```
+  # Option 1:
+  if(condition){
+    do any code in here if condition is TRUE
+  } else {
+    do any code in here if condition is FALSE
+  }
+  
+  # You can take liberty with white space and format as such:
+  
+  # Option 2:
+  if(condition)
+  {
+    do any code in here if condition is TRUE
+  } 
+  else 
+  {
+    do any code in here if condition is FALSE
+  }
+  
+  ## Both option1 and option2 function identically. Some prerfer option2 considering it to easier to read. 
+  
+  ```
+- The ifelse() function
+  - Used for element-wise conditional testing
+  - The function requies three arguemtns:
+    - test: The conditional test
+    - yes: what to do if TRUE
+    - no:  what to do if FALSE
+  - Syntax:
+  ```
+    ifelse(test = logical_expression, yes = True, no = False)
+  ```
+  
+- The switch statement
+  - Used to evaluate an epxression against a list of options
+  - Syntax:
+  ```
+  switch (expression, list)
+  
+  ```
+ 
+### Resources: R Conditional Statements & Functions
+  - [If-Else in R](https://r-coder.com/if-else-r/)
+  - [Logical Operators](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Logic.html)
+  - [Logical Operators](https://www.r-bloggers.com/2010/12/logical-operators-in-r/) by R-bloggers
+  - [any()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/any) function to determine if some values are true
+  - [all()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/all) function to determine if all of the values are true
+  - [ifelse()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/ifelse) function provides conditional element selection
+  - [switch()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/switch) statement to evaluate a condition against a list of options.
+
+### Resources: Usefull R functions
+  - [seq()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/seq) used to generate an sequence of numbers
+
+## Implement the R if statement
+```{r Implement the R if statement, include=T, error=F, warning=F}
+
+var1 <- 12
+if(var1 == 10){
+  'var1 equals 10'
+}
+
+if(var1 == 10) 'var1 equals 10'
+'test test test'
+
+
+```
+
+## Implement the any() and all() functions
+```{r Implement the any() and all() functions, include=T, error=F, warning=F}
+
+v1 <- c(5,6, 7 ,8, 9)
+if( any(v1 >= 5) ){
+  'We got one!'
+}
+
+if( any(v1 < 5) ){
+  'We got one!'
+}
+
+if( all(v1 >= 5) ){
+  'We got one!'
+}
+
+
+
+```
+
+
+
+## Implement if-else logic in R
+```{r Implement if-else logic in R, include=T, error=F, warning=F}
+
+v2 <- 100
+v3 <- 16
+
+if(v2 < v3){
+  seq(from = 1, to = 10, by = 2)
+} else {
+  seq(from = 1, to = 10, by = 3)
+}
+
+
+```
+## Use the R ifelse() function, nesting, and the switch statement
+```{r Use the R ifelse() function, nesting, and the switch statement, include=T, error=F, warning=F}
+
+# The ifelse() function
+
+var2 <- 1:20
+
+ifelse(
+  test = (var2 %% 2 == 0), 
+  yes = 'Even Number', 
+  no = 'Odd Number'
+)
+
+# Nesting
+
+a <- 3
+b <- 7
+my_number <- 3
+
+if(a<=my_number && my_number>3){
+	'first condition TRUE and second TRUE'
+	a <- a^3
+	b <- b
+} else if(a<=my_number && my_number<=3){
+	'first condition TRUE and second FALSE'
+	a <- a^4
+	b <- my_number*5
+} else {
+	'first condition FALSE and second FALSE'
+	a <- a - 3.5
+	b <- b + 3.5
+}
+a
+b
+my_number
+
+# The switch statement
+
+var3 <- 2
+switch(var3, "var3 = John", "var3 = Bill", "var3 = Tim", "var3 = Sam")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

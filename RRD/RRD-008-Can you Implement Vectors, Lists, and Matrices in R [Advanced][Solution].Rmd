@@ -1,0 +1,108 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# RRD-008-Can you Implement Vectors, Lists, and Matrices in R? [Advanced]
+
+## Implement R Vector Objects
+```{r Implement Vectors, include=T, warning=F, error=F}
+
+v1 <- c(3, 12, 95, 16)
+v1
+length(v1)
+
+v2 <- v1 * 3
+v2
+
+v3 <- c(v1,v2, v1 * 5)
+v3
+
+
+v3[4:7]
+
+
+```
+
+
+
+## Implement R List Objects
+```{r Implement Lists, include=T, error=F, warning=F}
+
+lst1 <- list(5.2, 9.97, 'Dog', 'Jason', 4L,TRUE)
+length(lst1)
+lst1
+
+lst1[3:5]
+
+lst2 <- list("StudentID" = 1001, "FirstName" = "Linda", "LastName" = "Smith", "GPA" = 3.75 )
+lst2
+
+lst2$FirstName
+
+typeof
+
+```
+
+
+## Implement R Matrix Objects
+```{r Implement Matricies, error=F, include=T, warning=F}
+
+m1 <- matrix(seq(1:9), nrow = 3, ncol = 3, byrow = F)
+dim(m1)
+m1
+
+
+m_classRoster <- matrix(c(1001, 'Fred', 'Jones', 3.75, 
+                1002, 'Sarah', 'Smith', 3.25, 
+                1003, 'Linda', 'Thompson', 2.75, 
+                1004, 'Bob', 'White', 2.95), 
+              nrow = 4, 
+              ncol = 4, 
+              byrow = T)
+m_classRoster
+
+colnames(m_classRoster) <- c('StudentID', 'FirstName', 'LastName', 'GPA')
+m_classRoster
+
+
+
+m_classRoster <- rbind(m_classRoster, c(1010, 'Barney', 'Washington', 3.75))
+m_classRoster <- rbind(m_classRoster, c(1011, 'Willma', 'Miller', 3.50))
+m_classRoster <- rbind(m_classRoster, c(1012, 'Alice', 'Gundersmith', 2.50))
+m_classRoster
+
+
+m_classRoster[ m_classRoster[, "GPA"] >= 3.00, ]
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,149 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-014-Create Functions in R [Guided]
+
+### Notes: R Functions
+- R Functions are "first class" objects
+- User defined R Functions are listed in the Environments pane
+- Functions and accept optional arguments
+- R supports function nesting which means functions can be declared within functions
+- By default, a user defined R function will return the last evaluated expression 
+- Defining a function
+  - Created using the function() method
+  - Syntax: No parameters
+    ```
+      f1 <- function(){
+        # Do something
+        # Do another thing
+        # Do more things
+      
+      }
+    ```
+  - Syntax: With parameters
+    ```
+      # Must be called using parameter order (arguement position) or by arguement name
+      f1 <- function(arg1, arg2){
+        # Do something
+        # Do another thing
+        # Do more things
+      
+      }
+      
+      # Specifying default parameter values
+      f2 <- function(arg1 = TRUE, arg2 = 'some value'){
+      
+        # Do something
+        # Do another thing
+        # Do more things
+        
+        # Maybe call return()
+      
+      }
+      
+      # Using ellipses
+      f3 <- function(arg1 = TRUE, arg2 = 'some value', arg3, arg4 = 5, ...){
+      
+        # Do something
+        # Do another thing
+        # Do more things
+        
+        # Maybe call return()
+      
+      }
+      
+    ```
+- Returning values:
+  - By default R will implicitly return NULL or the last lexical scoped variable declared
+  - In R a function has exactly one return value
+    - Return a data structure such as a List if multiple values need to be returned
+  - Syntax:
+    ```
+        f1 <- function(arg1, arg2){
+          # Do something
+          # Do another thing
+          # Do more things
+        
+        return(#output a single value)
+      
+      }
+    ```
+### Important Resources:
+- [function()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/function) for creating user defined functions
+- [return()](https://faculty.nps.edu/sebuttre/home/R/functions.html) used to return *a* value
+- [missing()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/missing) function used to test and check to see if functions arguements are missing
+- [...](https://faculty.nps.edu/sebuttre/home/R/functions.html) ellipses are special characters used to mean "anything else." They are usually placed last in the parameter list
+- [body()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/body) function used to get or set a function's body
+- [formals()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/formals) function to get or set the formal arguements
+
+### Related Resources: Usefull R functions
+- [print()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/print) function to print values
+- [format()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/format) function to encode output formats
+- [cat()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/cat) function to output and concatenate strings
+
+## Create a function in R
+```{r Create a function in R, include= T, warning=F, error=F}
+# function definition
+
+
+
+
+```
+## Declare a variable inside a function
+```{r Declare a variable inside a function, include=T, warning=F, error=F}
+# function definition
+
+
+
+
+# function call/function execution
+
+
+```
+## Implement function parameters
+```{r Implement function parameters, include=T, warning=F,error=F}
+
+
+
+
+
+```
+
+## Create a default function parameter
+```{r Create a default function parameter, include=T, warning=F, error=F}
+
+
+
+
+
+```
+
+
+## Print a function's body and formal argument list
+```{r Print a function\'s body and formal argument list, include = T, error = F, warning = F }
+
+
+
+
+
+```
+
+## Return an implicit and explicit value from a function
+```{r Return an implic value, include=T, error=F, warning=T}
+
+
+
+
+
+
+
+```
+

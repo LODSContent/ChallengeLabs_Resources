@@ -1,0 +1,119 @@
+---
+title: 'Skillable: RRD - Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "1/10/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Create the base vector data sources
+```{r base vectors, include=T, error=F, warning=F}
+v_student_ids <- c(1001, 1002, 1003)
+v_first_names <- c("John", "Mary", "Tyra")
+v_last_names <- c("Smith", "Jones", "Washington")
+v_email_addresses <- c("john.smith@test.com", "mj@example.com", "washtyra@test.info")
+```
+
+## Create the class roster data frame
+```{r create data frame, include=T, error=F, warning=F}
+df_MAT101_Roster <- data.frame(StudentID = v_student_ids, FirstName = v_first_names, LastName = v_last_names, Email = v_email_addresses, stringsAsFactors = FALSE)
+str(df_MAT101_Roster)
+colnames(df_MAT101_Roster)
+sapply(df_MAT101_Roster, class)
+dim(df_MAT101_Roster)
+```
+
+
+## Add Additional Rows & Cols
+```{r add rows & cols, include = T, error = F, waring = F}
+df_MAT101_Roster <- rbind(df_MAT101_Roster, c(1004, "Fred", "Johnson", "Fred.Johnson@test.us"))
+
+df_MAT101_Roster <- cbind(df_MAT101_Roster, Test1 = c(87, 93, 92, 76) )
+df_MAT101_Roster <- cbind(df_MAT101_Roster, Test2 = c(89, 95, 91, 78) )
+df_MAT101_Roster <- cbind(df_MAT101_Roster, Test3 = c(86, 91, 92, 75) )
+df_MAT101_Roster <- cbind(df_MAT101_Roster, Test4 = c(88, 90, 93, 76) )
+df_MAT101_Roster <- cbind(df_MAT101_Roster, Final = c(88, 92, 94, 74) )
+
+```
+
+## Creating calculated fields: Total Points & Avg
+```{r create calculated fields, include=TRUE, error=FALSE, warning=FALSE}
+df_MAT101_Roster$TotalScore <- apply(X = df_MAT101_Roster[, c(5:9)], MARGIN = 1, FUN = sum)
+df_MAT101_Roster$Avg <- round(apply( X = df_MAT101_Roster[, c(5:9)], MARGIN = 1, FUN = mean ), 2)
+```
+
+## Create the score to letter grade function
+```{r custom function, include=TRUE, error=FALSE, warning=FALSE}
+f_to_letter_grade <- function(score){
+  if(score >= 90 && score <= 100){
+    return('A')
+  } else if( score >= 80 && score < 90){
+    return('B')
+  } else if (score >= 70 && score < 80){
+    return('C')
+  } else if (score >= 60 && score < 70){
+    return('D')
+  } else if(score < 60){
+    return('F')
+  } else {
+    return('N/A')
+  }
+  
+}
+```
+
+
+## apply the letter grade function & convert to factor
+```{r letter grade factor, include=TRUE, warning=FALSE, error=FALSE}
+df_MAT101_Roster <- cbind( df_MAT101_Roster, 'Final Letter Grade' = sapply( X = df_MAT101_Roster$Avg, f_to_letter_grade) )
+df_MAT101_Roster$`Final Letter Grade` <- factor(df_MAT101_Roster$`Final Letter Grade`)
+```
+
+## Add additional students (rows)
+```{r add more students, include=TRUE, warning=FALSE, error=FALSE}
+df_MAT101_Roster <- rbind(df_MAT101_Roster, list(1010, "Jim", "Smith", "jsmith@test.edu", 88, 90, 86, 85, 80, 0, 0, NA))
+df_MAT101_Roster <- rbind(df_MAT101_Roster, list(1011, "George", "Lockwood", "lockwood@test.edu", 77, 79, 86, 75, 68, 0, 0, NA))
+df_MAT101_Roster <- rbind(df_MAT101_Roster, list(1012, "Frank", "Xavier", "frank-o@test.edu", 92, 90, 86, 85, 81, 0, 0, NA))
+```
+
+### Calculate Total Score, Avg, and Letter Grade for new students
+```{r re-calculate for new students, include=TRUE, warning=FALSE, error=FALSE}
+df_MAT101_Roster$TotalScore <- apply(X = df_MAT101_Roster[, c(5:9)], MARGIN = 1, FUN = sum)
+df_MAT101_Roster$Avg <- round(apply( X = df_MAT101_Roster[, c(5:9)], MARGIN = 1, FUN = mean ), 2)
+df_MAT101_Roster[ df_MAT101_Roster["StudentID"] >= 1010, ]$`Final Letter Grade` = sapply(X = df_MAT101_Roster[ df_MAT101_Roster["StudentID"] >= 1010, ]$Avg, f_to_letter_grade)
+
+dim(df_MAT101_Roster)
+```
+
+## Reporting
+
+### What's the letter grade distribution?
+```{r queries and reports, include = TRUE, error = FALSE, warning = FALSE}
+table(df_MAT101_Roster$`Final Letter Grade`)
+
+df_MAT101_Roster[df_MAT101_Roster$`Final Letter Grade` == "A", ]
+
+df_MAT101_Roster <- df_MAT101_Roster[ order(df_MAT101_Roster$Avg, decreasing = TRUE), ]
+df_MAT101_Roster
+
+
+df_MAT101_Roster$`Final Letter Grade` <- as.character(df_MAT101_Roster$`Final Letter Grade`)
+df_MAT101_Roster$`Final Letter Grade`[df_MAT101_Roster$`Final Letter Grade` == 'C'] <- 'W'
+df_MAT101_Roster$`Final Letter Grade` <- factor(df_MAT101_Roster$`Final Letter Grade`)
+
+table(df_MAT101_Roster$`Final Letter Grade`)
+
+df_MAT101_Roster_Final <- df_MAT101_Roster[!df_MAT101_Roster$`Final Letter Grade` == "W" ,]
+table(df_MAT101_Roster_Final$`Final Letter Grade`)
+
+df_MAT101_Roster_Final <- df_MAT101_Roster_Final[ order(df_MAT101_Roster_Final$LastName, decreasing = FALSE), ]
+df_MAT101_Roster_Final
+
+
+```
+
+
+

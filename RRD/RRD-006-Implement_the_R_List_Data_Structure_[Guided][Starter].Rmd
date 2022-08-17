@@ -1,0 +1,53 @@
+---
+title: "Skillable Data Science Series"
+author: "User 1"
+date: "12/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Lab 06: Implement the R List Data Structure
+```{r Create a Simple List, include= T, warning=F, error=F}
+
+
+
+
+
+
+
+```
+
+## Accessing List Elements/COmponents
+```{r Accessing List Elements, include=T, error=F, warning=F}
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

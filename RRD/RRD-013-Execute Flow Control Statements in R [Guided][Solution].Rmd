@@ -1,0 +1,142 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-013-Execute Flow Control Statements in R [Guided]
+
+## Notes: Flow Control Statements
+- Looping Methods
+  - for loop: iterates the loop element-by-element
+  - while loop: repeat code until a specified condition evaluates to FALSE
+- for Loops
+  - When to stop loop execution in known upfront. 
+    - Ex:
+      - Loop over the number vector elements
+      - Loop over the rows in a data frame
+  - loopindex: an individual element value within the loopvector
+  - loopvector: an iterable object such as a vector
+  - Syntax:
+    ```
+    for(loopindex in loopvector) {
+      # code to loop and repeat
+      
+    }
+    ```
+- while loops:
+  - Used when there is not a built in stop mechanism such as the number of vector elements.
+    - The programmer must write their own counting logic determining when to stop loop execution.
+  - Syntax:
+    ```
+    while(condition) {
+      # code to iterate and execute
+    
+    }
+    ```
+
+## Related Resources: Usefull R functions
+- apply family functions
+  - Performs implicit looping
+    - Can be used in place of a for loop in certain cases
+    - The apply() function takes a function and *applies* it to each *margin* of an array
+    - The apply function takes at least three arguments;
+      - X: specifies the iterable objet
+      - MARGIN: An integer specifying to iterate over rows (1) or columns (2).
+      - FUN: The function to execute against the margin
+  - [apply()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/apply) function used to apply functions over array margins
+    - Best for arrays and matrices
+  - [tapply()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/tapply) function used to apply a function over a Ragged Array
+  - [sapply()](https://r-lang.com/r-sapply/) function used to apply a function to all input elements
+  - [lapply()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/lapply) function used to apply a function over a List or Vector
+- [print()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/print) function used to print values 
+- [cat()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/cat) function used to concatenate and print values 
+- [R Constants](https://stat.ethz.ch/R-manual/R-devel/library/base/html/Constants.html) built in base and core R constants
+- [names()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/names) function to to get or set the names of an object
+- [cbind()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/cbind) function to combine an object by columns (or rbind() for rows).
+
+## Implement an R for loop
+```{r Implement an R for loop, include=TRUE, error=F, warning=F}
+for(idx in 1:10) {
+  
+  print(idx)
+  
+}
+
+for (idx in month.name){
+  print(idx)
+}
+
+```
+## Compare two for loops using idexing and values
+```{r Compare two for loops using indexing and values, include=T, warning=F, error=F}
+v_months <- month.abb
+
+for(idx in v_months){
+  print(idx)
+}
+
+for(idx in 1:length(v_months)){
+  
+  cat('Month number', idx, v_months[idx], '\n')
+  
+}
+
+```
+
+
+## Implement for loop nesting
+```{r Implement for loop nesting, include=TRUE, error=F, warning=F}
+v_names <- c('Jim', 'Lynn', 'Joyce', 'Paul')
+v_majors <- c('Finance', 'Education', 'Computer Science', 'Economics')
+v_GPAs <- c(3.50, 3.50, 2.75, 3.00)
+
+lst_classRoster <- list(Names = v_names, Majors = v_majors, GPAs = v_GPAs)
+lst_classRoster
+
+for(idx_classRoster in names(lst_classRoster)) {
+  
+  if(idx_classRoster == 'GPAs')
+  {
+    for(idx in lst_classRoster[idx_classRoster]){
+      print(idx)
+    }
+  }
+}
+```
+
+## Implement an R while loop
+```{r Implement an R while loop, include=T, error=F, warning=F}
+
+my_counter <- 0 
+
+while(my_counter <= 25) {
+  print(my_counter)
+  my_counter <- my_counter + 1
+}
+
+```
+
+## Implement implicit looping using the apply function
+```{r Implement implicit looping using the apply function, include=T, warning=F, error=F}
+
+m_test <- matrix(1:25, nrow=5, ncol=5)
+m_test
+
+apply(X = m_test, MARGIN = 1, FUN = sum)
+
+m_test <- cbind(m_test, apply(X = m_test, MARGIN =1, FUN = sum))
+m_test <- rbind(m_test, apply(X = m_test, MARGIN = 2, FUN = sum))
+m_test
+```
+
+
+
+
+
+

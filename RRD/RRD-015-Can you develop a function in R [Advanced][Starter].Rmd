@@ -1,0 +1,14 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-015-Can you develop a function in R [Advanced]
+
+

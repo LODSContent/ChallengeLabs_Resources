@@ -1,0 +1,49 @@
+---
+title: "Skillbuilder Base and Core R Programming Fundamentals"
+author: "User 1"
+date: "12/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-007-Implement R Matrices  [Guided]
+
+## The R Matrix Data Structure Object
+### R Data Structures
+- Vector
+  - The simplest and basic R data structure.
+  - A one dimensional array. Can be scalar having a single value
+  - All elements of the same data type
+- List 
+  - An ordered collection of objects
+  - Elements can be of mixed data types
+- Matrix
+  - A 2x2 arrary. Tabular/spreadsheet in nature
+  - created usin the matrix(), cbind(), or bind() functions. 
+- DataFrame - Discussed later in this series.
+- Factor - Discussed later in this series
+
+# Create an R Matrix
+```{r Simple R Matrix, include= T, warning=F, error=F}
+
+
+
+```
+
+# Implementing the R Class Roster Matrix
+```{r Create & Implement a Class Roster, include=T, error=T, warning=T}
+
+
+
+```
+
+# Modifying the R Class Roster Matrix
+```{r Modify the Class Roster Matrix, include=T, warning=F, error=F}
+
+
+
+
+```

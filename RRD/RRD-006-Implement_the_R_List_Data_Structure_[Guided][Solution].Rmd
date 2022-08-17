@@ -1,0 +1,66 @@
+---
+title: "Skillable Data Science Series"
+author: "User 1"
+date: "12/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Lab 06: Implement the R List Data Structure
+```{r Create a Simple List, include= T, warning=F, error=F}
+lst1 <- list("John", "Smith", 24, c("A", "A", "B-", "A", "B"), TRUE)
+typeof(lst1)
+length(lst1)
+lst2 <- list("FirstName" = "Jane", "LastName" ="Doe", "Age"= 24, "Grades" = c("B", "C", "A-", "A", "C"), "Graduated" =TRUE)
+str(lst1)
+str(lst2)
+
+
+
+
+
+```
+
+## Accessing List Elements/COmponents
+```{r Accessing List Elements, include=T, error=F, warning=F}
+lst1
+lst2
+
+lst1[2]
+lst2$FirstName
+lst2[["FirstName"]]
+lst2$Grades[3]
+lst2[["Grades"]][3]
+lst1 <- NULL
+lst2 <-NULL
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

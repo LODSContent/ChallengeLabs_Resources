@@ -1,0 +1,70 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-010-Implement R Factors [Guided]
+## R Factor Resources
+### Notes: R Factors
+- Factors are used for withing with *categorical* or *nominal* data. This is type of data is nonnumerical and categorical in nature. 
+  - **Categorica/Nominal** Data:
+    - Non-numerical
+    - Not continuous such as temperatures, heights, and weights
+    - In this type of data an element or data point belongs to a distinct category
+    - **Levels** are the distinct count of elements within a category(**factor**)
+  - Examples include: 
+    - Gender: Male|Female
+    - Party Affiliation: Republican|Democrat|Independent
+    - Marital Status: married|single|divorced|widowed
+- Factors and R Table objects are frequently used together. 
+- The R data frame default behavior is to make string data types factors. Set **stringAsFactor = FALSE** in the **data.frame()** method to diable this feature.
+- Factors have *levesl* which is a disctinct value count
+
+### Related Links
+- [Factors in R](https://www.stat.berkeley.edu/~s133/factors.html) an article from UC Berkeley
+- [factor()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/factor) function used to create factors in R
+- [levels()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/levels) function for level attributes
+- [table()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/table) function for cross tabulation and table creation
+
+## Implement a simple R factor
+```{r Implment a simple R factor, include=T, error=F, warning=F}
+
+
+
+
+```
+
+## Examine an R factor
+```{r Examine an R factor, include=T, error=F, warning=FALSE}
+
+
+
+
+```
+
+## Use the levels attribute and levels function
+```{r Use the levels attribute and levels function, include=T, error=F, warning=F}
+
+
+
+
+
+```
+
+## Implement factors in a data frame
+```{r Implement factors in a data frame, include= T, error= F, warning=F}
+
+
+
+
+```
+
+
+
+

@@ -1,0 +1,106 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-011-Can you implement Data Frames and Factors in R? [Advanced]
+## R Data Frame & Factor Resources
+### Notes: R Data Frames
+- Resources:
+  - [data.frame()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/data.frame) function used to create R data frame objects
+    - stringsAsFactors: default = TRUE; Sets character vectors to factors if TRUE
+  - Data Frame Subsetting:
+    - [How to Subset a Data Frame in R (4 Examples)](https://www.statology.org/subset-data-frame-in-r/)
+    - (How To Subset An R Data Frame – Practical Examples)[https://www.programmingr.com/examples/r-dataframe/subset-an-r-data-frame/]
+  - Data Frame Operations:
+    - [merge()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/merge) function to merge/join two data frames
+
+### Notes: R Factors
+- Factors are used for withing with *categorical* or *nominal* data. This is type of data is nonnumerical and categorical in nature. 
+  - **Categorica/Nominal** Data:
+    - Non-numerical
+    - Not continuous such as temperatures, heights, and weights
+    - In this type of data an element or data point belongs to a distinct category
+    - **Levels** are the distinct count of elements within a category(**factor**)
+  - Examples include: 
+    - Gender: Male|Female
+    - Party Affiliation: Republican|Democrat|Independent
+    - Marital Status: married|single|divorced|widowed
+- Factors and R Table objects are frequently used together. 
+- The R data frame default behavior is to make string data types factors. Set **stringAsFactor = FALSE** in the **data.frame()** method to diable this feature.
+- Factors have *levesl* which is a disctinct value count
+
+### Related Links
+- [Factors in R](https://www.stat.berkeley.edu/~s133/factors.html) an article from UC Berkeley
+- [factor()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/factor) function used to create factors in R
+- [levels()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/levels) function for level attributes
+- [table()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/table) function for cross tabulation and table creation
+
+## Creeate R data frame objects
+```{r Create R data frame object, include = T, error=F,warning=F}
+v_userIDs <- c(1001, 1002, 1003)
+v_FirstNames <- c('Fred', 'Mary', 'Peter')
+v_LastNames <- c('Johnson', 'Smith', 'Reeves')
+v_emails <- c('fred.johnson@test.com', 'mary_smith@test.com', 'reevp@example.org')
+
+df_Users1 <- data.frame(UserID = v_userIDs, FirstName = v_FirstNames, LastName = v_LastNames, Email = v_emails, stringsAsFactors = FALSE)
+df_Users1
+str(df_Users1)
+
+v_maritalstatus <- c('married', 'married', 'divorced')
+f_maritalstatus <- factor( v_maritalstatus, levels = c('married', 'divorced', 'widowed'))
+df_Users2 <- data.frame(UserID = v_userIDs, MaritalStatus = f_maritalstatus, stringsAsFactors = FALSE)
+df_Users2
+str(df_Users2)
+
+
+
+```
+## Join two data frames
+```{r Join two data frames, include= T, warning=F, error=F}
+
+df_Users <- merge(df_Users1, df_Users2, by = 'UserID')
+df_Users
+
+df_Users <- rbind(df_Users,c(1004,'Henry','Jones','jonesh@example.edu','married'))
+df_Users <- rbind(df_Users,c(1005,'Linda','Washington','washlin@test.org','divorced'))
+df_Users <- rbind(df_Users,c(1006,'Laura','Fine','laura.fine@test.us','divorced'))
+df_Users
+dim(df_Users)
+colnames(df_Users)
+
+
+```
+
+## Select and query data from an R data frame
+```{r Select and query data from an R data frame, include= T, error=F, warning=F}
+df_Users[ df_Users['MaritalStatus'] == 'married', ]
+
+df_Users[order(df_Users$LastName, decreasing = FALSE), ]
+
+
+```
+
+## Modify an R data frame row
+```{r Modify an R data frame row, include=T, error=F, warning=F}
+
+df_Users[df_Users['UserID'] ==1005, ]
+df_Users[df_Users$UserID == 1005, ]$LastName <- 'Brown'
+df_Users[df_Users$UserID == 1005, ]$MaritalStatus <- 'married'
+df_Users[order(df_Users$LastName, decreasing = FALSE), ]
+
+
+```
+
+
+
+
+
+
+

@@ -1,0 +1,59 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# RRD-008-Can you Implement Vectors, Lists, and Matrices in R? [Advanced]
+
+## Implement R Vector Objects
+```{r Implement Vectors, include=T, warning=F, error=F}
+
+
+```
+
+
+
+## Implement R List Objects
+```{r Implement Lists, include=T, error=F, warning=F}
+
+
+
+```
+
+
+## Implement R Matrix Objects
+```{r Implement Matricies, error=F, include=T, warning=F}
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,48 @@
+---
+title: 'Lab 05: Programming R Vectors'
+author: "User 1"
+date: "12/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE, error=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Lab 05: Implementing R Vectors #
+
+## Create Simple R Vectors ##
+```{r Create R Vectors, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+```
+
+## Create and Implement multi-element R Vectors ##
+```{r Multi-Element Vectors, include=TRUE, error=FALSE, warning= FALSE}
+v2 <- c(5, 5, 5, 10, 10, 6, 8, 3, 7, 9)
+typeof(v2)
+length(v2)
+```
+
+## Access Vector Elements ##
+```{r include=TRUE, error=FALSE, warning=FALSE}
+v2[4]
+v2[1:4]
+v2[v2 > 5]
+
+```
+## Summary statistics ##
+```{r Summary Stats, include=T, error=F, warning=F}
+mean(v2)
+median(v2)
+
+```
+
+## Vector Deletion ##
+```{r Vector Deletion, include=T, error=F, warning=F}
+v1 <- NULL
+v2 <- NULL
+
+```
+

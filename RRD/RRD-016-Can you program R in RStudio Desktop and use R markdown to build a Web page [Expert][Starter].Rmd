@@ -1,0 +1,40 @@
+---
+title: 'Skillable: RRD - Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "1/10/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Create the base vector data sources
+
+
+## Create the class roster data frame
+
+
+## Add Additional Rows & Cols
+
+
+## Creating calculated fields: Total Points & Avg
+
+
+## Create the score to letter grade function
+
+
+## apply the letter grade function & convert to factor
+
+## Add additional students (rows)
+
+### Calculate Total Score, Avg, and Letter Grade for new students
+
+## Reporting
+
+### What's the letter grade distribution?
+
+
+
+
+

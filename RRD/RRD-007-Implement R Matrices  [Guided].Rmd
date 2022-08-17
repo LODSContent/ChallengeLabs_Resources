@@ -1,0 +1,73 @@
+---
+title: "Skillbuilder Base and Core R Programming Fundamentals"
+author: "User 1"
+date: "12/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-007-Implement R Matrices  [Guided]
+
+## The R Matrix Data Structure Object
+### R Data Structures
+- Vector
+  - The simplest and basic R data structure.
+  - A one dimensional array. Can be scalar having a single value
+  - All elements of the same data type
+- List 
+  - An ordered collection of objects
+  - Elements can be of mixed data types
+- Matrix
+  - A 2x2 arrary. Tabular/spreadsheet in nature
+  - created usin the matrix(), cbind(), or bind() functions. 
+- DataFrame - Discussed later in this series.
+- Factor - Discussed later in this series
+
+# Create an R Matrix
+```{r Intro, include= T, warning=F, error=F}
+
+m1 <- matrix(1:9, ncol = 3, nrow = 3)
+m1
+dim(m1)
+
+m2 <- matrix(1:9, ncol = 3, nrow = 3, byrow = TRUE)
+m2
+
+m_classRoster <- matrix(c(1001, "John", "Smith", "A", 1002, "Jane", "Jackson", "A+", 1003, "Ralph", "Pederson", "B-"), ncol = 4, nrow = 4, byrow = TRUE)
+m_classRoster
+dim(m_classRoster)
+
+
+
+```
+
+# Implementing the R Class Roster Matrix
+```{r Implement, include=T, error=T, warning=T}
+
+colnames(m_classRoster) = c("StudentID", "FirstName", "LastName", "Grade")
+m_classRoster
+m_classRoster[c(1,2), c(2,3)]
+m_classRoster[, "FirstName"]
+
+
+
+
+```
+
+# Modifying the R Class Roster Matrix
+```{r modify, include=T, warning=F, error=F}
+
+m_classRoster[1, 2] <- "George"
+m_classRoster
+
+mt_classRoster = t(m_classRoster)
+mt_classRoster
+
+mt_classRoster <- NULL
+
+
+```
+

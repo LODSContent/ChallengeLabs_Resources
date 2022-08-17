@@ -1,0 +1,84 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-009-Implement R Data Frame Fundamentals [Guided]
+
+## The R Data Frame:
+- A 2 dimensional spreadsheet-like data structure similar to a database table
+   - Think rows X columns
+- An important R construct used R data structure in data science and statistical analysis
+- Can be thought of as a special kind of list:
+  - Can store various data types such as numbers, text, and logical variables
+  - **CRITICAL**: Data frame members must all be equal length vectors.
+
+## Create and examine R data frame object
+```{r create an R data frame, include=T, warning=F, error=T}
+
+v__StudentID <- c(1001,1002,1003)
+v_FirstName <- c('John', 'Linda', 'Tyra')
+v_LastName <- c('Smith', 'Jones', 'Johnson')
+v_Major <- c('Computer Sci', 'Data Sci', 'Finance')
+v_GPA <- c(3.75, 3.65,3.75)
+
+df_classRoster <- data.frame( StudentID = v__StudentID, FirstName = v_FirstName, LastName = v_LastName, Major = v_Major, GPA = v_GPA, stringsAsFactors = FALSE )
+
+df_classRoster
+str(df_classRoster)
+dim(df_classRoster)
+colnames(df_classRoster)
+
+
+```
+## Select and query data from an R data frame
+```{r select and query, include=T, error = T, warring = T}
+
+df_classRoster[2:3]
+df_classRoster[c('FirstName', 'LastName')]
+df_classRoster[df_classRoster['GPA'] >= 3.75, ]
+
+mean( df_classRoster[["GPA"]])
+
+```
+
+## Modify an R data frame
+```{r modify an R data frame, include= T, error= F , warning= F}
+df_classRoster <- rbind(df_classRoster, c(1004, 'Fred', 'Brown','Psychology', 2.75))
+df_classRoster <- rbind(df_classRoster, c(1005, 'Angie', 'Watson', 'Business', 3.00))
+df_classRoster
+
+gpa_sort <- order(df_classRoster$GPA, decreasing = TRUE)
+df_classRoster <- df_classRoster[gpa_sort, ]
+df_classRoster
+
+df_classRoster <- df_classRoster[df_classRoster$GPA > 3.00, ]
+df_classRoster
+
+```
+
+# Data Frame Resouces:
+
+## Links:
+- [data.frame()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/data.frame)
+  - [R CODER](https://r-coder.com/dataframe-r/) article, "DataFrame in R"
+  - [stringAsFactors = TRUE(default) | FALSE](https://developer.r-project.org/Blog/public/2020/02/16/stringsasfactors/index.html)
+- [str()](https://www.rdocumentation.org/packages/utils/versions/3.6.2/topics/str) function for data frame structure
+- [dim()](https://r-lang.com/dim-in-r/) function for data frame dimensions rowsXcols
+- [colnames()](https://rdrr.io/r/base/colnames.html) function to list column names
+- [head()]() function ouput the first n number of rows
+- [tail()]() function output the last n number of rows
+- [summary()]() function output summary statistics
+- [cbind()]() function used to add columns
+- [rbind()]() function used to add rows
+- [order()](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/order) function used to sort and order data
+
+
+
+

@@ -1,0 +1,76 @@
+---
+title: 'Skillable: Introduction to R & RStudio Desktop'
+author: "User 1"
+date: "12/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RRD-015-Can you develop a function in R [Advanced]
+```{r f_to_letter_grade definition, include=TRUE, error=FALSE, warning=FALSE}
+
+# Function Definition
+f_to_letter_grade <- function(score){
+    
+  if(score >= 90 && score <= 100){
+    cat('Final Letter Grade: A')
+  } else if( score >= 80 && score < 90){
+    cat('Final Letter Grade: B')
+  } else if (score >= 70 && score < 80){
+    cat('Final Letter Grade: C')
+  } else if (score >= 60 && score < 70){
+    cat('Final Letter Grade: D')
+  } else if(score < 60){
+    cat('Final Letter Grade: F')
+  } else {
+    cat('Final Letter Grade: N/A')
+  }
+  
+}
+
+# Tests
+f_to_letter_grade(94)
+f_to_letter_grade(89)
+f_to_letter_grade(72)
+f_to_letter_grade(63)
+f_to_letter_grade(59)
+f_to_letter_grade(1000)
+
+
+```
+```{r f_to_letter_grade_v2 definition, include=TRUE, error=FALSE, warning=FALSE}
+f_to_letter_grade <- function(score){
+  if(score >= 90 && score <= 100){
+    return('A')
+  } else if( score >= 80 && score < 90){
+    return('B')
+  } else if (score >= 70 && score < 80){
+    return('C')
+  } else if (score >= 60 && score < 70){
+    return('D')
+  } else if(score < 60){
+    return('F')
+  } else {
+    return('N/A')
+  }
+  
+}
+```
+
+```{r implment f_to_letter_grade_v2 in a data frame, include=TRUE, error=FALSE, warning=FALSE}
+
+v_studentID <- c(1001, 1002, 1003)
+v_names <- c('John', 'Lynn', 'Joe')
+v_scores <- c(98, 73, 88)
+
+df_classRoster <- data.frame(StudentID = v_studentID, StudentName = v_names, Scores = v_scores )
+
+
+df_classRoster <- cbind( df_classRoster, 'Letter Grade' = sapply( X = df_classRoster$Scores,f_to_letter_grade) )
+
+df_classRoster
+
+```
