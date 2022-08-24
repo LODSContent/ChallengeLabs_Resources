@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-## Create an simple matrix
+## Create a simple matrix
 ```{r Create a simple matrix, include= T, warning=F, error=F}
 
 
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-## Create an simple matrix by row
+## Create a simple matrix by row
 ```{r Create a simple matrix by row, include= T, warning=F, error=F}
 
 

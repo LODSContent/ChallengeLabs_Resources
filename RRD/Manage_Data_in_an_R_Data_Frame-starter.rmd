@@ -33,7 +33,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Extract data from a data frame
-```{r Extract data from a data frame, include=T, error = T, warring = T}
+```{r Extract data from a data frame, include=T, error = T, warning = T}
 
 
 
