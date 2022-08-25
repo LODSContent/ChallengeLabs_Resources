@@ -9,4 +9,8 @@ public class TestMovie {
    public static void printMovieList() {
 	   
    }
+
+   public static void findByDirector() {
+      
+   }
 }
