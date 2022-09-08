@@ -1,0 +1,76 @@
+---
+title: 'DVRS-006: Can you work with data distributions using R in RStudio?[Advanced]'
+author: "Skillable"
+date: '2022-06-18'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load and prepare the data
+
+```{r Requirement 1, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+```
+## Explore and Prepare the Data Set
+```{r Requirement 2, echo=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+## Compare Bar & Histogram Plots
+
+```{r Requirement 3, echo=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+## Configure Histogram Plots
+
+```{r Requirement 3, echo=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+ 
+```
+
+
+```{r Requirement a, echo=FALSE, error=FALSE, warning=FALSE}
+
+
+
+
+
+```
+
+## Label a Boxplot
+
+```{r Requirement b, echo=FALSE, error=FALSE, warning = FALSE}
+
+
+
+
+
+```
+
+## Embellish a Boxplot
+
+```{r Requirement c, echo=TRUE, error =FALSE, warning=FALSE}
+
+
+
+
+
+
+```
