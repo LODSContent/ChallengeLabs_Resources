@@ -1,0 +1,476 @@
+---
+title: "R Data Visualisation"
+author: "Skillable.com"
+date: '2022-04-20'
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+# R Data Visualization
+
+```{r Lab03_Working_With_Categorical_Data, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+```
+
+## Statistical & Data Science: Key terms & Concepts:
+
+-   Independent Variable
+
+    -   The x-axis
+
+    -   What's being manipulated or changed
+
+    -   The **predictor**/cause/exploratory variable
+
+-   Dependent Variable
+
+    -   The y-axis
+
+    -   What's being measured
+
+    -   The **prediction**/response variable
+
+## Exploring New Data Sets
+
+1.  Look at the fundamentals. What are they?
+
+    1.  How many records are there?
+
+    2.  What are the variable names and data types?
+
+    3.  What are the unique factors?
+
+    4.  Is there missing data?
+
+2.  Calculate descriptive statistics for the variables
+
+    1.  Correlation plots?
+
+    2.  Box plots?
+
+3.  Look for data anomalies
+
+4.  Identify relationships
+
+5.  Document your findings
+
+## Statistical & Data Science Data Categories:
+
+Information and data can be presented and encoded in various format for storage and communication. The two most common formats used are numeric and categorical.
+
+-   Numerical Data - Quantitative
+
+    -   Continuous Data
+
+        -   Any number on a number line line from (-$\infty$, $\infty$).
+        -   Unlimited number of possible values - limited by the domain
+        -   Think about fractional and decimal values
+        -   Intervals & Ratios
+        -   Allow antithetic operations, sorting, and ordering
+        -   Population moments provide insights into data distribution
+            -   Measures of Central Tendency: Mean, mode, and median
+
+            -   Spread: Range, IQR (inter-quartile range), variance, standard deviation
+
+            -   Skewness
+
+            -   Peakedness
+        -   Examples:
+            -   Dates
+
+            -   Times
+
+            -   Weight: 162.4 lbs, 162.7 lbs
+
+            -   Temperature: 95.5°, 95.4°
+
+    -   Discrete(count) Data
+
+        -   Limited domain of possible values
+
+            -   Whole numbers - no fractions or decimal points
+
+            -   Can be categorical or nominal
+
+            -   Can be ordered or counted (frequency), but do not permit arithmetic operations - rather arithmetic operations are meaningless.
+
+                -   List US states alphabetically
+
+                -   Does it make sense to sum up all the area codes in the customer database?
+
+                -   Does it make sense to sort by product id? Maybe.
+
+                -   Does it make sense to get the average product id? Not really.
+
+        -   Examples:
+
+            -   Number of states within a particular country
+
+            -   Status codes
+
+            -   Number of books I own
+
+            -   Number of friends I have
+
+            -   Number of children in a family 😉
+
+            -   Rankings
+
+-   Categorical Data - Qualitative
+
+    -   Ordinal (ordered) Data
+
+        -   Can be sorted or ranked
+
+        -   Example, ranking questions on a survey
+
+    -   Nominal (unorderd) Data
+
+        -   Not sorted or ranked
+
+        -   Example, political party affiliation
+
+-   Distribution - Probability that a value will occur at random
+
+    -   Need: Mean and Variance
+
+    -   Continuous Distributions
+
+        -   Normal
+
+        -   T-Distribution
+
+        -   Chi-Squared
+
+        -   Logisitic
+
+    -   Discrete Distributions
+
+        -   Binomial
+
+        -   Poisson
+
+-   Time Series
+
+    -   A series or sequene of data points ordered in time.
+
+        -   t - n: lag time, the previous observation
+
+        -   t: The current observation
+
+        -   t + n: lead time, the next observation
+
+    -   Time series data is usually used to predict and forecast trends
+
+    -   Examples
+
+        -   Moving averages
+
+        -   Month-over-Month/Year-over-Year calculations
+
+-   Hierarchical Data
+
+    -   Part to whole data
+
+-   Relational Data
+
+    -   Is there a relationship between the data?
+
+        -   Correlated and connected data
+
+    -   Do not confuse with relational database normalization
+
+## [Statistical & Data Science Chart Families by Data Category](http://chartmaker.visualisingdata.com/)\*:
+
+-   Amounts per Category
+
+    -   Matrix chart
+
+        -   A matrix chart displays quantitative values at the intersection between two categorical dimensions. The chart comprises two categorical axes with each possible value presented across the row and column headers of a table layout. Each corresponding cell is then marked by a geometric shape with its area sized to represent a quantitative value and colour often used visually to distinguish a further categorical dimension. While they are most commonly seen using circles, you can use other proportionally sized shapes.
+
+    -   Bar Chart
+
+        -   A bar chart displays quantitative values for different categories. The chart comprises line marks (bars) -- not rectangular areas -- with the size attribute (length or height) used to represent the quantitative value for each category.
+
+        -   The most frequently used visualization to display amounts (counts)
+
+        -   For two or more categories consider stacked bar charts
+
+        -   Not to be confused with a histogram
+
+    -   Histogram
+
+        -   A histogram displays the frequency and distribution for a range of quantitative groups. Whereas bar charts compare quantities for different categories, a histogram technically compares the number of observations across a range or value 'bins' using the size of lines/bars (if the bins relate to values with equal intervals) or the area of rectangles (if the bins have unequal value ranges) to represent the quantitative counts. With the bins arranged in meaningful order (that effectively form ordinal groupings) the resulting shape formed reveals the overall pattern of the distribution of observations. When looking at the distribution of values across two dimensions, a 'back-to-back' layout might be used, commonly known as a 'violin plot', to help compare the respective shapes.
+        -   **Tip**: Experiment with different bin widths
+        -   **Tip**: Check to make sure your density estimates do not predict nonsensical data
+
+    -   Dot Plot
+
+        -   A dot plot displays the distribution of a series of quantitative values for different categories. In contrast to the box-and-whisker plot, which shows selected statistical values, a dot plot shows all values across a series. For each item of data, a range of points (typically circles but any 'symbol' is legitimate) are used to mark the position along the scale of the quantitative values. From this you can see the range, the outliers and the clusters and form an understanding about the general shape of the data.
+
+    -   Heat map
+
+        -   A heat map displays quantitative values at the intersection between two categorical dimensions. The chart comprises two categorical axes with each possible value presented across the row and column headers of a table layout. Each corresponding cell is then color-coded to represent a quantitative value for each combination of category pairing. It is not easy for the eye to determine the exact quantitative values represented by the colours, even if there is a colour scale provided, so heat maps mainly facilitate a gist of the order of magnitude.
+
+    -   Density Plot
+
+        -   Density plots can be thought of as plots of smoothed histograms. The smoothness is controlled by a bandwidth parameter that is analogous to the histogram bin width. Most density plots use a kernel density estimate, but there are other possible strategies; qualitatively the particular strategy rarely matters.
+
+    -   Box plot / Box-and-whisker Plot
+
+        -   A box-and-whisker plot displays the distribution and shape of a series of quantitative values for different categories. The display is formed by a combination of lines and point markers to indicate (through position and length), typically, five different statistical measures. Three of the statistical values are common to most plots: the first quartile (25th percentile), the second quartile (or median) and the third quartile (75th percentile) values. These are displayed with a box (effectively a wide bar) positioned and sized according to the first and third quartile values with a marker indicating the median. The remaining two statistical values vary in definition: usually either the minimum and maximum values or the 10th and 90th percentiles. These statistical values are represented by extending a line beyond the bottom and top of the main box to join with a point marker indicating the appropriate position. These are the whiskers. Variations exist using different statistical measures such as the 25th & 75th percentiles or, as with the OHLC chart, the opening, highest, lowest and closing values (for a stock).
+
+    -   Word Cloud
+
+        -   A word cloud shows the frequency of individual word items used in sets of text data (such as tweets, comments) or documents (passages, articles). The display is based around an enclosed cluster of words with the font (not the word length) sized according to the frequency of usage. In modifying the size of font this is effectively increasing the area size of the whole word. All words have a different shape and size so this can make it quite difficult to avoid the prominence of long words, irrespective of their font size. Word clouds are therefore only useful when you are trying to get a quick and rough sense of some of the dominant keywords used in the text. They can be an option for working with qualitative data during the data exploration stage, more so as a means for reporting analysis to others.
+
+-   Relational
+
+    -   Scatter Plot
+
+        -   A scatter plot displays the relationship between two quantitative measures for different categories. Scatter plots are used to explore visually the potential existence, extent or absence of a significant relationship between the plotted variables. The display is formed by points (usually a dot or circle), representing each category and plotted positionally along quantitative x- and y-axes. Sometimes coloris used visually to distinguish categorical dimensions across all the points. Scatter plots do not work too well if one or both of the quantitative measures has limited variation in value as this especially causes problems of 'occlusion', whereby multiple instances of the similar values are plotted on top of each other and essentially hidden from the reader. A 'ternary plot' is a variation of the scatter plot through the inclusion of a third quantitative variable axis.
+
+    -   Bubble Plot
+
+        -   A bubble chart or proportional shape chart displays quantitative values for different categories. The chart is based on the use of different circle area marks, one for each item of data presented, sized in proportion to the quantitative value. By using the quadratic dimension of area size rather than the linear dimension of bar length or dot position, this chart offers scope for displaying a diverse range of quantitative values within a compact chart area. Typically the layout is quite free-form with no meaningful baseline or central gravity binding the display together. A circle packing diagram is a derivative hierarchical display using circles to show how the quantities of different constituent parts make up a whole. It is similar in concept to the bubble chart but is optimally packed into a circular layout to representing a rough notion of a 'whole' enclosure.
+
+    -   Venn Diagram
+
+        -   A Venn diagram shows collections of and relationships between multiple sets. They typically use round or elliptical containers to represent all different 'membership' permutations to include all independent and intersecting containers. The size of the contained area is (typically) not important: what is important is in which containing region a value resides, which may be represented through the mark of a text label or 'point'. A common variation or alternative to the Venn (but often mistakenly called a Venn) is the 'Euler diagram'. The difference is that an Euler diagram does not need to present all possible intersections with and independencies from all sets.
+
+    -   Network Diagram
+
+        -   Network diagrams display relationships through the connections between categorical 'entities'. The entry-level version of this type of diagram displays entities as nodes (represented by point marks and usually including a label) with links or edges (represented by lines) depicting the existence of connections. The connecting lines will often display an attribute of direction to indicate the influencer relationship. In some versions a quantitative weighting is applied to the show relationship strength, maybe through increased line width. Replacing point marks with a geometric shape and using attributes of size and colour is a further variation. Often the complexity seen in these displays is merely a reflection of the underlying complexity of the subject and/or system upon which the data is based, so oversimplifying can compromise the essence of such content.
+
+-   Temporal
+
+    -   Line Chart
+
+        -   A line chart shows how quantitative values for different categories have changed over time. They are typically structured around a temporal x-axis with equal intervals from the earliest to latest point in time. Quantitative values are plotted using joined-up lines that effectively connect consecutive points positioned along a y-axis. The resulting slopes formed between the two ends of each line provide an indication of the local trends between points in time. As this sequence is extended to plot all values across the time frame it forms an overall line representative of the quantitative change over time story for a single categorical value. Multiple categories can be displayed in the same view, each represented by a unique line. Sometimes a point (circle/dot) is also used to substantiate the visibility of individual values. The lines used in a line chart will generally be straight. However, sometimes curved line interpolation may be used as a method of estimating values between known data points. This approach can be useful to help emphasise a general trend. While this might slightly compromise the visual accuracy of discrete values if you already have approximations, this will have less impact.
+
+    -   Area Chart
+
+        -   A line chart shows how quantitative values for different categories have changed over time. They are typically structured around a temporal x-axis with equal intervals from the earliest to latest point in time. Quantitative values are plotted using joined-up lines that effectively connect consecutive points positioned along a y-axis. The resulting slopes formed between the two ends of each line provide an indication of the local trends between points in time. As this sequence is extended to plot all values across the time frame it forms an overall line representative of the quantitative change over time story for a single categorical value. To accentuate the magnitude of the quantitative values and the change through time the area beneath the line is filled with colour. The height of each coloured layer at each point in time reveals its quantity. Area charts can display values for several categories, using stacks, to show also the changing part-to-whole relationship.
+
+    -   Gantt Chart
+
+        -   A Gantt chart displays the start and finish points and durations for different categorical 'activities'. The display is commonly used in project management to illustrate the breakdown of a schedule of tasks but can be a useful device to show any data based on milestone dates and durations. The chart is structured around a time-based quantitative x-axis and a categorical y-axis. Each categorical activity is represented by lines positioned according to the start moment and then stretched out to the finish point. There may be several start/finish durations within the same activity row. Sometimes points are used to accentuate the start/finish positions and the line may be coloured to indicate a relevant categorical value (e.g. separating completed vs ongoing).
+
+-   Hierarchical
+
+    -   Stacked bar chart
+
+        -   A stacked bar chart displays a part-to-whole breakdown of quantitative values for different major categories. The percentage proportion of each categorical dimension or 'part' is represented by separate bars, distinguished by colour, that are sized according to their proportion and then stacked to create the whole. Sometimes the whole is standardised to represent 100%, at other times the whole will be representative of absolute values. Stacked bar charts work best when the parts are based on ordinal dimensions, which enables ordering of the parts within the stack to help establish the overall shape of the data. If the parts are representative of nominal data, it is best to keep the number of constituent categories quite low as estimating the size of individual stacked parts when there are many becomes quite hard.
+
+    -   Pie Chart
+
+        -   A pie chart shows how the quantities of different constituent categories make up a whole. It uses a circular display divided into sectors for each category, with the angle representing each of the percentage proportions. The resulting size of the sector (in area terms) is a spatial by-product of the angle applied to each part and so offers an additional means for judging the respective values. The primary value of a pie chart is to faciliate comparing a part to a whole rather than comparing one part to another part, which means they work best when there are only two or three parts included at most. There are a few important rules for pie charts. Firstly, the total percentage values of all sector values must be 100%; if the aggregate is greater than or less than 100% the chart will be corrupted. Secondly, the whole has to be meaningful -- often people just add up independent percentages but that is not what a pie chart is about. Finally, the category values must represent exclusive quantities; nothing should be counted twice or overlap across different categories. Despite all these warnings, do not be afraid of the pie chart -- just use it with discretion.
+
+    -   Donut Chart
+
+        -   A donut chart shows how the quantities of different constituent categories make up a whole. It uses a hollowed-out circular display divided into sectors for each category, with the arc lengths representing each of the percentage proportions. The function is exactly the same as a pie chart but the removal of the centre, often to accommodate a labelling property, inevitably removes the possibility of the reader judging the angles at the origin. The primary value of a donut chart is to faciliate comparing a part to a whole rather than comparing one part to another part, which means they work best when there are only two or three parts included at most. There are a few important rules for pie charts. Firstly, the total percentage values of all sector values must be 100%; if the aggregate is greater than or less than 100% the chart will be corrupted. Secondly, the whole has to be meaningful -- often people just add up independent percentages but that is not what a pie chart is about. Finally, the category values must represent exclusive quantities; nothing should be counted twice or overlap across different categories.
+
+    -   Treemap
+
+        -   A treemap is an enclosure diagram providing a hierarchical display to show how the quantities of different constituent parts make up a whole. It uses a contained rectangular layout (often termed 'squarified') representing the 100% total divided into proportionally sized rectangular tiles for each categorical part. Colour can be used represent an additional quantitative measure, such as an indication of amount of change over a time period. The absolute positioning and dimension of each rectangle is organised by an underlying tiling algorithm to optimise the overall space usage and to cluster related categories into larger rectangle-grouped containers. Treemaps are most commonly used, and of most value, when there are many parts to the whole but they are only valid if the constituent units are legitimately part of the same 'whole'. A variation of the treemap sees the rectangular layout replaced by a circular one and the rectangular tiles replaced by organic shapes. These are known as 'Voronoi treemaps' as the tiling algorithm is informed by a Voronoi tessellation.
+
+-   Spatial
+
+    -   Choropleth map
+
+        -   A choropleth map displays quantitative values for distinct, definable spatial regions on a map. Each geographic region is represented by a polygonal area based on its outline shape, with each distinct shape then collectively arranged to form the entire landscape. (Note that most tools for mapping have a predetermined reference between a region name and the dimensions of the regional polygon.) Each area is color-coded to represent a quantitative value based on a scale with color variation intervals that (typically) go from a light tint for smaller values to a dark shade for larger values. Choropleth maps should only be used when the quantitative measure is directly associated with and continuously relevant across the spatial region on which it will be displayed. Similarly, if your quantitative measure is about or related to the consequence of more people living in an area, interpretations may be distorting, so consider transforming your data to per capita or per acre (or other spatial denominator) to standardise the analysis accordingly. 'Dasymetric mapping' is similar in approach to choropleth mapping but breaks the constituent regional areas into much more specific, almost custom-drawn, sub-regions to better represent the realities of the distribution of human and physical phenomena within a given spatial boundary.
+
+    -   Dot map
+
+        -   A dot map displays the geographic density and distribution of phenomena on a map. It uses a point marker to indicate a categorical 'observation' at a geographical coordinate, which might be plotting instances of people, notable sites or incidences. The point marker is usually a filled, small dot. Colour can be used to distinguish categorical classifications. Sometimes a dot represents a one-to-one phenomenon (i.e. a single record at that location) and sometimes a dot will represent one-to-many phenomena (i.e. for an aggregated statistic whereby the location represents a logical mid-point.). As the proliferation of GPS recording devices increases, the accuracy and prevalence of detailed location marked incidences are leading to increased potential for this type of approach. However, think carefully about the potential sensitivity of directly plotting a phenomenon or data incidence at a given location. A 'dot density map' is a variation that involves plotting a representative quantity of dots equally (but randomly) across and within a defined spatial region. The position of individual dots is therefore not to be read as indicative of precise locations but used to form a measure of quantitative density.
+
+## 
+
+## Appendix
+
+### Frequently Used Packages
+
+-   Fundamental Packages
+
+    -   [base](https://rdocumentation.org/packages/base/versions/3.6.2)- The core R package
+
+    -   [utils](https://www.rdocumentation.org/packages/utils/versions/3.6.2)- Contains commonly used additional functionality frequently used by data scientists
+
+    -   [stats](https://www.rdocumentation.org/packages/stats/versions/3.6.2)- The central R statistical package
+
+    -   [graphics](https://www.rdocumentation.org/packages/graphics/versions/3.6.2)- The primary R graphics package
+
+    -   [fields](https://www.rdocumentation.org/packages/fields/versions/13.3) - Additional graphics support
+
+    -   [grid](https://www.rdocumentation.org/packages/grid/versions/3.6.2)- The foundation package for R lattice and ggplot
+
+-   Data Related
+
+    -   [DescTools](https://www.rdocumentation.org/packages/DescTools/versions/0.99.44) - Tools for Descriptive Statistics and Exploratory Data Analysis
+
+    -   [HistData](https://www.rdocumentation.org/packages/HistData/versions/0.8-7)- Historical data that can be used when learning R.
+
+    -   [sqldf](https://www.rdocumentation.org/packages/sqldf/versions/0.4-11)- Use SQL commands in R
+
+### Frequently Used Functions
+
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| Package      | Function Name  | Description                                                                                | Help & More Information                                                                                        |
++==============+================+============================================================================================+================================================================================================================+
+| graphics     | `abline`       | Adds lines to data visualizations such as trend lines.                                     | [Online documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/abline)          |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `abs`          | Calculate the absolute value                                                               | [Online Documentation](https://www.rdocumentation.org/packages/SparkR/versions/2.1.2/topics/abs)               |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `as.factor`    | Convert to Factor data type                                                                | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/factor)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `as.matrix`    | Convert to Matrix date type                                                                | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/matrix)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `as.numeric`   | Convert to Numeric data type                                                               | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/numeric)             |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `attach`       | A helpful function for adding a data frame to the R search path for convenience.           | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/attach)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `axis`         | Draws axes on plots                                                                        | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/Axis)            |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `barplot`      | Draws the standard bar plot                                                                | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/barplot)         |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `boxplot`      | Draws a boxplot                                                                            | [Online Documentation](https://rdocumentation.org/packages/graphics/versions/3.6.2/topics/boxplot)             |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `c`            | Standard function that combines elements to create a vector                                | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/c)                   |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `cbind`        | Adds columns to a data frame                                                               | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/cbind)               |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `colnames`     | List row and column names from a matrix or data frame                                      | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/row+colnames)        |
+|              |                |                                                                                            |                                                                                                                |
+|              | `rownames`     |                                                                                            |                                                                                                                |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `cumsum`       | Calculates the cumulative sum                                                              | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/cumsum)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `data.frame`   | Crate a date frame                                                                         | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/data.frame)          |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| utils        | `data`         | Used to load built in R data frames                                                        | [Online Documentation](https://www.rdocumentation.org/packages/utils/versions/3.6.2/topics/data)               |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `factor`       | Convert a variable to a factor                                                             | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/factor)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| DescTools    | `Freq`         | Create a frequency table                                                                   | [Online Documentation](https://www.rdocumentation.org/packages/DescTools/versions/0.99.44/topics/Freq)         |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `hist`         | Draws a histogram                                                                          | [Online Documentation](https://rdocumentation.org/packages/graphics/versions/3.6.2/topics/hist)                |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| ursa         | `is.na`        | Checks for 'NA' and missing values                                                         | [Online Documentation](https://www.rdocumentation.org/packages/ursa/versions/3.9.6/topics/is.na)               |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `lapply`       | Used to perform implicit looping over vectors, arrays, and lists                           | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/lapply)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `legend`       | Adds a legend to an R plot                                                                 | [Online Documentation](https://rdocumentation.org/packages/graphics/versions/3.6.2/topics/legend)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `length`       | Returns the number of elements in an R data structure                                      | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/length)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `levels`       | Used with factors to query or define categories                                            | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/levels)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `lines`        | Draws a linear plot                                                                        | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/lines)           |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `list`         | Create an R list data structure                                                            | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/nrow)                |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| stats        | `lm`           | Fit a linear model and build regression models                                             | [Online Documentation](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/lm)                 |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `load`         | Loads data of various formats into R                                                       | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/load)                |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `margin.table` | Used to compute sums in R contingency tables                                               | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/margin.table)        |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `matrix`       | Create an R matrix data structure                                                          | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/matrix)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `merge`        | Used to join data frames on a common variable. Similar to a SQL join.                      | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/merge)               |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `mtext`        | Set the margin text for R plots                                                            | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/mtext)           |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| photobiology | `na.omit`      | Omit missing and 'NA' values                                                               | [Online Documentation](https://www.rdocumentation.org/packages/photobiology/versions/0.10.10/topics/na.omit)   |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `nrow`         | Returns the number of rows in an R data structure                                          | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/nrow)                |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `order`        | Used to sort data in an R data structure                                                   | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/order)               |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `par`          | Used to set R graphics parameters and settings.                                            | [Online Documentation( paste() )](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/par)  |
+|              |                |                                                                                            |                                                                                                                |
+|              |                |                                                                                            | [Online Documentation( paste0() )](https://www.rdocumentation.org/packages/infix/versions/0.1.0/topics/paste0) |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `paste`        | Concatenate strings                                                                        | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/paste)               |
+|              |                |                                                                                            |                                                                                                                |
+| infix        | `paste0`       |                                                                                            |                                                                                                                |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `pie`          | Draws a pie chart                                                                          | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/pie)             |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `plot`         | The primary R plotting function                                                            | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/plot)            |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `points`       | Plot data points                                                                           | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/points)          |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `prop.table`   | Generates a conditional proportion table                                                   | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/prop.table)          |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| SparkR       | `rbind`        | Add rows to an R data structure                                                            | [Online Documentation](https://www.rdocumentation.org/packages/SparkR/versions/3.1.2/topics/rbind)             |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| utils        | `read.table`   | Load a CSV file                                                                            | [Online Documentation](https://www.rdocumentation.org/packages/utils/versions/3.6.2/topics/read.table)         |
+|              |                |                                                                                            |                                                                                                                |
+| utils        | `read.csv`     |                                                                                            | [Online Documentation](https://www.rdocumentation.org/packages/qtl2/versions/0.28/topics/read_csv)             |
+|              |                |                                                                                            |                                                                                                                |
+| qtl2         | `read_csv`     |                                                                                            |                                                                                                                |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| gdata        | `read.xls`     | Load an Excel file                                                                         | [Online Documentation](https://www.rdocumentation.org/packages/gdata/versions/2.18.0/topics/read.xls)          |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `round`        | Round an object                                                                            | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/Round)               |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `rowsum`       | Calculate the row sum for an array or data frame                                           | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/rowsum)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| memisc       | `sapply`       |                                                                                            | [Online Documentation](https://www.rdocumentation.org/packages/memisc/versions/0.99.30.7/topics/Sapply)        |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `sort`         | Sort an object                                                                             | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/sort)                |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `strsplit`     | Split strings                                                                              | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/strsplit)            |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `subset`       | Select a subset of data from an R data structure                                           | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/subset)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `substr`       | Returns a string's substring                                                               | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/substr)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `t`            | Transpose and pivot a data frame or matrix                                                 | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/t)                   |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `text`         | Add text to an R plot                                                                      | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/text)            |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| graphics     | `title`        | Add a title to an R plot                                                                   | [Online Documentation](https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/title)           |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| stats        | `ts`           | Create a time series object                                                                | [Online Documentation](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/ts)                 |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| base         | `which`        | Determines the position of an object element within a data structure based on a condition. | [Online Documentation](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/which)               |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+| fields       | `xline`        | Plot vertical and horizontal lines                                                         | [Online Documentation](https://www.rdocumentation.org/packages/fields/versions/13.3/topics/xline)              |
+|              |                |                                                                                            |                                                                                                                |
+|              | `yline`        |                                                                                            | [Online Documentation](https://www.rdocumentation.org/packages/fields/versions/13.3/topics/yline)              |
++--------------+----------------+--------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+
+: Important & Frequently Used Functions
+
+### Resources
+
+-   [List of Built in Datasets in R](https://rstats101.com/built-in-datasets-in-r/)
+
+-   \*[The Chart Maker Directory](http://chartmaker.visualisingdata.com/)
+
+-   [The Fundamentals of Data Visualization](https://clauswilke.com/dataviz/)
+
+-   [Graphics Parameters](https://www.statmethods.net/advgraphs/parameters.html)
+
+    -   Text and symbol size (cex)
+
+    -   line types(lty)
+
+    -   colors (col)
+
+    -   and more ...
+
+-   [R color cheatsheet](https://www.nceas.ucsb.edu/sites/default/files/2020-04/colorPaletteCheatsheet.pdf)
+
+-   [ggplot2 Colors](http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/)
