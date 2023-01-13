@@ -1,0 +1,34 @@
+---
+title: "Create Pie Charts by Using RStudio"
+output: 
+  html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+# Requirements
+
+```{r Calculate data for a pie chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+```{r Create a basic pie chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+```{r Customize the display of a pie chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
