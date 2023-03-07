@@ -1,15 +1,32 @@
 ﻿$msolcred=Get-Credential
-Connect-MsolService -Credential $msolcred
-Connect-AzureAD -Credential $msolcred
+#Connect-MsolService -Credential $msolcred
+$connection = Connect-AzureAD -Credential $msolcred
 
 #Get tenant domain and create variable for use later in script
 
-$dn = "@" + (get-msoldomain).name
+#$dn = "@" + (get-msoldomain).name
+$dn = "@" + $connection.TenantDomain
 
 #Create users and, optionally, ensure they are assigned appropriate licences
 
-Import-Csv D:\LabFiles\onlineusers.csv | foreach {New-MsolUser -UserPrincipalName ($_.SAM + "$dn")  -DisplayName "$($_.DisplayName)" -FirstName "$($_.Fname)" -LastName "$($_.Lname)" -Department "$($_.Department)" -City "$($_.City)" -State "$($_.State)" -Title "$($_.Title)"-Password 'Passw0rd!' -PasswordNeverExpires $true -ForceChangePassword $false -UsageLocation "US"}  
-Get-Msoluser -All | where {$_.usagelocation -eq $null} | Set-MsolUser -UsageLocation US
+#Import-Csv D:\LabFiles\onlineusers.csv | foreach {New-MsolUser -UserPrincipalName ($_.SAM + "$dn")  -DisplayName "$($_.DisplayName)" -FirstName "$($_.Fname)" -LastName "$($_.Lname)" -Department "$($_.Department)" -City "$($_.City)" -State "$($_.State)" -Title "$($_.Title)"-Password 'Passw0rd!' -PasswordNeverExpires $true -ForceChangePassword $false -UsageLocation "US"}  
+Import-Csv D:\LabFiles\onlineusers.csv | foreach {
+New-MsolUser `
+ -AccountEnabled $true `
+ -UserPrincipalName ($_.SAM + "$dn") `
+ -DisplayName "$($_.DisplayName)" `
+ -GivenName "$($_.Fname)" `
+ -Department "$($_.Department)" `
+ -City "$($_.City)" `
+ -State "$($_.State)" `
+ -JobTitle "$($_.Title)" `
+ -MailNickName "$($_.DisplayName)" `
+ -PasswordProfile $([Microsoft.Open.AzureAd.Model.PasswordProfile]::new('Passw0rd!',$false,$false)) `
+ -PasswordPolicies "DisablePasswordExpiration, DisableStrongPassword" `
+ -UsageLocation "US"
+}
+#Get-Msoluser -All | where {$_.usagelocation -eq $null} | Set-MsolUser -UsageLocation US
+Get-AzureAdUser | where {$_.usagelocation -eq $null} | Set-AzureAdUser -UsageLocation US
 # Get-MsolUser | where {$_.isLicensed -eq $false} | Set-MsolUserLicense -AddLicenses (Get-MsolAccountSku).AccountSkuId
 
 #Create groups
