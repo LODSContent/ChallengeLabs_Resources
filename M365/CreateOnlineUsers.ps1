@@ -11,7 +11,7 @@ $dn = "@" + $connection.TenantDomain
 
 #Import-Csv D:\LabFiles\onlineusers.csv | foreach {New-MsolUser -UserPrincipalName ($_.SAM + "$dn")  -DisplayName "$($_.DisplayName)" -FirstName "$($_.Fname)" -LastName "$($_.Lname)" -Department "$($_.Department)" -City "$($_.City)" -State "$($_.State)" -Title "$($_.Title)"-Password 'Passw0rd!' -PasswordNeverExpires $true -ForceChangePassword $false -UsageLocation "US"}  
 Import-Csv D:\LabFiles\onlineusers.csv | foreach {
-New-MsolUser `
+New-AzureADUser `
  -AccountEnabled $true `
  -UserPrincipalName ($_.SAM + "$dn") `
  -DisplayName "$($_.DisplayName)" `
