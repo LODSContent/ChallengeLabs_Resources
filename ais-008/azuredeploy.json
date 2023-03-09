@@ -14,7 +14,7 @@
             "defaultValue": "azureuser"
         },
         "adminPassword": {
-            "type": "string"
+            "type": "secureString"
         },
         "imageSku": {
             "type": "string",
