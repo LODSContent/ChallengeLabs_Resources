@@ -1,0 +1,60 @@
+---
+title: "Create a Histogram by Using RStudio"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Create a Histogram by Using RStudio
+
+```{r Load a dataset, echo=TRUE, error=FALSE, warning=TRUE, results='hide', message=FALSE}
+
+
+
+
+
+
+```
+
+
+```{r Compare a bar chart and a histogram, echo=TRUE, error=FALSE, warning=FALSE, message=FALSE}
+
+
+
+
+
+
+
+```
+
+
+```{r Configure a historgram, echo=TRUE, error=FALSE, warning = FALSE, message=FALSE}
+
+
+
+
+
+
+```
+
+```{r Add a trend line to a histogram that visualizes frequencies, echo=TRUE, error =FALSE, warning=FALSE, message=FALSE}
+
+
+
+
+
+
+
+```
+
+```{r Add a trend line to a histogram that visualizes probability densities, echo=TRUE, error =FALSE, warning=FALSE, message=FALSE}
+
+
+
+
+
+
+
+```

@@ -1,0 +1,46 @@
+---
+title: 'Create a Scatter Plot by Using RStudio'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Create a Scatter Plot by Using RStudio
+
+## Load a dataset
+
+```{r Load a dataset, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+```
+##Create a data frame
+
+```{r Create a data frame, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+```
+
+##Create a scatter plot
+
+```{r Create a scatter plot, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+```
+
+##Enhance a scatter plot
+
+```{r Enhance a scatter plot, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+```
+

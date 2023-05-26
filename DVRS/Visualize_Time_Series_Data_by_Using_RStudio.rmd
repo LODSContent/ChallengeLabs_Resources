@@ -1,0 +1,73 @@
+---
+title: 'Visualize Time Series Data by Using RStudio'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+#Visualize Time Series Data by Using RStudio
+
+## Load a dataset
+
+```{r Load a dataset, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Visualize dates by using the R Date class data type
+
+```{r Visualize dates by using the R Date class data type, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Create a time series object
+
+```{r Create a time series object, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+```
+
+## Manipulate the display of a time series object
+
+```{r  Manipulate the display of a time series object, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+```
+
+## Create a multivariate time series object
+
+```{r Create a multivariate time series object, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+```
+
+## Visualize a multivariate time series object
+
+```{r Visualize a multivariate time series object, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+```

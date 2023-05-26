@@ -1,0 +1,42 @@
+---
+title: "Create Bar Charts by Using RStudio"
+output: 
+  html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+# Create Bar Charts by Using RStudio
+
+```{r Load a dataset, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+```{r Create a bar chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+```{r Customize the display of a bar chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+
+```{r Create a stacked bar chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```

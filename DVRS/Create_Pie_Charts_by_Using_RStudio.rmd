@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-# Requirements
+# Create Pie Charts by Using RStudio
 
 ```{r Calculate data for a pie chart, include=TRUE, error=FALSE, warning=FALSE}
 

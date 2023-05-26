@@ -1,0 +1,42 @@
+---
+title: 'Create a Boxplot by Using RStudio'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Create a Boxplot by Using RStudio
+
+## Load a dataset
+
+```{r Load a dataset, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Create a boxplot
+
+```{r Create a boxplot, echo=FALSE, error=FALSE, warning=FALSE}
+
+
+
+
+
+
+
+```
+
+## Customize the display of a boxplot
+
+```{r Customize the display of a boxplot, echo=FALSE, error=FALSE, warning = FALSE}
+
+
+
+
+```
