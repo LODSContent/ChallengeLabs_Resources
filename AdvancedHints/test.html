@@ -7,110 +7,105 @@
 
   <h1>Template</h1>
   
-  <p>#How To Unzip A File In Linux | Unzip Syntax | 8 Unzip Commands
-If you have a compressed zip file, you can unzip it using the Linux command line. Linux's unzip command is highly flexible just like zip commands and can be used for much more than simply extracting zip files.  Files from a ZIP archive, which are often seen on MS-DOS computers, can be listed, tested, or extracted using Unzip. If no settings are provided, the default behavior i.e. with no options will extract all files from the supplied ZIP archive into the current file and all subdirectories beneath it.
-<br>
-## Unzip syntax
-- First of all, you need to install the unzip package. To do so, type in a terminal command:
-<br>
-<br>
->  ```sudo apt-get install unzip```
-<br>
-<br>
-- Once all the packets have been installed, to unzip the archive files type in a terminal command:
-<br>
-<br>
->  ```unzip archive.zip```
-<br>
-<br>
-- A more useful tool is 7z, which zips and unzips a range of compression formats, notably lzma, usually the protocol offering the highest compression rates.
-<br>
-<br>
->  ```sudo apt-get install p7zip-full```
-<br>
-## Extract the zip file with **Linux**
-- Open the Files app and navigate to the directory where the zip file is located.
-<br><br>
-- Locate the file which you want to unzip.
-<br><br>
-- Right-click on the file and the context menu will appear with the list of options.
-<br><br>
-- Select the “Extract Here” option to unzip files into the present working directory or choose “Extract to...” for a different directory.
-<br>
-## Unzip arguments in Linux
+  <p>If you have a compressed zip file, you can unzip it using the Linux command line. Linux's unzip command is highly flexible just like zip commands and can be used for much more than simply extracting zip files.  Files from a ZIP archive, which are often seen on MS-DOS computers, can be listed, tested, or extracted using Unzip. If no settings are provided, the default behavior i.e. with no options will extract all files from the supplied ZIP archive into the current file and all subdirectories beneath it.
+
+Unzip syntax
+First of all, you need to install the unzip package. To do so, type in a terminal command:
+
+sudo apt-get install unzip
+
+Once all the packets have been installed, to unzip the archive files type in a terminal command:
+
+unzip archive.zip
+
+A more useful tool is 7z, which zips and unzips a range of compression formats, notably lzma, usually the protocol offering the highest compression rates.
+
+sudo apt-get install p7zip-full
+
+Extract the zip file with Linux
+Open the Files app and navigate to the directory where the zip file is located.
+Locate the file which you want to unzip.
+Right-click on the file and the context menu will appear with the list of options.
+Select the “Extract Here” option to unzip files into the present working directory or choose “Extract to...” for a different directory.
+Unzip arguments in Linux
 Some of the most commonly used arguments by unzip are listed below:
-<br><br>
+
 1. file[.zip]
-<br><br>
+
 It tells the path of the zip archive(s). When a wildcard is used in the file specification, the operating system chooses the order in which each matching file is processed (or file system). The path itself cannot be a wildcard; only the filename can.
-<br><br>
+
 2. [file(s)]
-<br><br>
+
 A list of archive members to process that can be optional, delimited by spaces. (VMS versions that have VMSCLI specified during compilation had to delimit files using commas. (For further information, see -v in the section below that lists your options.) You can match several members using regular expressions (wildcards).
-<br><br>
+
 3. [-x xfile(s)]
-<br><br>
+
 An optional list of archive members to be excluded from processing. This option can be used to exclude any files that are in subdirectories because wildcard characters often match ('/') directory separators (for exceptions see the option -W).
-<br><br>
+
 4. [-d exdir]
-<br><br>
+
 If specified, files will be extracted to the target directory exdir. By default, all files and subdirectories are recreated in the current directory; the -d option allows extraction in an arbitrary directory (always assuming one has permission to write to the current working directory). This option need not appear at the end of the command line; it is also accepted before the zip file specification (with the normal options), immediately after the zip file path, or between the file(s) and the -x option.
-<br>
-## Unzip commands/Options in Linux
+
+Unzip commands/Options in Linux
 To unzip a file, you do not need to add any options like the zip command. With unzip, the default behavior is to always seek permission before overwriting current files. Using unzip, you can extract every letter from the archive. Create any necessary subdirectories, then unzip into the current directory and any subdirectories below it options and commands that unzip accepts and uses are:
-<br><br>
+
 1. Unzip a file to a different directory
-<br><br>
+
 To unzip a ZIP file to a different directory than the current folder, we use the -D (Directory) Option. Go to the file manager and click on the zip file you want to unzip. Now open the terminal window and run the following command:
-<br><br>
->  ```Command: $ unzip filename.zip -d /path/to/directory```
-<br><br>
+
+Command: $ unzip filename.zip -d /path/to/directory
+
 2. Unzip tar/tar.gz/tgz files to a specific directory
-<br><br>
+
 Most files in Linux are compressed using the tar format. A .tar file is a collection of uncompressed files, sometimes known as a tarball. Since .tar doesn’t compress anything, it requires a separate compression utility for compression. The tar command allows you to create tar archive files as well as decompress them. This technique can be used on other file types/ file formats also. Using tar UtilityA tar.gz file is a combination of a .tar file and a .gz file. By default, the tar command will extract files to your current directory. Go to the terminal window and run the following command:
-<br><br>
->  ```Command:  $ tar -xf file-name.tar -C /path/to/directory```
-<br><br>
+
+Command:  $ tar -xf file-name.tar -C /path/to/directory
+
 The -x option tells tar to extract the files. You can also use xargs with tar to create a tar.gz archive and populate it with files from the find command. Note: Some graphical interfaces include a tool for managing tar.gz files without the command line. Working with the graphical interface is a little difficult task.
-<br><br>
-Unzip a password-protected zip file
-<br><br>
-3. To unzip a file that is password-protected, invoke the unzip command with the -P option i.e -P (Password) Option followed by the password:
-<br><br>
->  ```Command: $ unzip -P PasswOrd filename.zip```
-<br><br>
+
+3. Unzip a password-protected zip file
+
+To unzip a file that is password-protected, invoke the unzip command with the -P option i.e -P (Password) Option followed by the password:
+
+Command: $ unzip -P PasswOrd filename.zip
+
 4. Exclude Files when Unzipping a ZIP File
-<br><br>
+
 To exclude specific files or directories from being extracted, use the -X (Exclude) option in the terminal :
-<br><br>
->  ```Command: $ unzip filename.zip -x file1-to-exclude file2-to-exclude```
-<br><br>
+
+Command: $ unzip filename.zip -x file1-to-exclude file2-to-exclude
+
 5. Suppress the Output of the unzip Command
-<br><br>
+
 By default, unzip prints the names of all the files it’s extracting and a summary when the extraction is completed. Use the -q switch to suppress the printing of these messages.
-<br><br>
->  ```Command: $ unzip -q filename.zip```
-<br><br>
+
+Command: $ unzip -q filename.zip
+
 6. Overwrite existing files
-<br><br>
+
 If you want to overwrite existing files without prompting, it can be done using the -o option. To run the -o (overwrite) option open the terminal window and run the following command:
-<br><br>
->  ```Command: $ unzip -o filename.zip```
-<br><br>
+
+Command: $ unzip -o filename.zip
+
 7. Unzip a zip file without overwriting existing files
-<br><br>
+
 This command can be performed using the -n option which forces unzip to skip the extraction of a file that already exists:
-<br><br>
->  ```Command: $ unzip -n filename.zip```
-<br><br>
+
+Command: $ unzip -n filename.zip
+
 8. List the Contents of a zip file
-<br><br>
+
 To list the contents of a given zip file we use the -l (list archive) option. To execute the -l option to the current file, open the windows terminal and type the following command:
-<br><br>
->  ```Command: $ unzip -l filename.zip```
-<br><br>
->  <font size="1"> [1] https://unstop.com/blog/how-to-unzip-a-file-in-linux. Accessed 25 Sept. 2023.</font> 
-> </p>
+
+Command: $ unzip -l filename.zip
+
+Summary
+The unzip utility is an extremely effective and straightforward tool for transferring compressed files over a network or even between operating systems. From the above tutorial, you can easily unzip files in Linux systems through the command line using the unzip command. </p>
   
 </body>
 </html>
+
+
+
+
+https://htmlpreview.github.io/?https://github.com/LODSContent/ChallengeLabs_Resources/blob/master/AdvancedHints/test.htm
