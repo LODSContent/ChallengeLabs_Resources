@@ -1,0 +1,79 @@
+---
+title: 'Can You Tell a Story by Using Data Visualization in RStudio?'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+#Requirements
+
+## Visualize categorical data by using a bar chart
+
+```{r Visualize categorical data by using a bar chart, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+```
+
+## Visualize categorical data by using a pie chart
+
+```{r Visualize categorical data by using a pie chart, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Visualize data distributions by using a histogram
+
+```{r  Visualize data distributions by using a histogram, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Visualize data distributions by using a boxplot
+
+```{r  Visualize data distributions by using a boxplot, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Visualize relational data by using a scatter plot
+
+```{r  Visualize relational data by using a scatter plot, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Visualize multivariate time series data
+
+```{r Visualize multivariate time series data, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+```

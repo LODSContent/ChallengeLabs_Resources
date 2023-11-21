@@ -1,0 +1,51 @@
+---
+title: "Can You Visualize Categorical Data by Using RStudio?"
+output: 
+  html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+# Requirements
+
+```{r Load a dataset, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+```{r Create a bar chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+
+```{r Create a stacked bar chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+
+```{r Create a pie chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+
+```{r Customize the display of a pie chart, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```

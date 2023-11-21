@@ -1,0 +1,45 @@
+---
+title: "Can You Visualize Data Distributions by Using RStudio?"
+output: 
+  html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+# Requirements
+
+```{r Create a data frame, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+```{r Compare a bar chart and a histogram, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+
+```{r Configure the display of a histogram, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+
+```{r Create a boxplot, include=TRUE, error=FALSE, warning=FALSE}
+
+
+
+
+```
+
+

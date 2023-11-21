@@ -1,0 +1,57 @@
+---
+title: 'Can You Visualize Relational and Temporal Data by Using RStudio?'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+#Requirements
+
+## Create a data frame
+
+```{r Create a data frame, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+```
+
+## Create a scatter plot
+
+```{r Create a scatter plot, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Create a time series object
+
+```{r  Create a time series object, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Visualize time series data
+
+```{r Visualize time series data, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+```
