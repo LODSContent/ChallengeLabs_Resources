@@ -1,0 +1,78 @@
+---
+title: 'Can You Create Data Structures in R?'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+#Requirements
+
+## Create a vector
+
+```{r Create a vector, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+```
+
+## Manipulate a vector
+
+```{r Manipulate a vector, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Create a list object
+
+```{r  Create a list object, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+```
+
+## Manipulate elements in a list
+```{r Manipulate elements in a list, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+```
+
+## Create a matrix
+```{r Create a matrix, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+```
+
+## Modify a matrix
+```{r Modify a matrix, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+```

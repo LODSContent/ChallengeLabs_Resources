@@ -1,0 +1,64 @@
+---
+title: 'Can You Manage the Flow of Execution in R?'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+#Requirements
+
+## Evaluate a condition by using an if statement
+
+```{r Evaluate a condition by using an if statement, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+
+```
+
+## Manage the flow of execution by using looping structures
+```{r Manage the flow of execution by using looping structures, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+
+
+```
+
+## Create a function that returns a value
+```{r Create a function that returns a value, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+
+
+```
+
+## Create an implicit loop by using the apply function
+
+```{r Create an implicit loop by using the apply function, echo=FALSE, error=FALSE, warning=TRUE}
+
+
+
+
+
+
+
+
+
+```
