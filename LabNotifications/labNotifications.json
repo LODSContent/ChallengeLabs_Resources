@@ -1,0 +1,32 @@
+{
+  "_usage": "For id, enter a name for the Notification with no spaces. For summary, provide the brief summary of the Notificaiton that will appear at the top. For details, add the detailed message that should appear when the Notification is expanded. The type can be a note, help or alert message, or it can be left blank for a plain blockquote. The querystring can be used to only display the Notification when certain regex text strings are found within the lab text, or leave it blank to always display. The startDate and endDate can be used to display the message only between the dates specified, or leave it blank to always display the message. The date format should be mm/dd/yyyy hh:mm:ss or just mm/dd/yyyy and it will assume 00:00:00 for the time. To add more messages, place a comma (,) after the } in the messages structure and then use the same format as the existing message.",
+  "messages": [
+      {
+      "id": "TestOne",
+      "summary": "This is the <strong>TestOne</strong> notification.",
+      "details": "Microsoft has added a new <strong>Welcome to Microsoft Azure</strong> screen when you initially log in to the Azure Portal.<br><br>We are actively making updates to reflect this change. However, if you see this screen appear, you may select <strong>Cancel</strong> to dismiss the screen.",
+      "type": "help",
+      "queryString": "Microsoft",
+      "startDate": "2/1/2024",
+      "endDate": "2/29/2024"
+      },        
+      {
+      "id": "TestTwo",
+      "summary": "This is the <strong>TestTwo</strong> notification.",
+      "details": "This is the body of the <strong>TestTwo</strong> notification. The more detailed message should be entered here.",
+      "type": "alert",
+      "queryString": "",
+      "startDate": "2/1/2024",
+      "endDate": "2/29/2024"
+      },        
+      {
+      "id": "AzureWelcome",
+      "summary": "You may dismiss the <strong>Welcome to Microsoft Azure</strong> screen.",
+      "details": "Microsoft has added a new <strong>Welcome to Microsoft Azure</strong> screen when you initially log in to the Azure Portal.<br><br>We are actively making updates to reflect this change. However, if you see this screen appear, you may select <strong>Cancel</strong> to dismiss the screen.",
+      "type": "note",
+      "queryString": "Azure",
+      "startDate": "",
+      "endDate": ""
+      }
+  ]
+}
