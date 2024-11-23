@@ -1,7 +1,3 @@
-My commit must not have worked correctly, the labNotifications.json file is still the same. The file is: ChallengeLabs_Resources/LabNotifications/labNotifications.json at master · LODSContent/ChallengeLabs_Resources
- 
-Here is the content I need in there:
- 
 {
 
   "_usage": "For id, enter a name for the Notification with no spaces. For summary, provide the brief summary of the Notificaiton that will appear at the top. For details, add the detailed message that should appear when the Notification is expanded. The type can be a note, help or alert message, or it can be left blank for a plain blockquote. The querystring can be used to only display the Notification when certain regex text strings are found within the lab text, or leave it blank to always display. (Most regex patterns are supported. Use .* as a wildcard.) The startDate and endDate can be used to display the message only between the dates specified, or leave it blank to always display the message. The date format should be mm/dd/yyyy hh:mm:ss or just mm/dd/yyyy and it will assume 00:00:00 for the time. To add more messages, place a comma (,) after the } in the messages structure and then use the same format as the existing message.",
