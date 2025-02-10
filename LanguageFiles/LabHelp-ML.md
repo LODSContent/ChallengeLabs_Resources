@@ -1,4 +1,4 @@
-## Navigating the Challenge Lab
+## <x-l8>Navigating the Challenge Lab</x-l8>
 
 ::: labhelp
 
