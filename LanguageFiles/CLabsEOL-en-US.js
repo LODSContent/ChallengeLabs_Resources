@@ -95,7 +95,7 @@ window.strings = {
             "messages": [
                 "You completed this area with great success.",
                 "No doubt about it, in this section you know your stuff.",
-                "After completing this section, itâ€™s obvious you know what you're talking about.",
+                "After completing this section, it's obvious you know what you're talking about.",
                 "You completed this section with ease.",
                 "Looks like you have a strong grasp on this material.",
                 "You showed your skills in this area and finished with success.",
@@ -108,8 +108,8 @@ window.strings = {
             "messages": [
                 "You demonstrated competency in this area, but you might want to try again for a better understanding.",
                 "Your skills in this area are growing, but still need some improvement to reach your goal.",
-                "You might want to focus a bit here, thereâ€™s more room to grow in this area.",
-                "You're off to a good start, but thereâ€™s room to improve in this section.",
+                "You might want to focus a bit here, there's more room to grow in this area.",
+                "You're off to a good start, but there's room to improve in this section.",
                 "You had some success in this section, but you may want to polish your skills here.",
                 "If you review the material for this area, we think you'll do even better next time.",
                 "Your performance in this section was sufficient but could be stronger."
@@ -121,7 +121,7 @@ window.strings = {
             "messages": [
                 "The competencies you showed in this area could be stronger.",
                 "Looks like you could use a break to regroup and try again.",
-                "Thereâ€™s a fair amount of room for you to improve in this section.",
+                "There's a fair amount of room for you to improve in this section.",
                 "This area was not the strongest, so give it another shot.",
                 "You should spend some more time reviewing this area and try again.",
                 "Check your source material and try again, there's room to improve.",
