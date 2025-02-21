@@ -86,7 +86,7 @@
 
       "type": "alert",
 
-      "queryString": "Entra ID tenant",
+      "queryString": "Entra.*tenant",
 
       "startDate": "",
 
