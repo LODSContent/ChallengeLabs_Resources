@@ -3,12 +3,12 @@
 # !INSTRUCTIONS[][challenge-title]
 
 :::overviewbutton
-<x-l8>Challenge Overview</x-l8>
+Challenge Overview
 :::
 
 @lab.Variable(GlobalIntroduction)
 
-## <x-l8>Understand the scenario</x-l8>
+## Understand the scenario
 
 !INSTRUCTIONS[][overview]
 
