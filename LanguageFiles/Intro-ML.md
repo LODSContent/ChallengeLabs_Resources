@@ -12,7 +12,7 @@ Challenge Overview
 
 !INSTRUCTIONS[][overview]
 
-!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/LabHelp-ML.md)
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/Challenge-V3-Framework/main/Templates/Sections/LabHelp.md)
 
 :::HiddenVariables(ShowVariables=Yes)
 @lab.DropDownList(ShowToggle)[Yes,No]
