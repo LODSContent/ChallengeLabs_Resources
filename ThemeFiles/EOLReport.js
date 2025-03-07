@@ -6,12 +6,12 @@ try {
   // Get the AutoTranslate variable setting
   try {autoTranslate = $('[data-name="AutoTranslate"] option:selected').first().text().toLowerCase()} catch (err) {autoTranslate = null}
   
-  // Get the language code for the current lab
-  try {labLanguageCode = document.documentElement.lang} catch(err) {labLanguageCode = "en-US"}
-
+  // Get target language from HTML lang attribute, fallback to 'en'    
+  try {targetLanguage = document.documentElement.lang} catch(err) {labLanguageCode = "en-US"}
+  
   // Retrieve the appropriate language file from github
   if (autoTranslate == 'no' || autoTranslate == null) {
-    let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-" + labLanguageCode + ".js";    
+    let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-" + targetLanguage + ".js";    
   } else {
     let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-ML.js";
   }
