@@ -10,10 +10,10 @@ try {
   try {labLanguageCode = document.documentElement.lang} catch(err) {labLanguageCode = "en-US"}
 
   // Retrieve the appropriate language file from github
-  if (autoTranslate == 'yes') {
-    let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-ML.js";
+  if (autoTranslate == 'no' || autoTranslate == null) {
+    let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-" + labLanguageCode + ".js";    
   } else {
-    let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-" + labLanguageCode + ".js";
+    let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-ML.js";
   }
   let xhttp = new XMLHttpRequest();
   xhttp.open("GET", uri, false);
