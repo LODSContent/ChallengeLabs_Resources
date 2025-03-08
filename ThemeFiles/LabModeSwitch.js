@@ -4,8 +4,8 @@ function modeSwitch() {
     if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
 
     // Cached selectors for visibility toggles (kept for reference, unused when commented)
-    const $hints = $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided');
-    const $knowledge = $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced');
+    //const $hints = $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided');
+    //const $knowledge = $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced');
 
     const modes = {
         guided: { 
