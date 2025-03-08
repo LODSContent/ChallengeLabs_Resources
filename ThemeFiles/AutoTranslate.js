@@ -4,7 +4,7 @@
 try {autoTranslate = $('select[data-name="AutoTranslate"]').val().toLowerCase();} catch (err) {autoTranslate = null}
 
 // Retrieve the appropriate language file from github
-if (autoTranslate == 'no' || autoTranslate == null) {  
+if (autoTranslate == 'no') {  
   console.log("Skipping Translation.");
 } else {
   // Store translated elements to prevent duplicate translations
