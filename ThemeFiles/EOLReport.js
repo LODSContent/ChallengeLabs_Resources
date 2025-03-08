@@ -1,5 +1,8 @@
+// Get the debug lab variable setting
+const debug = $('select[data-name="debug"]').val()?.toLowerCase() === "true" || false;
+
 // Runs at the end of the lab report
-console.log("Starting end-of-lab report generation");
+if (debug) { console.log("Starting end-of-lab report generation"); }
 document.querySelector("body").style.display = "none"; // Blank screen initially
 
 try {
@@ -7,28 +10,28 @@ try {
     const autoTranslateStatus = getAutoTranslateStatus();
     const labLanguageCode = getLabLanguageCode();
     const languageFileUrl = getLanguageFileUrl(autoTranslateStatus, labLanguageCode);
-    console.log(`AutoTranslate: ${autoTranslateStatus}, Language Code: ${labLanguageCode}, URL: ${languageFileUrl}`);
+    if (debug) { console.log(`AutoTranslate: ${autoTranslateStatus}, Language Code: ${labLanguageCode}, URL: ${languageFileUrl}`); }
 
     // Load and evaluate language file synchronously
     const scriptBody = loadScriptSync(languageFileUrl);
     eval(scriptBody); // Executes language file content
     const strings = window.strings; // Capture flavor text
-    console.log("Language file loaded and evaluated, strings captured");
+    if (debug) { console.log("Language file loaded and evaluated, strings captured"); }
 
     // Parse report data
     const examData = parseReport();
-    console.log("Report parsed:", examData);
+    if (debug) { console.log("Report parsed:", examData); }
 
     // Assign summary color
     const colorOption = strings.summary.find(option => 
         option.maxScore >= examData.skillometerScore && option.minScore <= examData.skillometerScore
     ) || strings.summary[0]; // Fallback to first option
     examData.summaryColor = colorOption.color;
-    console.log(`Assigned summary color: ${examData.summaryColor}`);
+    if (debug) { console.log(`Assigned summary color: ${examData.summaryColor}`); }
 
     // Generate and apply report HTML
     document.querySelector("body").innerHTML = generateReport(examData, strings);
-    console.log("Report HTML generated and applied");
+    if (debug) { console.log("Report HTML generated and applied"); }
 
     // Load jQuery Knob library and configure skillometer
     $.getScript("https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js", () => {
@@ -45,20 +48,20 @@ try {
             thickness: ".35",
             format: value => `${value}%`
         });
-        console.log("jQuery Knob library loaded and skillometer configured");
+        if (debug) { console.log("jQuery Knob library loaded and skillometer configured"); }
     });
 
     // Reveal report with delay
     setTimeout(() => {
         document.querySelector('body.end-of-lab-report')?.setAttribute('style', 'display:block !important');
-        console.log("Report revealed after 1-second delay");
+        if (debug) { console.log("Report revealed after 1-second delay"); }
     }, 1000);
 
 } catch (error) {
-    console.error("Report generation failed:", error);
+    console.error("Report generation failed:", error); // Keep error logging always on
     // Reveal standard report on failure
     document.querySelector('body.end-of-lab-report')?.setAttribute('style', 'display:block !important');
-    console.log("Standard report revealed due to error");
+    if (debug) { console.log("Standard report revealed due to error"); }
 }
 
 // Helper Functions
@@ -122,7 +125,7 @@ function parseReport() {
     });
 
     examData.skillometerScore = Math.round((examData.totalAchievedScore / examData.maxScore) * 100) || 0;
-    return examData; // Logging moved to caller
+    return examData;
 }
 
 function getElementText(selector, context = document) {
@@ -141,7 +144,7 @@ function parsePercentage(scoreString) {
 
 function assignText(type, score, strings) {
     if (!strings) {
-        console.log("No strings available");
+        if (debug) { console.log("No strings available"); }
         return "";
     }
 
