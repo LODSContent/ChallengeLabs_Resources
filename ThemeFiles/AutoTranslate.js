@@ -8,6 +8,7 @@ if (autoTranslate == 'no' || autoTranslate == null) {
   console.log("Skipping Translation.");
 } else {
   // Store translated elements to prevent duplicate translations
+  console.log("Starting Translation.");
   const translatedElements = new Set();
   const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, details, span, input[type="button"]';
   const elementArray = findElements.replace('[type="button"]','').split(",")
