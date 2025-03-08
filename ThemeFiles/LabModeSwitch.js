@@ -48,7 +48,7 @@ function modeSwitch() {
 }
 
 // Timeout for creating the mode switch watchdog
-setTimeout(()=>{
+//setTimeout(()=>{
   try {
     modeSwitchItems = $('[data-name="LabMode"]')
     for (i=0;i < modeSwitchItems.length;i++) {
@@ -57,5 +57,5 @@ setTimeout(()=>{
       eval(listener);        
     }
   } catch(err) {};
-}, 2000);
+//}, 2000);
 // End code for mode switching
