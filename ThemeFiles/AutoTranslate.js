@@ -1,7 +1,7 @@
 // Begin Translation code
 
 // Get the AutoTranslate variable setting
-try {autoTranslate = $('[data-name="AutoTranslate"] option:selected').first().text().toLowerCase()} catch (err) {autoTranslate = null}
+try {autoTranslate = $('select[data-name="AutoTranslate"]').val().toLowerCase();} catch (err) {autoTranslate = null}
 
 // Retrieve the appropriate language file from github
 if (autoTranslate == 'no' || autoTranslate == null) {  
