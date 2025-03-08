@@ -1,6 +1,7 @@
 // Code for mode switching
 function modeSwitch() {
     const difficultyValue = $(`select[data-name="${name}"]`).val() || '';
+    if (debug) { console.log(`Current Difficulty: ${difficultyValue}`); }
     const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null; // Removed .toLowerCase()
     if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
 
