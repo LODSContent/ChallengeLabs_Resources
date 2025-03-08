@@ -4,7 +4,7 @@ document.querySelector("body").style.display = "none";
 
 try {
   // Get the AutoTranslate variable setting
-  try {autoTranslateStatus = $('[data-name="AutoTranslate"] option:selected').first().text().toLowerCase()} catch (err) {autoTranslateStatus = null}
+  try {autoTranslateStatus = $('select[data-name="AutoTranslate"]').val().toLowerCase();} catch (err) {autoTranslate = null}
   
   // Get target language from HTML lang attribute, fallback to 'en'    
   try {labLanguageCode = document.documentElement.lang} catch(err) {labLanguageCode = "en-US"}
