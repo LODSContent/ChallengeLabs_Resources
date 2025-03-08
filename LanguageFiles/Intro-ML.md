@@ -19,4 +19,5 @@ Challenge Overview
 @lab.DropDownList(ShowGuided)[Yes,No]
 @lab.DropDownList(ShowAdvanced)[Yes,No]
 @lab.DropDownList(ShowActivity)[Yes,No]
+@lab.DropDownList(AutoTranslate)[Yes,No]
 :::
