@@ -10,7 +10,7 @@ if (autoTranslate == 'no' || autoTranslate == null) {
   // Store translated elements to prevent duplicate translations
   console.log("Starting Translation.");
   const translatedElements = new Set();
-  const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, details, span, input[type="button"], #labNotificationsHeader';
+  const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, input[type="button"], #labNotificationsHeader';
   const elementArray = findElements.replace('[type="button"]','').split(",")
   const ignoreElements = 'no-xl8, code, .codeTitle, .typeText, .copyable';
   
