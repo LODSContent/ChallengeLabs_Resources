@@ -31,6 +31,7 @@ function modeSwitch() {
         }
     };
 
+    // Update the Difficulty button on page0 to reflect the change
     const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
     if (modeSwitchSelected in modes) {
         const settings = modes[modeSwitchSelected];
