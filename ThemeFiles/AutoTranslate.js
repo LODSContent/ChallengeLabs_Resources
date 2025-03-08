@@ -1,67 +1,48 @@
 // Begin Translation code
 
-// Get the AutoTranslate variable setting
-try {autoTranslate = $('select[data-name="AutoTranslate"]').val().toLowerCase();} catch (err) {autoTranslate = null}
+// Get AutoTranslate setting
+const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
+if (debug) { console.log(`AutoTranslate setting: ${autoTranslate}`); }
 
-// Retrieve the appropriate language file from github
-if (autoTranslate == 'no') {  
-  console.log("Skipping Translation.");
+if (autoTranslate === 'no') {
+    if (debug) { console.log("Skipping Translation."); }
 } else {
-  // Store translated elements to prevent duplicate translations
-  console.log("Starting Translation.");
-  const translatedElements = new Set();
-  const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, input[type="button"], #labNotificationsHeader';
-  const elementArray = findElements.replace('[type="button"]','').split(",")
-  const ignoreElements = 'no-xl8, code, .codeTitle, .typeText, .copyable';
-  
-  // Get target language from HTML lang attribute, fallback to 'en'    
-  try {targetLanguage = document.documentElement.lang} catch(err) {labLanguageCode = "en-US"}
-    
-  if(targetLanguage != "en-US") {
-    if (targetLanguage.substr(0,2).toLowerCase() == "ja" || targetLanguage.substr(0,2).toLowerCase() == "ko") {
-      targetLanguage = targetLanguage.substr(0,2)
-    }     
-    
+    if (debug) { console.log("Starting Translation."); }
+
+    // Configuration
+    const translatedElements = new Set();
+    const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, input[type="button"], #labNotificationsHeader';
+    const elementArray = findElements.replace('[type="button"]', '').split(',').map(s => s.trim().toLowerCase());
+    const ignoreElements = 'no-xl8, code, .codeTitle, .typeText, .copyable';
+    const targetLanguage = getTargetLanguage();
+
+    // Translation Functions
     async function translateText(text, targetLang) {
         try {
             const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
             const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             return data[0].map(item => item[0]).join('');
         } catch (error) {
             console.error('Translation error:', error);
-            return text; // Return original text if translation fails
+            return text; // Fallback to original text
         }
     }
-    
+
     async function translateElement(element) {
-        // Skip elements within <no-xl8> or other listed tags
-        const closestElement = element.closest(ignoreElements);
-        if (closestElement) {
+        if (element.closest(ignoreElements) || translatedElements.has(element)) {
             return;
         }
-    
-        // Skip if already translated
-        if (translatedElements.has(element)) {
-            return;
-        }
-    
+
         const originalText = element.textContent.trim();
         if (!originalText) return;
-    
+
         try {
-            // Add loading indicator
             element.classList.add('translating');
-            
             const translatedText = await translateText(originalText, targetLanguage);
-            
-            // Update the element content
             element.textContent = translatedText;
-            
-            // Mark as translated
             translatedElements.add(element);
-            
-            // Store original text as data attribute
             element.setAttribute('data-original-text', originalText);
         } catch (error) {
             console.error('Error translating element:', error);
@@ -69,24 +50,22 @@ if (autoTranslate == 'no') {
             element.classList.remove('translating');
         }
     }
-    
+
     async function translateTextNodes(element) {
-        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+            acceptNode: node => node.parentElement.closest(ignoreElements) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+        });
         const textNodes = [];
         let node;
-        while (node = walker.nextNode()) {
-            // Skip text nodes within ignored elements
-            if (node.parentElement.closest(ignoreElements)) {
-                continue;
-            }      
+        while ((node = walker.nextNode())) {
             textNodes.push(node);
         }
-    
+
         for (const textNode of textNodes) {
             const originalText = textNode.nodeValue;
             const trimmedText = originalText.trim();
             if (!trimmedText) continue;
-    
+
             try {
                 const translatedText = await translateText(trimmedText, targetLanguage);
                 textNode.nodeValue = originalText.replace(trimmedText, translatedText);
@@ -94,8 +73,7 @@ if (autoTranslate == 'no') {
                 console.error('Error translating text node:', error);
             }
         }
-    
-        // Handle button text separately
+
         if (element.tagName === 'INPUT' && element.type === 'button') {
             const originalText = element.value;
             const trimmedText = originalText.trim();
@@ -109,18 +87,19 @@ if (autoTranslate == 'no') {
             }
         }
     }
-    
+
     async function translateAllElements(parent) {
         const parentElement = document.querySelector(parent);
-        if (!parentElement) return;
-    
+        if (!parentElement) {
+            if (debug) { console.log(`Parent element '${parent}' not found`); }
+            return;
+        }
+
         const elements = parentElement.querySelectorAll(findElements);
-        const translations = Array.from(elements).map(element => 
-            translateTextNodes(element)
-        );
-        await Promise.all(translations);
+        await Promise.all(Array.from(elements).map(translateTextNodes));
+        if (debug) { console.log(`Completed initial translation for ${elements.length} elements in '${parent}'`); }
     }
-    
+
     function revertTranslations() {
         translatedElements.forEach(element => {
             const originalText = element.getAttribute('data-original-text');
@@ -129,54 +108,52 @@ if (autoTranslate == 'no') {
             }
         });
         translatedElements.clear();
+        if (debug) { console.log("Reverted all translations"); }
     }
-    
-    function initializeTranslation (parent) {
-      try {
-        // Initialize translation observer
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) { // ELEMENT_NODE
-                        //if (['BLOCKQUOTE', 'TABLE', 'A', 'P', 'H1', 'H2', 'H3', 'H4', 'OL', 'UL', 'DETAILS', 'SPAN', 'INPUT'].includes(node.tagName) && (node.type === 'button' || node.tagName !== 'INPUT')) {
-                        if (node.closest(parent) && elementArray.includes(node.tagName.toLowerCase) && (node.type === 'button' || node.tagName !== 'INPUT')) {
+
+    function initializeTranslation(parent) {
+        if (targetLanguage === "en-US") {
+            if (debug) { console.log("Target language is en-US, skipping translation"); }
+            return;
+        }
+
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1 && node.closest(parent)) {
+                        const tagName = node.tagName.toLowerCase();
+                        if (elementArray.includes(tagName) && (node.type === 'button' || tagName !== 'input')) {
                             translateTextNodes(node);
                         }
-                        // Check for specified elements inside the added node
                         const languageElements = node.querySelectorAll(findElements);
-                        Array.from(languageElements).forEach(element => 
-                            translateTextNodes(element)
-                        );
+                        Array.from(languageElements).forEach(translateTextNodes);
                     }
                 });
             });
         });
-    
-        // Perform initial translation
+
         translateAllElements(parent);
+        observer.observe(document.body, { childList: true, subtree: true });
+        if (debug) { console.log(`Translation observer initialized for '${parent}'`); }
         
-        // Start observing the document
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    
-        // Add methods to window object for manual control
         window.translatePage = translateAllElements;
         window.revertTranslations = revertTranslations;
-      } catch(err) {};
     }
 
-    if (window.location.pathname.indexOf("ExamResult") < 0) {
-      //setTimeout(()=>{
-        initializeTranslation('.instructions');
-      //}, 2000);
-    } else {
-      //setTimeout(()=>{
-        initializeTranslation('.end-of-lab-report');
-      //}, 2000);
+    // Helper Function
+    function getTargetLanguage() {
+        let lang = document.documentElement.lang || "en-US";
+        const langPrefix = lang.substr(0, 2).toLowerCase();
+        if (langPrefix === "ja" || langPrefix === "ko") {
+            lang = langPrefix;
+        }
+        return lang;
     }
-  }
+
+    // Start Translation
+    const isExamResult = window.location.pathname.includes("ExamResult");
+    const parentSelector = isExamResult ? '.end-of-lab-report' : '.instructions';
+    initializeTranslation(parentSelector);
 }
-// End Translation code
 
+// End Translation code
