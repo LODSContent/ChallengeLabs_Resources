@@ -31,7 +31,7 @@ function modeSwitch() {
         }
     };
 
-    const difficultyButton = $('.difficultyButton p .variable');
+    const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
     if (modeSwitchSelected in modes) {
         const settings = modes[modeSwitchSelected];
         for (const [name, value] of Object.entries(settings)) {
@@ -44,9 +44,9 @@ function modeSwitch() {
         // Update text to modeSwitchSelected for valid modes
         if (difficultyButton.length) {
             difficultyButton.text(modeSwitchSelected);
-            if (debug) { console.log(`Updated .difficultyButton p .variable text to: ${modeSwitchSelected}`); }
+            if (debug) { console.log(`Updated .difficultybutton p .variable text to: ${modeSwitchSelected}`); }
         } else if (debug) {
-            console.log("No .difficultyButton p .variable element found");
+            console.log("No .difficultybutton p .variable element found");
         }
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
     } else if (modeSwitchSelected === null || modeSwitchSelected === "select lab mode") {
