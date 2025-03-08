@@ -1,240 +1,243 @@
-// This section only runs on the end of lab report
-// Preemptively blank screen - un-blanked by both try and catch
-document.querySelector("body").style.display = "none";
+// Runs at the end of the lab report
+console.log("Starting end-of-lab report generation");
+document.querySelector("body").style.display = "none"; // Blank screen initially
 
 try {
-  // Get the AutoTranslate variable setting
-  try {autoTranslateStatus = $('select[data-name="AutoTranslate"]').val().toLowerCase();} catch (err) {autoTranslate = null}
-  
-  // Get target language from HTML lang attribute, fallback to 'en'    
-  try {labLanguageCode = document.documentElement.lang} catch(err) {labLanguageCode = "en-US"}
-  
-  // Retrieve the appropriate language file from github
-  if (autoTranslateStatus == 'no' || autoTranslateStatus == null) {
-    let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-" + labLanguageCode + ".js";    
-  } else {
-    let uri = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-ML.js";
-  }
-  let xhttp = new XMLHttpRequest();
-  xhttp.open("GET", uri, false);
-  xhttp.send();
-  var scriptBody = xhttp.responseText;
-  eval (scriptBody);
+    // Configuration and data retrieval
+    const autoTranslateStatus = getAutoTranslateStatus();
+    const labLanguageCode = getLabLanguageCode();
+    const languageFileUrl = getLanguageFileUrl(autoTranslateStatus, labLanguageCode);
+    console.log(`AutoTranslate: ${autoTranslateStatus}, Language Code: ${labLanguageCode}, URL: ${languageFileUrl}`);
 
-  // Capture the flavor text
-  var strings = window.strings
+    // Load and evaluate language file synchronously
+    const scriptBody = loadScriptSync(languageFileUrl);
+    eval(scriptBody); // Executes language file content
+    const strings = window.strings; // Capture flavor text
+    console.log("Language file loaded and evaluated, strings captured");
 
-  // Parse the current text      
-  var examData = parseReport();
+    // Parse report data
+    const examData = parseReport();
+    console.log("Report parsed:", examData);
 
-  const colorOptions = strings.summary.filter(option => option.maxScore >= examData.skillometerScore && option.minScore <= examData.skillometerScore);
-  examData.summaryColor = colorOptions[0].color;
+    // Assign summary color
+    const colorOption = strings.summary.find(option => 
+        option.maxScore >= examData.skillometerScore && option.minScore <= examData.skillometerScore
+    ) || strings.summary[0]; // Fallback to first option
+    examData.summaryColor = colorOption.color;
+    console.log(`Assigned summary color: ${examData.summaryColor}`);
 
-  // Generate the report using the parsed data and replace the standard report with the result
-  document.querySelector("body").innerHTML = generateReport(examData, strings);
+    // Generate and apply report HTML
+    document.querySelector("body").innerHTML = generateReport(examData, strings);
+    console.log("Report HTML generated and applied");
 
-  // Import dial library and set the options for the skillometer
-  $.getScript("https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js", function () {
-    $(".dial").knob({
-      'min': 0, 'max': 100,
-      'readOnly': true,
-      'angleArc': 240, 'angleOffset': -120,
-      'fgColor': examData.summaryColor,
-      'inputColor': examData.summaryColor,
-      'width': 300, 'height': 240,
-      'thickness': ".35",
-      format: function (value) {
-        return value + '%';
-      }
-    })
-  });
+    // Load jQuery Knob library and configure skillometer
+    $.getScript("https://cdnjs.cloudflare.com/ajax/libs/jQuery-Knob/1.2.13/jquery.knob.min.js", () => {
+        $(".dial").knob({
+            min: 0,
+            max: 100,
+            readOnly: true,
+            angleArc: 240,
+            angleOffset: -120,
+            fgColor: examData.summaryColor,
+            inputColor: examData.summaryColor,
+            width: 300,
+            height: 240,
+            thickness: ".35",
+            format: value => `${value}%`
+        });
+        console.log("jQuery Knob library loaded and skillometer configured");
+    });
 
-  // Remove screen blanking
-  setTimeout(()=>{
-    try {
-      document.querySelector('body.end-of-lab-report').setAttribute('style','display:block !important')
-    } catch(err) {};
-  }, 1000);
+    // Reveal report with delay
+    setTimeout(() => {
+        document.querySelector('body.end-of-lab-report')?.setAttribute('style', 'display:block !important');
+        console.log("Report revealed after 1-second delay");
+    }, 1000);
 
 } catch (error) {
-  // Remove screen blanking - reveal standard report
-  document.querySelector('body.end-of-lab-report').setAttribute('style','display:block !important')
+    console.error("Report generation failed:", error);
+    // Reveal standard report on failure
+    document.querySelector('body.end-of-lab-report')?.setAttribute('style', 'display:block !important');
+    console.log("Standard report revealed due to error");
 }
 
-// Parse the stock report
-function parseReport() {
-  var examData = {};
-  examData.labName = document.querySelector(".labName").innerHTML
-  examData.labSeriesName = document.querySelector(".labSeriesName").innerHTML
-  examData.labInstanceId = document.querySelector(".labInstanceId").innerHTML
-  examData.duration = document.querySelector(".timeSpent").innerHTML
-  examData.expectedDuration = document.querySelector(".labProfileDurationMinutes").innerHTML + " minutes"
-  examData.totalAchievedScore = 0
-  examData.maxScore = 0
-  examData.activities = []
-  examData.assessments = { preScore: null, preMax: null, postScore: null, postMax: null };
+// Helper Functions
 
-  // Account for variance in activity group naming
-  const matchPreAssessment = new RegExp('pre[ -]*assessment', 'ig');
-  const matchPostAssessment = new RegExp('post[ -]*assessment', 'ig');
+function getAutoTranslateStatus() {
+    return $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
+}
 
-  // Parse activities
-  let activityGroupList = document.querySelectorAll(".activityGroupResult")
+function getLabLanguageCode() {
+    return document.documentElement.lang || "en-US";
+}
 
-  activityGroupList.forEach((activity) => {
-    let title = activity.querySelector(".activityGroupName").innerHTML
-    let scoreString = activity.querySelector(".activityGroupScore").innerHTML
-    let scoreAsFraction = scoreString.substring(scoreString.indexOf(":") + 2, scoreString.indexOf(","));
-    let numerator = parseInt(scoreAsFraction.split('/')[0])
-    let denominator = parseInt(scoreAsFraction.split('/')[1])
-    let percentageString = scoreString.substring(scoreString.lastIndexOf(" ") + 1)
-    let numericPercentage = percentageString.substring(0, percentageString.length - 1)
+function getLanguageFileUrl(autoTranslateStatus, labLanguageCode) {
+    const baseUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/CLabsEOL-";
+    return (autoTranslateStatus === 'no' || autoTranslateStatus === null)
+        ? `${baseUrl}${labLanguageCode}.js`
+        : `${baseUrl}ML.js`;
+}
 
-    // Look for assessments, collect their scores and exclude them from activities array
-    if (matchPreAssessment.test(title)) { examData.assessments.preScore = scoreAsFraction; }
-    else if (matchPostAssessment.test(title)) { examData.assessments.postScore = scoreAsFraction; }
-    else {
-      // not an assessment, must be an activity
-      examData.totalAchievedScore += numerator;
-      examData.maxScore += denominator;
-
-      examData.activities.push({
-        title: title,
-        score: numericPercentage
-      })
+function loadScriptSync(url) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url, false); // Synchronous
+    xhr.send();
+    if (xhr.status !== 200) {
+        throw new Error(`Failed to load script ${url}: HTTP ${xhr.status}`);
     }
-  });
-
-  examData.skillometerScore = Math.round((examData.totalAchievedScore / examData.maxScore) * 100)
-  console.log(examData)
-  return examData;
+    return xhr.responseText;
 }
 
-// Pairs a score with a random string from the range the score falls into
+function parseReport() {
+    const examData = {
+        labName: getElementText(".labName"),
+        labSeriesName: getElementText(".labSeriesName"),
+        labInstanceId: getElementText(".labInstanceId"),
+        duration: getElementText(".timeSpent"),
+        expectedDuration: `${getElementText(".labProfileDurationMinutes")} minutes`,
+        totalAchievedScore: 0,
+        maxScore: 0,
+        activities: [],
+        assessments: { preScore: null, preMax: null, postScore: null, postMax: null }
+    };
+
+    const matchPreAssessment = /pre[ -]*assessment/gi;
+    const matchPostAssessment = /post[ -]*assessment/gi;
+
+    document.querySelectorAll(".activityGroupResult").forEach(activity => {
+        const title = getElementText(".activityGroupName", activity);
+        const scoreString = getElementText(".activityGroupScore", activity);
+        const [numerator, denominator] = parseScoreFraction(scoreString);
+        const percentage = parsePercentage(scoreString);
+
+        if (matchPreAssessment.test(title)) {
+            examData.assessments.preScore = `${numerator}/${denominator}`;
+        } else if (matchPostAssessment.test(title)) {
+            examData.assessments.postScore = `${numerator}/${denominator}`;
+        } else {
+            examData.totalAchievedScore += numerator;
+            examData.maxScore += denominator;
+            examData.activities.push({ title, score: percentage });
+        }
+    });
+
+    examData.skillometerScore = Math.round((examData.totalAchievedScore / examData.maxScore) * 100) || 0;
+    return examData; // Logging moved to caller
+}
+
+function getElementText(selector, context = document) {
+    return context.querySelector(selector)?.innerHTML || "";
+}
+
+function parseScoreFraction(scoreString) {
+    const fraction = scoreString.match(/: (\d+\/\d+)/)?.[1] || "0/0";
+    return fraction.split('/').map(Number);
+}
+
+function parsePercentage(scoreString) {
+    const percentage = scoreString.match(/\d+%$/)?.[0] || "0%";
+    return parseInt(percentage);
+}
+
 function assignText(type, score, strings) {
-  // retrieval failed, bail out
-  if (null == strings) {
-    console.log("no strings are present");
-    return "";
-  }
+    if (!strings) {
+        console.log("No strings available");
+        return "";
+    }
 
-  // Section 1
-  if (type == "summaryHeader") {
-    let options = strings.summary.filter(option => option.maxScore >= score && option.minScore <= score);
-    return options[0].headings[(Math.floor(options[0].headings.length * Math.random()))];
-  }
+    const options = (type === "summaryHeader" || type === "summaryMessage")
+        ? strings.summary
+        : strings.activities;
 
-  // Section 2
-  if (type == "summaryMessage") {
-    let options = strings.summary.filter(option => option.maxScore >= score && option.minScore <= score);
-    return options[0].captions[(Math.floor(options[0].captions.length * Math.random()))];
-  }
+    const match = options.find(option => 
+        option.maxScore >= score && option.minScore <= score
+    ) || options[0]; // Fallback to first option
 
-  // Sections 3 & 4
-  else {
-    let options = strings.activities.filter(option => option.maxScore >= score && option.minScore <= score);
-    return options[0].messages[(Math.floor(options[0].messages.length * Math.random()))];
-  }
+    const key = type === "summaryHeader" ? "headings" : type === "summaryMessage" ? "captions" : "messages";
+    const items = match[key] || [];
+    return items[Math.floor(Math.random() * items.length)] || "";
 }
 
-// Generates the html to replace the standard report
 function generateReport(examData, strings) {
-
-  // Header
-  const summaryHeader = assignText("summaryHeader", examData.skillometerScore, strings);
-  const summaryMessage = assignText("summaryMessage", examData.skillometerScore, strings);
-  let activities = examData.activities
-
-  // Activities
-  activities.forEach(activity => {
-    activity.feedback = assignText("message", activity.score, strings);
-  })
-
-  let content = `<div id="report-container">
-    <div id="report-body">
-      <div id="print-container">
-        <a id="print-icon" onclick="print();">${strings.elements.print}</a>
-      </div>
-      <div class="report-section">
-        <h1 id="report-header">${summaryHeader}</h1>
-      </div>
-      <div class="report-section">
-        <h2 id="report-summary" style="color: ${examData.summaryColor}">${summaryMessage}</h2>
-        <div id="report-skillometer">
-          <input type="text" value="${examData.skillometerScore}" class="dial">
-        </div>`;
-
-  /* End report heading - optionally show lab details*/
-  content += `</div>`;
-
-  /* Only create excelled if there are applicable activities */
-  if (activities.some(activity => activity.score == 100)) {
-    content += `<div class="report-section excelled"><h2 class="report-section-title">` + strings.elements.excelled + `</h2><ul class="activities">`
-
-    examData.activities.forEach(activity => {
-      if (activity.score == 100) {
-        content += `<li>
-            <span class="report-activity-title">` + activity.title + `</span><br>
-            <span class="report-activity-feedback">` + activity.feedback + `</span>
-          </li> `;
-      }
-    })
-
-    content += `</ul>
-      </div>`
-  }
-
-  /* Only open growth if there are applicable activities */
-  if (activities.some(activity => activity.score < 100)) {
-    content += `<div class="report-section growth"><h2 class="report-section-title">` + strings.elements.growth + `</h2><ul class="activities">`;
+    const { skillometerScore, summaryColor, activities } = examData;
+    const summaryHeader = assignText("summaryHeader", skillometerScore, strings);
+    const summaryMessage = assignText("summaryMessage", skillometerScore, strings);
 
     activities.forEach(activity => {
-      if (activity.score < 100) {
-        // Partially correct
-        if (activity.score > 0) {
-          content += `<li class="partial">`
-        }
-        else {
-          content += `<li class="none">`
-        }
+        activity.feedback = assignText("message", activity.score, strings);
+    });
 
-        content +=
-          `<span class="report-activity-title">` + activity.title + `</span><br>
-            <span class="report-activity-feedback">` + activity.feedback + `</span>
-          </li> `;
-      }
-    })
+    let content = `
+        <div id="report-container">
+            <div id="report-body">
+                <div id="print-container">
+                    <a id="print-icon" onclick="print();">${strings.elements.print}</a>
+                </div>
+                <div class="report-section">
+                    <h1 id="report-header">${summaryHeader}</h1>
+                </div>
+                <div class="report-section">
+                    <h2 id="report-summary" style="color: ${summaryColor}">${summaryMessage}</h2>
+                    <div id="report-skillometer">
+                        <input type="text" value="${skillometerScore}" class="dial">
+                    </div>
+                </div>`;
 
-    content += `</ul>
-      </div>`
-  }
+    if (activities.some(activity => activity.score === 100)) {
+        content += `
+            <div class="report-section excelled">
+                <h2 class="report-section-title">${strings.elements.excelled}</h2>
+                <ul class="activities">
+                    ${activities
+                        .filter(activity => activity.score === 100)
+                        .map(activity => `
+                            <li>
+                                <span class="report-activity-title">${activity.title}</span><br>
+                                <span class="report-activity-feedback">${activity.feedback}</span>
+                            </li>
+                        `).join('')}
+                </ul>
+            </div>`;
+    }
 
-  content += `<div class="report-section assessments">`;
+    if (activities.some(activity => activity.score < 100)) {
+        content += `
+            <div class="report-section growth">
+                <h2 class="report-section-title">${strings.elements.growth}</h2>
+                <ul class="activities">
+                    ${activities
+                        .filter(activity => activity.score < 100)
+                        .map(activity => `
+                            <li class="${activity.score > 0 ? 'partial' : 'none'}">
+                                <span class="report-activity-title">${activity.title}</span><br>
+                                <span class="report-activity-feedback">${activity.feedback}</span>
+                            </li>
+                        `).join('')}
+                </ul>
+            </div>`;
+    }
 
-  // Pre and Post assessments will not display if their values cannot be retrieved
-  if (null != examData.assessments.preScore || null != examData.assessments.postScore) {
-    content += `<h2 class="report-section-title">` + strings.elements.title + `</h2>`
-  }
+    content += `
+        <div class="report-section assessments">
+            ${(examData.assessments.preScore || examData.assessments.postScore) 
+                ? `<h2 class="report-section-title">${strings.elements.title}</h2>` : ''}
+            ${examData.assessments.preScore ? `<div class="report-assessment"><span>Pre-Assessment: <b>${examData.assessments.preScore}</b></span></div>` : ''}
+            ${examData.assessments.postScore ? `<div class="report-assessment"><span>Post-Assessment: <b>${examData.assessments.postScore}</b></span></div>` : ''}
+        </div>
+    </div>`;
 
-  if (null != examData.assessments.preScore) {
-    content += `<div class="report-assessment"><span>Pre-Assessment: <b>${examData.assessments.preScore}</b></span></div>`;
-  }
+    const key = window.location.pathname.split('/').pop();
+    content += `
+        <a href="https://labondemand.com/Evaluation/Submit/${key}" id="evaluation">
+            <button type="button" class="primary">Challenge Labs Feedback ></button>
+        </a>
+    </div>`;
 
-  if (null !== examData.assessments.postScore) {
-    content += `<div class="report-assessment"><span>Post-Assessment: <b>${examData.assessments.postScore}</b></span></div>`;
-  }
-
-  /* End report body - optionally show lab details*/
-  content += "</div></div>";
-
-  let key = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
-  content += `<a href="https://labondemand.com/Evaluation/Submit/${key}" id="evaluation"><button type="button" class="primary">Challenge Labs Feedback &gt;</button></a></div>`;
-
-  return content;
+    return content;
 }
 
 function getColor() {
-  if (document.querySelector('link[href^="/Css/Dark.css"]') != null) {
-    document.querySelector('h2#report-summary').classList.add('dark');
-  }
+    if (document.querySelector('link[href^="/Css/Dark.css"]')) {
+        document.querySelector('h2#report-summary')?.classList.add('dark');
+    }
 }
