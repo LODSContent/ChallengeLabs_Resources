@@ -118,24 +118,34 @@ if (autoTranslate === 'no') {
         }
 
         const observer = new MutationObserver(mutations => {
+            let newElementsTranslated = 0;
+
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === 1 && node.closest(parent)) {
                         const tagName = node.tagName.toLowerCase();
                         if (elementArray.includes(tagName) && (node.type === 'button' || tagName !== 'input')) {
                             translateTextNodes(node);
+                            newElementsTranslated++;
                         }
                         const languageElements = node.querySelectorAll(findElements);
-                        Array.from(languageElements).forEach(translateTextNodes);
+                        Array.from(languageElements).forEach(element => {
+                            translateTextNodes(element);
+                            newElementsTranslated++;
+                        });
                     }
                 });
             });
+
+            if (debug && newElementsTranslated > 0) {
+                console.log(`Translated ${newElementsTranslated} new elements in '${parent}'`);
+            }
         });
 
         translateAllElements(parent);
         observer.observe(document.body, { childList: true, subtree: true });
         if (debug) { console.log(`Translation observer initialized for '${parent}'`); }
-        
+
         window.translatePage = translateAllElements;
         window.revertTranslations = revertTranslations;
     }
