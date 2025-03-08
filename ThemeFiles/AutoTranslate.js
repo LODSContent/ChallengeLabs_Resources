@@ -161,8 +161,12 @@ if (autoTranslate === 'no') {
     }
 
     // Start Translation
-    const isExamResult = window.location.pathname.includes("ExamResult");
-    const parentSelector = isExamResult ? '.end-of-lab-report' : '.instructions';
+    let parentSelector;
+    if (window.location.pathname.indexOf("ExamResult") < 0) {
+        parentSelector = '.instructions';
+    } else {
+        parentSelector = '.end-of-lab-report';
+    }
     initializeTranslation(parentSelector);
 }
 
