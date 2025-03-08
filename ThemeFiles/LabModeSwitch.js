@@ -55,7 +55,7 @@ function modeSwitch() {
             console.log("No difficultybutton [data-name=\"Difficulty\"] element found");
         }
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
-    } else if (modeSwitchSelected === null || modeKey === "select lab mode") {
+    } else if (modeSwitchSelected === null || modeSwitchSelected === '' || modeKey === "select lab mode") {
         // Update innerHTML to Difficulty toggle value when null or "select lab mode"
         if (difficultyButton.length) {
             difficultyButton.each((index, element) => {
