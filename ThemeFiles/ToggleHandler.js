@@ -108,6 +108,6 @@ function handleToggles (){
 }
 
 // Timeout based toggle handling
-setTimeout(()=>{
+//setTimeout(()=>{
   handleToggles();
-}, 750);
+//}, 750);
