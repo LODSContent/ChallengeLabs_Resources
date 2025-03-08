@@ -167,17 +167,15 @@ if (autoTranslate == 'no' || autoTranslate == null) {
       } catch(err) {};
     }
 
-    /*
     if (window.location.pathname.indexOf("ExamResult") < 0) {
-      setTimeout(()=>{
+      //setTimeout(()=>{
         initializeTranslation('.instructions');
-      }, 2000);
+      //}, 2000);
     } else {
-      setTimeout(()=>{
+      //setTimeout(()=>{
         initializeTranslation('.end-of-lab-report');
-      }, 2000);
+      //}, 2000);
     }
-    */
   }
 }
 // End Translation code
