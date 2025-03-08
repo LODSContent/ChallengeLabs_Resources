@@ -4,8 +4,9 @@
 try {autoTranslate = $('[data-name="AutoTranslate"] option:selected').first().text().toLowerCase()} catch (err) {autoTranslate = null}
 
 // Retrieve the appropriate language file from github
-if (autoTranslate != 'no' && autoTranslate != null) {  
-
+if (autoTranslate == 'no' || autoTranslate == null) {  
+  console.log("Skipping Translation.");
+} else {
   // Store translated elements to prevent duplicate translations
   const translatedElements = new Set();
   const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, details, span, input[type="button"]';
