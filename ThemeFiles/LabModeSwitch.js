@@ -1,8 +1,16 @@
 // Code for mode switching
+let isSwitching = false; // Recursion guard
+const difficultyValue = $(`select[data-name="Difficulty"]`).val() || ''; // Cached at init
+
 function modeSwitch() {
-    const difficultyValue = $(`select[data-name="Difficulty"]`).val() || '';
+    if (isSwitching) {
+        if (debug) { console.log("Recursion detected, aborting modeSwitch"); }
+        return;
+    }
+    isSwitching = true;
+
     if (debug) { console.log(`Current Difficulty: ${difficultyValue}`); }
-    const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null; // Removed .toLowerCase()
+    const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null;
     if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
 
     // Cached selectors for visibility toggles (kept for reference, unused when commented)
@@ -14,28 +22,24 @@ function modeSwitch() {
             ShowGuided: 'Yes', 
             ShowAdvanced: 'Yes', 
             ShowActivity: 'Yes'
-            // Uncomment below to work with objects outside of "Sections"
             //visibility: () => { $hints.show(); $knowledge.show(); }
         },
         advanced: { 
             ShowGuided: 'No', 
             ShowAdvanced: 'Yes', 
             ShowActivity: 'Yes' 
-            // Uncomment below to work with objects outside of "Sections"
             //visibility: () => { $hints.hide(); $knowledge.show(); }
         },
         expert: { 
             ShowGuided: 'No', 
             ShowAdvanced: 'No', 
             ShowActivity: 'No' 
-            // Uncomment below to work with objects outside of "Sections"
             //visibility: () => { $hints.hide(); $knowledge.hide(); }
         }
     };
 
-    // Update the Difficulty button on page0 to reflect the change
     const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
-    const modeKey = modeSwitchSelected ? modeSwitchSelected.toLowerCase() : null; // Case-insensitive key check
+    const modeKey = modeSwitchSelected ? modeSwitchSelected.toLowerCase() : null;
     if (modeKey in modes) {
         const settings = modes[modeKey];
         for (const [name, value] of Object.entries(settings)) {
@@ -45,7 +49,6 @@ function modeSwitch() {
                 setSelectValue(name, value);
             }
         }
-        // Update innerHTML to modeSwitchSelected (original case) for valid modes
         if (difficultyButton.length) {
             difficultyButton.each((index, element) => {
                 element.innerHTML = modeSwitchSelected; // Original case preserved
@@ -56,7 +59,6 @@ function modeSwitch() {
         }
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
     } else if (modeSwitchSelected === null || modeSwitchSelected === '' || modeKey === "select lab mode") {
-        // Update innerHTML to Difficulty toggle value when null or "select lab mode"
         if (difficultyButton.length) {
             difficultyButton.each((index, element) => {
                 element.innerHTML = difficultyValue || '';
@@ -69,13 +71,15 @@ function modeSwitch() {
     } else if (modeSwitchSelected) {
         if (debug) { console.log(`Unknown mode: ${modeSwitchSelected}, no changes applied`); }
     }
+
+    isSwitching = false; // Reset guard
 }
 
 // Helper Functions
 function setSelectValue(name, value) {
     const $select = $(`select[data-name="${name}"]`);
     $select.find(`option[value="${value}"]`).prop('selected', true);
-    $select.trigger('change');
+    $select.trigger('change'); // This might trigger other listeners
 }
 
 // Setup event listeners
