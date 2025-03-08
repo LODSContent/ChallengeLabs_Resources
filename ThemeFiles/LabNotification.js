@@ -62,9 +62,9 @@ function labNotifications(){
 }
   
 // Timeout for running the lab Notification function
-setTimeout(()=>{
+//setTimeout(()=>{
   try {
     labNotifications();
   } catch(err) {};
-}, 2000);
+//}, 2000);
 // End lab Notification code
