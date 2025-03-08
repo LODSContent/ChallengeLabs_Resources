@@ -42,22 +42,26 @@ function modeSwitch() {
                 setSelectValue(name, value);
             }
         }
-        // Update text to modeSwitchSelected for valid modes
+        // Update innerHTML to modeSwitchSelected for valid modes
         if (difficultyButton.length) {
-            difficultyButton.text(modeSwitchSelected);
-            if (debug) { console.log(`Updated difficultybutton text to: ${modeSwitchSelected}`); }
+            difficultyButton.each((index, element) => {
+                element.innerHTML = modeSwitchSelected;
+            });
+            if (debug) { console.log(`Updated difficultybutton [data-name="Difficulty"] innerHTML to: ${modeSwitchSelected}`); }
         } else if (debug) {
-            console.log("No difficultybutton element found");
+            console.log("No difficultybutton [data-name=\"Difficulty\"] element found");
         }
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
     } else if (modeSwitchSelected === null || modeSwitchSelected === "select lab mode") {
-        // Update text to Difficulty toggle value when null or "select lab mode"
+        // Update innerHTML to Difficulty toggle value when null or "select lab mode"
         const difficultyValue = getToggleValue('Difficulty');
         if (difficultyButton.length) {
-            difficultyButton.text(difficultyValue || '');
-            if (debug) { console.log(`Updated difficultyButton text to Difficulty: ${difficultyValue}`); }
+            difficultyButton.each((index, element) => {
+                element.innerHTML = difficultyValue || '';
+            });
+            if (debug) { console.log(`Updated difficultybutton [data-name="Difficulty"] innerHTML to Difficulty: ${difficultyValue}`); }
         } else if (debug) {
-            console.log("No difficultyButton element found");
+            console.log("No difficultybutton [data-name=\"Difficulty\"] element found");
         }
         if (debug) { console.log(`No mode applied (modeSwitchSelected: ${modeSwitchSelected})`); }
     } else if (modeSwitchSelected) {
