@@ -45,9 +45,9 @@ function modeSwitch() {
         // Update text to modeSwitchSelected for valid modes
         if (difficultyButton.length) {
             difficultyButton.text(modeSwitchSelected);
-            if (debug) { console.log(`Updated .difficultybutton p .variable text to: ${modeSwitchSelected}`); }
+            if (debug) { console.log(`Updated difficultybutton text to: ${modeSwitchSelected}`); }
         } else if (debug) {
-            console.log("No .difficultybutton p .variable element found");
+            console.log("No difficultybutton element found");
         }
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
     } else if (modeSwitchSelected === null || modeSwitchSelected === "select lab mode") {
@@ -55,9 +55,9 @@ function modeSwitch() {
         const difficultyValue = getToggleValue('Difficulty');
         if (difficultyButton.length) {
             difficultyButton.text(difficultyValue || '');
-            if (debug) { console.log(`Updated .difficultyButton p .variable text to Difficulty: ${difficultyValue}`); }
+            if (debug) { console.log(`Updated difficultyButton text to Difficulty: ${difficultyValue}`); }
         } else if (debug) {
-            console.log("No .difficultyButton p .variable element found");
+            console.log("No difficultyButton element found");
         }
         if (debug) { console.log(`No mode applied (modeSwitchSelected: ${modeSwitchSelected})`); }
     } else if (modeSwitchSelected) {
