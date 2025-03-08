@@ -50,16 +50,14 @@ try {
   });
 
   // Remove screen blanking
-  //setTimeout(()=>{
-    //try {
-      //document.querySelector("body").style.display = "block";
+  setTimeout(()=>{
+    try {
       document.querySelector('body.end-of-lab-report').setAttribute('style','display:block !important')
-    //} catch(err) {};
-  //}, 1000);
-  
+    } catch(err) {};
+  }, 1000);
+
 } catch (error) {
   // Remove screen blanking - reveal standard report
-  //document.querySelector("body").style.display = "block";
   document.querySelector('body.end-of-lab-report').setAttribute('style','display:block !important')
 }
 
@@ -175,9 +173,8 @@ function generateReport(examData, strings) {
 
     examData.activities.forEach(activity => {
       if (activity.score == 100) {
-        activityTitle = activity.title.replaceAll('&lt;x-l8&gt;', '<x-l8>').replaceAll('&lt;/x-l8&gt;','</x-l8>')
         content += `<li>
-            <span class="report-activity-title">` + activityTitle + `</span><br>
+            <span class="report-activity-title">` + activity.title + `</span><br>
             <span class="report-activity-feedback">` + activity.feedback + `</span>
           </li> `;
       }
@@ -193,7 +190,6 @@ function generateReport(examData, strings) {
 
     activities.forEach(activity => {
       if (activity.score < 100) {
-        activityTitle = activity.title.replaceAll('&lt;x-l8&gt;', '<x-l8>').replaceAll('&lt;/x-l8&gt;','</x-l8>')
         // Partially correct
         if (activity.score > 0) {
           content += `<li class="partial">`
@@ -203,7 +199,7 @@ function generateReport(examData, strings) {
         }
 
         content +=
-          `<span class="report-activity-title">` + activityTitle + `</span><br>
+          `<span class="report-activity-title">` + activity.title + `</span><br>
             <span class="report-activity-feedback">` + activity.feedback + `</span>
           </li> `;
       }
@@ -232,7 +228,7 @@ function generateReport(examData, strings) {
   content += "</div></div>";
 
   let key = window.location.pathname.substring(window.location.pathname.lastIndexOf("/") + 1)
-  content += `<a href="https://labondemand.com/Evaluation/Submit/${key}" id="evaluation"><button type="button" class="primary">` + strings.elements.feedback + ` &gt;</button></a></div>`;
+  content += `<a href="https://labondemand.com/Evaluation/Submit/${key}" id="evaluation"><button type="button" class="primary">Challenge Labs Feedback &gt;</button></a></div>`;
 
   return content;
 }
