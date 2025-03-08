@@ -50,12 +50,12 @@ try {
   });
 
   // Remove screen blanking
-  setTimeout(()=>{
-    try {
+  //setTimeout(()=>{
+    //try {
       //document.querySelector("body").style.display = "block";
       document.querySelector('body.end-of-lab-report').setAttribute('style','display:block !important')
-    } catch(err) {};
-  }, 1000);
+    //} catch(err) {};
+  //}, 1000);
   
 } catch (error) {
   // Remove screen blanking - reveal standard report
