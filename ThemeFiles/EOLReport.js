@@ -1,7 +1,3 @@
-// Get the debug lab variable setting
-const debug = true;
-if (debug) { console.log("Debug is on."); }
-
 // Runs at the end of the lab report
 if (debug) { console.log("Starting end-of-lab report generation"); }
 document.querySelector("body").style.display = "none"; // Blank screen initially
