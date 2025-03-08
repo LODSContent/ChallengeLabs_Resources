@@ -15,9 +15,13 @@ Challenge Overview
 !INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/Challenge-V3-Framework/main/Templates/Sections/LabHelp.md)
 
 :::HiddenVariables(ShowVariables=Yes)
-@lab.DropDownList(ShowToggle)[Yes,No]
-@lab.DropDownList(ShowGuided)[Yes,No]
-@lab.DropDownList(ShowAdvanced)[Yes,No]
-@lab.DropDownList(ShowActivity)[Yes,No]
-@lab.DropDownList(AutoTranslate)[Yes,No]
+ShowToggle: @lab.DropDownList(ShowToggle)[Yes,No]
+
+ShowGuided: @lab.DropDownList(ShowGuided)[Yes,No]
+
+ShowAdvanced: @lab.DropDownList(ShowAdvanced)[Yes,No]
+
+ShowActivity: @lab.DropDownList(ShowActivity)[Yes,No]
+
+AutoTranslate: @lab.DropDownList(AutoTranslate)[Yes,No]
 :::
