@@ -1,61 +1,74 @@
 // Code for mode switching
 function modeSwitch() {
-  try {modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text().toLowerCase()} catch (err) {modeSwitchSelected = null}
-  if (modeSwitchSelected == 'guided') {
-    //try {$(".hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowGuided, .ShowAdvanced").show();} catch (err) {}
-    try {
-      $('select[data-name="ShowGuided"] option[value="Yes"]').prop('selected', true)
-      $('select[data-name="ShowGuided"]').trigger("change");            
-    } catch (err) {}
-    try {
-      $('select[data-name="ShowAdvanced"] option[value="Yes"]').prop('selected', true)
-      $('select[data-name="ShowAdvanced"]').trigger("change"); 
-    } catch (err) {}
-    try {
-      $('select[data-name="ShowActivity"] option[value="Yes"]').prop('selected', true)
-      $('select[data-name="ShowActivity"]').trigger("change");            
-    } catch (err) {}
-    } else if (modeSwitchSelected == 'advanced') {
-    //try {$(".knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced").show();} catch (err) {}
-    //try {$(".hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided").hide();} catch (err) {}
-    try {
-      $('select[data-name="ShowGuided"] option[value="No"]').prop('selected', true)
-      $('select[data-name="ShowGuided"]').trigger("change");            
-    } catch (err) {}
-    try {
-      $('select[data-name="ShowAdvanced"] option[value="Yes"]').prop('selected', true)
-      $('select[data-name="ShowAdvanced"]').trigger("change");    
-    } catch (err) {}
-    try {
-      $('select[data-name="ShowActivity"] option[value="Yes"]').prop('selected', true)
-      $('select[data-name="ShowActivity"]').trigger("change");       
-    } catch (err) {}
-    } else if (modeSwitchSelected == 'expert') {
-    //try {$(".hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowGuided, .ShowAdvanced").hide();} catch (err) {}
-    try {
-      $('select[data-name="ShowGuided"] option[value="No"]').prop('selected', true)
-      $('select[data-name="ShowGuided"]').trigger("change");            
-    } catch (err) {}
-    try {
-      $('select[data-name="ShowAdvanced"] option[value="No"]').prop('selected', true)
-      $('select[data-name="ShowAdvanced"]').trigger("change"); 
-    } catch (err) {}
-    try {
-      $('select[data-name="ShowActivity"] option[value="No"]').prop('selected', true)
-      $('select[data-name="ShowActivity"]').trigger("change");          
-    } catch (err) {}
-    } 
+    const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text()?.toLowerCase() || null;
+    if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
+
+    // Cached selectors for visibility toggles (kept for reference, unused when commented)
+    const $hints = $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided');
+    const $knowledge = $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced');
+
+    const modes = {
+        guided: { 
+            ShowGuided: 'Yes', 
+            ShowAdvanced: 'Yes', 
+            ShowActivity: 'Yes'
+            // Uncomment below to work with objects outside of "Sections"
+            //visibility: () => { $hints.show(); $knowledge.show(); }
+        },
+        advanced: { 
+            ShowGuided: 'No', 
+            ShowAdvanced: 'Yes', 
+            ShowActivity: 'Yes' 
+            // Uncomment below to work with objects outside of "Sections"
+            //visibility: () => { $hints.hide(); $knowledge.show(); }
+        },
+        expert: { 
+            ShowGuided: 'No', 
+            ShowAdvanced: 'No', 
+            ShowActivity: 'No' 
+            // Uncomment below to work with objects outside of "Sections"
+            //visibility: () => { $hints.hide(); $knowledge.hide(); }
+        }
+    };
+
+    if (modeSwitchSelected in modes) {
+        const settings = modes[modeSwitchSelected];
+        for (const [name, value] of Object.entries(settings)) {
+            if (typeof value === 'function') {
+                value(); // Skipped when commented out
+            } else {
+                setSelectValue(name, value);
+            }
+        }
+        if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); } // Removed "and visibility"
+    } else if (modeSwitchSelected) {
+        if (debug) { console.log(`Unknown mode: ${modeSwitchSelected}, no changes applied`); }
+    }
 }
 
-// Timeout for creating the mode switch watchdog
-//setTimeout(()=>{
-  try {
-    modeSwitchItems = $('[data-name="LabMode"]')
-    for (i=0;i < modeSwitchItems.length;i++) {
-      //modeSwitchItems.click(function(){modeSwitch();});
-      listener = 'modeSwitchItems[' + i +'].addEventListener(\'click\',function(){modeSwitch();});'
-      eval(listener);        
-    }
-  } catch(err) {};
-//}, 2000);
-// End code for mode switching
+// Helper Function
+function setSelectValue(name, value) {
+    const $select = $(`select[data-name="${name}"]`);
+    $select.find(`option[value="${value}"]`).prop('selected', true);
+    $select.trigger('change');
+}
+
+// Setup event listeners
+function initializeModeSwitch() {
+    const $modeSwitchItems = $('[data-name="LabMode"]');
+    if (debug) { console.log(`Found ${$modeSwitchItems.length} mode switch elements`); }
+
+    $modeSwitchItems.each((index, element) => {
+        element.addEventListener('click', () => {
+            modeSwitch();
+            if (debug) { console.log(`Mode switch triggered by element ${index}`); }
+        });
+    });
+}
+
+// Initialze the Mode Switch
+try {
+    initializeModeSwitch();
+} catch (err) {
+    console.error("Mode switch initialization failed:", err);
+}
