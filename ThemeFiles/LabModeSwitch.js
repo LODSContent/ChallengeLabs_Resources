@@ -1,6 +1,6 @@
 // Code for mode switching
 function modeSwitch() {
-    const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text()?.toLowerCase() || null;
+    const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null; // Removed .toLowerCase()
     if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
 
     // Cached selectors for visibility toggles (kept for reference, unused when commented)
@@ -33,8 +33,9 @@ function modeSwitch() {
 
     // Update the Difficulty button on page0 to reflect the change
     const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
-    if (modeSwitchSelected in modes) {
-        const settings = modes[modeSwitchSelected];
+    const modeKey = modeSwitchSelected ? modeSwitchSelected.toLowerCase() : null; // Case-insensitive key check
+    if (modeKey in modes) {
+        const settings = modes[modeKey];
         for (const [name, value] of Object.entries(settings)) {
             if (typeof value === 'function') {
                 value(); // Skipped when commented out
@@ -42,17 +43,17 @@ function modeSwitch() {
                 setSelectValue(name, value);
             }
         }
-        // Update innerHTML to modeSwitchSelected for valid modes
+        // Update innerHTML to modeSwitchSelected (original case) for valid modes
         if (difficultyButton.length) {
             difficultyButton.each((index, element) => {
-                element.innerHTML = modeSwitchSelected;
+                element.innerHTML = modeSwitchSelected; // Original case preserved
             });
             if (debug) { console.log(`Updated difficultybutton [data-name="Difficulty"] innerHTML to: ${modeSwitchSelected}`); }
         } else if (debug) {
             console.log("No difficultybutton [data-name=\"Difficulty\"] element found");
         }
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
-    } else if (modeSwitchSelected === null || modeSwitchSelected === "select lab mode") {
+    } else if (modeSwitchSelected === null || modeKey === "select lab mode") {
         // Update innerHTML to Difficulty toggle value when null or "select lab mode"
         const difficultyValue = getToggleValue('Difficulty');
         if (difficultyButton.length) {
