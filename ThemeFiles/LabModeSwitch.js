@@ -2,7 +2,15 @@
 let isSwitching = false; // Recursion guard
 const difficultyValue = $(`select[data-name="Difficulty"]`).val() || ''; // Cached at init
 
-function modeSwitch() {
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+const modeSwitch = debounce(() => {
     if (isSwitching) {
         if (debug) { console.log("Recursion detected, aborting modeSwitch"); }
         return;
@@ -13,28 +21,24 @@ function modeSwitch() {
     const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null;
     if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
 
-    // Cached selectors for visibility toggles (kept for reference, unused when commented)
-    //const $hints = $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided');
-    //const $knowledge = $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced');
-
     const modes = {
         guided: { 
             ShowGuided: 'Yes', 
             ShowAdvanced: 'Yes', 
             ShowActivity: 'Yes'
-            //visibility: () => { $hints.show(); $knowledge.show(); }
+            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').show(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
         },
         advanced: { 
             ShowGuided: 'No', 
             ShowAdvanced: 'Yes', 
             ShowActivity: 'Yes' 
-            //visibility: () => { $hints.hide(); $knowledge.show(); }
+            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
         },
         expert: { 
             ShowGuided: 'No', 
             ShowAdvanced: 'No', 
             ShowActivity: 'No' 
-            //visibility: () => { $hints.hide(); $knowledge.hide(); }
+            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').hide(); }
         }
     };
 
@@ -72,14 +76,18 @@ function modeSwitch() {
         if (debug) { console.log(`Unknown mode: ${modeSwitchSelected}, no changes applied`); }
     }
 
+    // Log current LabMode state post-update
+    const currentMode = $('[data-name="LabMode"] option:selected').first().text() || null;
+    if (debug) { console.log(`Post-update LabMode state: ${currentMode}`); }
+
     isSwitching = false; // Reset guard
-}
+}, 100); // 100ms debounce
 
 // Helper Functions
 function setSelectValue(name, value) {
     const $select = $(`select[data-name="${name}"]`);
     $select.find(`option[value="${value}"]`).prop('selected', true);
-    $select.trigger('change'); // This might trigger other listeners
+    $select.trigger('change'); // Might trigger other listeners
 }
 
 // Setup event listeners
@@ -88,7 +96,7 @@ function initializeModeSwitch() {
     if (debug) { console.log(`Found ${$modeSwitchItems.length} mode switch elements`); }
 
     $modeSwitchItems.each((index, element) => {
-        element.addEventListener('click', () => {
+        element.addEventListener('change', () => { // Changed to 'change'
             modeSwitch();
             if (debug) { console.log(`Mode switch triggered by element ${index}`); }
         });
