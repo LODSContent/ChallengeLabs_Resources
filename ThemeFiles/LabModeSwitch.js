@@ -1,49 +1,42 @@
 // Code for mode switching
-let isSwitching = false; // Recursion guard
 const difficultyValue = $(`select[data-name="Difficulty"]`).val() || ''; // Cached at init
 
-function debounce(func, wait) {
-    let timeout;
-    return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-}
-
-const modeSwitch = debounce(() => {
-    if (isSwitching) {
-        if (debug) { console.log("Recursion detected, aborting modeSwitch"); }
-        return;
-    }
-    isSwitching = true;
-
-    if (debug) { console.log(`Current Difficulty: ${difficultyValue}`); }
-    const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null;
+// Code for mode switching
+function modeSwitch() {
+    const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null; // Removed .toLowerCase()
     if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
+
+    // Cached selectors for visibility toggles (kept for reference, unused when commented)
+    //const $hints = $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided');
+    //const $knowledge = $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced');
 
     const modes = {
         guided: { 
             ShowGuided: 'Yes', 
             ShowAdvanced: 'Yes', 
             ShowActivity: 'Yes'
-            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').show(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
+            // Uncomment below to work with objects outside of "Sections"
+            //visibility: () => { $hints.show(); $knowledge.show(); }
         },
         advanced: { 
             ShowGuided: 'No', 
             ShowAdvanced: 'Yes', 
             ShowActivity: 'Yes' 
-            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
+            // Uncomment below to work with objects outside of "Sections"
+            //visibility: () => { $hints.hide(); $knowledge.show(); }
         },
         expert: { 
             ShowGuided: 'No', 
             ShowAdvanced: 'No', 
             ShowActivity: 'No' 
-            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').hide(); }
+            // Uncomment below to work with objects outside of "Sections"
+            //visibility: () => { $hints.hide(); $knowledge.hide(); }
         }
     };
 
+    // Update the Difficulty button on page0 to reflect the change
     const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
-    const modeKey = modeSwitchSelected ? modeSwitchSelected.toLowerCase() : null;
+    const modeKey = modeSwitchSelected ? modeSwitchSelected.toLowerCase() : null; // Case-insensitive key check
     if (modeKey in modes) {
         const settings = modes[modeKey];
         for (const [name, value] of Object.entries(settings)) {
@@ -53,6 +46,7 @@ const modeSwitch = debounce(() => {
                 setSelectValue(name, value);
             }
         }
+        // Update innerHTML to modeSwitchSelected (original case) for valid modes
         if (difficultyButton.length) {
             difficultyButton.each((index, element) => {
                 element.innerHTML = modeSwitchSelected; // Original case preserved
@@ -62,7 +56,8 @@ const modeSwitch = debounce(() => {
             console.log("No difficultybutton [data-name=\"Difficulty\"] element found");
         }
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
-    } else if (modeSwitchSelected === null || modeSwitchSelected === '' || modeKey === "select lab mode") {
+    } else if (modeSwitchSelected === null || modeKey === "select lab mode") {
+        // Update innerHTML to Difficulty toggle value when null or "select lab mode"
         if (difficultyButton.length) {
             difficultyButton.each((index, element) => {
                 element.innerHTML = difficultyValue || '';
@@ -75,19 +70,13 @@ const modeSwitch = debounce(() => {
     } else if (modeSwitchSelected) {
         if (debug) { console.log(`Unknown mode: ${modeSwitchSelected}, no changes applied`); }
     }
-
-    // Log current LabMode state post-update
-    const currentMode = $('[data-name="LabMode"] option:selected').first().text() || null;
-    if (debug) { console.log(`Post-update LabMode state: ${currentMode}`); }
-
-    isSwitching = false; // Reset guard
-}, 100); // 100ms debounce
+}
 
 // Helper Functions
 function setSelectValue(name, value) {
     const $select = $(`select[data-name="${name}"]`);
     $select.find(`option[value="${value}"]`).prop('selected', true);
-    $select.trigger('change'); // Might trigger other listeners
+    $select.trigger('change');
 }
 
 // Setup event listeners
@@ -96,7 +85,7 @@ function initializeModeSwitch() {
     if (debug) { console.log(`Found ${$modeSwitchItems.length} mode switch elements`); }
 
     $modeSwitchItems.each((index, element) => {
-        element.addEventListener('change', () => { // Changed to 'change'
+        element.addEventListener('click', () => {
             modeSwitch();
             if (debug) { console.log(`Mode switch triggered by element ${index}`); }
         });
