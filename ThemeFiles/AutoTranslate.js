@@ -165,7 +165,8 @@ if (autoTranslate == 'no' || autoTranslate == null) {
         window.revertTranslations = revertTranslations;
       } catch(err) {};
     }
-    
+
+    /*
     if (window.location.pathname.indexOf("ExamResult") < 0) {
       setTimeout(()=>{
         initializeTranslation('.instructions');
@@ -175,6 +176,7 @@ if (autoTranslate == 'no' || autoTranslate == null) {
         initializeTranslation('.end-of-lab-report');
       }, 2000);
     }
+    */
   }
 }
 // End Translation code
