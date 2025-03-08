@@ -1,113 +1,84 @@
-function handleToggles (){
-  // ShowToggle
-  try {showToggle = $('select[data-name="ShowToggle"]').val().toLowerCase();} catch (err) {showToggle = null}
-  // ShowHints
-  try {showHints = $('select[data-name="ShowHints"]').val().toLowerCase();} catch (err) {showHints = null}
-  // ShowGuided
-  try {showGuided = $('select[data-name="ShowGuided"]').val().toLowerCase();} catch (err) {showGuided = null}
-  // ShowAdvanced
-  try {showAdvanced = $('select[data-name="ShowAdvanced"]').val().toLowerCase();} catch (err) {showAdvanced = null}
-  // ShowHints = yes or missing
-  if (showHints == null || showHints !== 'no') {
-    try {$('input.checkMode').attr('checked', true);} catch (err) {}
-    if (showToggle == 'yes') {
-      if (showGuided == 'yes') {  
-        try {
-          $('select[data-name="ShowGuided"] option[value="Yes"]').prop('selected', true)
-          $('select[data-name="ShowGuided"]').trigger("change");               
-        } catch (err) {}
-      }
-      if (showAdvanced == 'yes') {  
-        try {
-          $('select[data-name="ShowAdvanced"] option[value="Yes"]').prop('selected', true)
-          $('select[data-name="ShowAdvanced"]').trigger("change");       
-        } catch (err) {}
-      }
-    }
-  }
-  // ShowHints = no 
-  else {
-    try {$('input.checkMode').removeAttr('checked');} catch (err) {}
-    try {$(".hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowGuided, .ShowAdvanced").hide();} catch (err) {}
-    if (showToggle == 'yes') {
-      if (showGuided == 'yes') {  
-        try {
-          $('select[data-name="ShowGuided"] option[value="No"]').prop('selected', true)
-          $('select[data-name="ShowGuided"]').trigger("change");            
-        } catch (err) {}
-      }
-      if (showAdvanced == 'yes') {  
-        try {
-          $('select[data-name="ShowAdvanced"] option[value="No"]').prop('selected', true)
-          $('select[data-name="ShowAdvanced"]').trigger("change");        
-        } catch (err) {}
-      }
-    }
-  }
+function handleToggles() {
+    // Fetch toggle settings with defaults
+    const showToggle = getToggleValue('ShowToggle');
+    const showHints = getToggleValue('ShowHints');
+    const showGuided = getToggleValue('ShowGuided');
+    const showAdvanced = getToggleValue('ShowAdvanced');
+    if (debug) { console.log(`Toggle settings - ShowToggle: ${showToggle}, ShowHints: ${showHints}, ShowGuided: ${showGuided}, ShowAdvanced: ${showAdvanced}`); }
 
-  //ShowToggle = no
-  if (showToggle != null && showToggle == 'no') {
-    try {$('.hint-toggle, [data-name="ShowHints"]').remove();} catch (err) {}
-  }
-  // ShowToggle = yes or missing
-  else {
-    $('body').on('click', 'input.checkMode', function () {
-      // Is checkbox checked?
-      if ($(this).is(':checked')) {
-        $('input.checkMode').prop("checked", true);
-        try {$(".hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowGuided, .ShowAdvanced").show();} catch (err) {}     
-        // Is this the editor?
-        if(document.querySelector('link[href^="/Css/EditInstructions.css"]') == null ){
-          try {
-            $('select[data-name="ShowHints"] option[value="Yes"]').prop('selected', true)
-            $('select[data-name="ShowHints"]').trigger("change");  
-          } catch (err) {}
-          if (showToggle == 'yes') { 
-            if (showGuided == 'yes') {             
-              try {
-                $('select[data-name="ShowGuided"] option[value="Yes"]').prop('selected', true)
-                $('select[data-name="ShowGuided"]').trigger("change");               
-              } catch (err) {}
-            }
-            if (showAdvanced == 'yes') { 
-              try {
-                $('select[data-name="ShowAdvanced"] option[value="Yes"]').prop('selected', true)
-                $('select[data-name="ShowAdvanced"]').trigger("change");    
-              } catch (err) {}
-            }
-          }
+    const $checkMode = $('input.checkMode');
+    const $hintsElements = $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowGuided, .ShowAdvanced');
+
+    // Handle ShowHints
+    if (!showHints || showHints !== 'no') {
+        if (debug) { console.log("Hints enabled by default or set to yes"); }
+        $checkMode.prop('checked', true);
+        if (showToggle === 'yes') {
+            setSelectValue('ShowGuided', showGuided, 'Yes');
+            setSelectValue('ShowAdvanced', showAdvanced, 'Yes');
         }
-      } else {
-        try {$(".hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowGuided, .ShowAdvanced").hide();} catch (err) {}
-        try {$('[data-variable-name="ShowGuided"]').hide();} catch (err) {}
-        try {$('[data-variable-name="ShowAdvanced"]').hide();} catch (err) {}
-        try {$('input.checkMode').prop("checked", false);} catch (err) {}
-        if (document.querySelector('link[href^="/Css/EditInstructions.css"]') == null){
-          try {
-            $('select[data-name="ShowHints"] option[value="No"]').prop('selected', true)
-            $('select[data-name="ShowHints"]').trigger("change");
-          } catch (err) {}
-          if (showToggle == 'yes') {
-            if (showGuided == 'yes') { 
-              try {
-                $('select[data-name="ShowGuided"] option[value="No"]').prop('selected', true)
-                $('select[data-name="ShowGuided"]').trigger("change");            
-              } catch (err) {}                
-            }
-            if (showAdvanced == 'yes') { 
-              try {
-                $('select[data-name="ShowAdvanced"] option[value="No"]').prop('selected', true)
-                $('select[data-name="ShowAdvanced"]').trigger("change");            
-              } catch (err) {}
-            }
-          }
+    } else {
+        if (debug) { console.log("Hints disabled (ShowHints = no)"); }
+        $checkMode.prop('checked', false);
+        $hintsElements.hide();
+        if (showToggle === 'yes') {
+            setSelectValue('ShowGuided', showGuided, 'No');
+            setSelectValue('ShowAdvanced', showAdvanced, 'No');
         }
-      }
-    });
-  }
+    }
+
+    // Handle ShowToggle
+    if (showToggle === 'no') {
+        if (debug) { console.log("Removing hint toggles (ShowToggle = no)"); }
+        $('.hint-toggle, [data-name="ShowHints"]').remove();
+    } else {
+        if (debug) { console.log("Setting up toggle event listener (ShowToggle = yes or null)"); }
+        $('body').on('click', 'input.checkMode', function () {
+            const isChecked = $(this).is(':checked');
+            if (debug) { console.log(`Checkbox toggled: ${isChecked ? 'checked' : 'unchecked'}`); }
+
+            if (isChecked) {
+                $checkMode.prop('checked', true);
+                $hintsElements.show();
+                if (!isEditor()) {
+                    setSelectValue('ShowHints', 'yes', 'Yes');
+                    if (showToggle === 'yes') {
+                        setSelectValue('ShowGuided', showGuided, 'Yes');
+                        setSelectValue('ShowAdvanced', showAdvanced, 'Yes');
+                    }
+                }
+            } else {
+                $hintsElements.hide();
+                $('[data-variable-name="ShowGuided"], [data-variable-name="ShowAdvanced"]').hide();
+                $checkMode.prop('checked', false);
+                if (!isEditor()) {
+                    setSelectValue('ShowHints', 'no', 'No');
+                    if (showToggle === 'yes') {
+                        setSelectValue('ShowGuided', showGuided, 'No');
+                        setSelectValue('ShowAdvanced', showAdvanced, 'No');
+                    }
+                }
+            }
+        });
+    }
+
+    // Helper Functions
+    function getToggleValue(name) {
+        return $(`select[data-name="${name}"]`).val()?.toLowerCase() || null;
+    }
+
+    function setSelectValue(name, condition, value) {
+        if (condition === 'yes') {
+            const $select = $(`select[data-name="${name}"]`);
+            $select.find(`option[value="${value}"]`).prop('selected', true);
+            $select.trigger('change');
+        }
+    }
+
+    function isEditor() {
+        return document.querySelector('link[href^="/Css/EditInstructions.css"]') !== null;
+    }
 }
 
-// Timeout based toggle handling
-//setTimeout(()=>{
-  handleToggles();
-//}, 750);
+// Execute immediately (timeout removed, add back if needed)
+handleToggles();
