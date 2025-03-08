@@ -1,5 +1,6 @@
 // Code for mode switching
 function modeSwitch() {
+    const difficultyValue = $(`select[data-name="${name}"]`).val() || '';
     const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null; // Removed .toLowerCase()
     if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
 
@@ -55,7 +56,6 @@ function modeSwitch() {
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
     } else if (modeSwitchSelected === null || modeKey === "select lab mode") {
         // Update innerHTML to Difficulty toggle value when null or "select lab mode"
-        const difficultyValue = getToggleValue('Difficulty');
         if (difficultyButton.length) {
             difficultyButton.each((index, element) => {
                 element.innerHTML = difficultyValue || '';
@@ -75,10 +75,6 @@ function setSelectValue(name, value) {
     const $select = $(`select[data-name="${name}"]`);
     $select.find(`option[value="${value}"]`).prop('selected', true);
     $select.trigger('change');
-}
-
-function getToggleValue(name) {
-    return $(`select[data-name="${name}"]`).val()?.toLowerCase() || '';
 }
 
 // Setup event listeners
