@@ -31,6 +31,7 @@ function modeSwitch() {
         }
     };
 
+    const $variable = $('.difficultyButton .variable');
     if (modeSwitchSelected in modes) {
         const settings = modes[modeSwitchSelected];
         for (const [name, value] of Object.entries(settings)) {
@@ -40,17 +41,38 @@ function modeSwitch() {
                 setSelectValue(name, value);
             }
         }
-        if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); } // Removed "and visibility"
+        // Update text to modeSwitchSelected for valid modes
+        if ($variable.length) {
+            $variable.text(modeSwitchSelected);
+            if (debug) { console.log(`Updated .difficultyButton .variable text to: ${modeSwitchSelected}`); }
+        } else if (debug) {
+            console.log("No .difficultyButton .variable element found");
+        }
+        if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
+    } else if (modeSwitchSelected === null || modeSwitchSelected === "select lab mode") {
+        // Update text to Difficulty toggle value when null or "select lab mode"
+        const difficultyValue = getToggleValue('Difficulty');
+        if ($variable.length) {
+            $variable.text(difficultyValue || '');
+            if (debug) { console.log(`Updated .difficultyButton .variable text to Difficulty: ${difficultyValue}`); }
+        } else if (debug) {
+            console.log("No .difficultyButton .variable element found");
+        }
+        if (debug) { console.log(`No mode applied (modeSwitchSelected: ${modeSwitchSelected})`); }
     } else if (modeSwitchSelected) {
         if (debug) { console.log(`Unknown mode: ${modeSwitchSelected}, no changes applied`); }
     }
 }
 
-// Helper Function
+// Helper Functions
 function setSelectValue(name, value) {
     const $select = $(`select[data-name="${name}"]`);
     $select.find(`option[value="${value}"]`).prop('selected', true);
     $select.trigger('change');
+}
+
+function getToggleValue(name) {
+    return $(`select[data-name="${name}"]`).val()?.toLowerCase() || '';
 }
 
 // Setup event listeners
@@ -66,7 +88,7 @@ function initializeModeSwitch() {
     });
 }
 
-// Initialze the Mode Switch
+// Initialize the Mode Switch
 try {
     initializeModeSwitch();
 } catch (err) {
