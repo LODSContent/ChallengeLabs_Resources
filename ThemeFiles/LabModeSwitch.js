@@ -31,7 +31,7 @@ function modeSwitch() {
         }
     };
 
-    const $variable = $('.difficultyButton .variable');
+    const difficultyButton = $('.difficultyButton p .variable');
     if (modeSwitchSelected in modes) {
         const settings = modes[modeSwitchSelected];
         for (const [name, value] of Object.entries(settings)) {
@@ -42,21 +42,21 @@ function modeSwitch() {
             }
         }
         // Update text to modeSwitchSelected for valid modes
-        if ($variable.length) {
-            $variable.text(modeSwitchSelected);
-            if (debug) { console.log(`Updated .difficultyButton .variable text to: ${modeSwitchSelected}`); }
+        if (difficultyButton.length) {
+            difficultyButton.text(modeSwitchSelected);
+            if (debug) { console.log(`Updated .difficultyButton p .variable text to: ${modeSwitchSelected}`); }
         } else if (debug) {
-            console.log("No .difficultyButton .variable element found");
+            console.log("No .difficultyButton p .variable element found");
         }
         if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
     } else if (modeSwitchSelected === null || modeSwitchSelected === "select lab mode") {
         // Update text to Difficulty toggle value when null or "select lab mode"
         const difficultyValue = getToggleValue('Difficulty');
-        if ($variable.length) {
-            $variable.text(difficultyValue || '');
-            if (debug) { console.log(`Updated .difficultyButton .variable text to Difficulty: ${difficultyValue}`); }
+        if (difficultyButton.length) {
+            difficultyButton.text(difficultyValue || '');
+            if (debug) { console.log(`Updated .difficultyButton p .variable text to Difficulty: ${difficultyValue}`); }
         } else if (debug) {
-            console.log("No .difficultyButton .variable element found");
+            console.log("No .difficultyButton p .variable element found");
         }
         if (debug) { console.log(`No mode applied (modeSwitchSelected: ${modeSwitchSelected})`); }
     } else if (modeSwitchSelected) {
