@@ -1,9 +1,9 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.11
- * Date: March 09, 2025
- * Description: Translates elements in the HTML to the target language, including dynamic mode changes.
+ * Version: 1.10
+ * Date: March 08, 2025
+ * Description: Translates elements in the HTML to the target language.
  */
 
 // Begin Translation code
@@ -129,7 +129,6 @@ if (autoTranslate === 'no') {
             let newElementsTranslated = 0;
 
             mutations.forEach(mutation => {
-                // Handle new nodes
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === 1 && node.closest(parent)) {
                         const tagName = node.tagName.toLowerCase();
@@ -144,16 +143,6 @@ if (autoTranslate === 'no') {
                         });
                     }
                 });
-
-                // Handle text changes in .select-Difficulty .selected
-                if (mutation.type === 'characterData') {
-                    const target = mutation.target;
-                    const parentElement = target.parentElement;
-                    if (parentElement && parentElement.matches('.select-Difficulty .selected')) {
-                        translateTextNodes(parentElement);
-                        if (debug) { console.log(`Translated mode text change: ${parentElement.textContent}`); }
-                    }
-                }
             });
 
             if (debug && newElementsTranslated > 0) {
@@ -162,8 +151,8 @@ if (autoTranslate === 'no') {
         });
 
         translateAllElements(parent);
-        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-        if (debug) { console.log(`Translation observer initialized for '${parent}' with characterData support`); }
+        observer.observe(document.body, { childList: true, subtree: true });
+        if (debug) { console.log(`Translation observer initialized for '${parent}'`); }
 
         window.translatePage = translateAllElements;
         window.revertTranslations = revertTranslations;
