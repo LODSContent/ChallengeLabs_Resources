@@ -52,7 +52,7 @@ function createCustomDifficultyDropdown() {
     if (debug) { console.log("Hid original difficultybutton [data-name=\"Difficulty\"]"); }
 
     // Create new dropdown
-    const $newSelect = $('<select class="custom-difficulty" data-name="CustomDifficulty"></select>');
+    const $newSelect = $('<select class="select-Difficulty" data-name="select-Difficulty"></select>');
     const options = [
         { text: 'Guided', value: 'Guided' },
         { text: 'Advanced', value: 'Advanced' },
@@ -75,9 +75,31 @@ function createCustomDifficultyDropdown() {
         $newSelect.append($option);
     });
 
-    // Append after the original button's parent
-    difficultyButton.parent().after($newSelect);
-    if (debug) { console.log(`Created custom difficulty dropdown with default: ${defaultValue}`); }
+    // Get computed styles from original element
+    const originalStyles = window.getComputedStyle(difficultyButton[0]);
+    const backgroundColor = originalStyles.backgroundColor;
+    const fontFamily = originalStyles.fontFamily;
+    const fontSize = originalStyles.fontSize;
+
+    // Apply styles to new dropdown
+    $newSelect.css({
+        'background-color': backgroundColor,
+        'font-family': fontFamily,
+        'font-size': fontSize
+    });
+    if (debug) { console.log(`Applied styles to select-Difficulty: background-color=${backgroundColor}, font-family=${fontFamily}, font-size=${fontSize}`); }
+
+    // Place inside the same parent <p> as the original
+    const $parentP = difficultyButton.closest('p');
+    if ($parentP.length) {
+        $parentP.append($newSelect);
+        if (debug) { console.log("Placed select-Difficulty inside parent <p>"); }
+    } else {
+        if (debug) { console.log("No parent <p> found, appending after difficultyButton"); }
+        difficultyButton.after($newSelect); // Fallback
+    }
+
+    if (debug) { console.log(`Created select-Difficulty dropdown with default: ${defaultValue}`); }
 
     // Apply initial mode settings based on default value
     const initialMode = $newSelect.val();
@@ -91,13 +113,13 @@ function createCustomDifficultyDropdown() {
                 setSelectValue(name, value);
             }
         }
-        if (debug) { console.log(`Applied initial ${initialMode} mode settings from custom dropdown`); }
+        if (debug) { console.log(`Applied initial ${initialMode} mode settings from select-Difficulty`); }
     }
 
     // Event listener for new dropdown
     $newSelect.on('change', () => {
         const selectedMode = $newSelect.val();
-        if (debug) { console.log(`Custom difficulty dropdown changed to: ${selectedMode}`); }
+        if (debug) { console.log(`select-Difficulty dropdown changed to: ${selectedMode}`); }
         
         // Update original button’s innerHTML (hidden but tracked)
         if (difficultyButton.length) {
@@ -118,7 +140,7 @@ function createCustomDifficultyDropdown() {
                     setSelectValue(name, value);
                 }
             }
-            if (debug) { console.log(`Applied ${selectedMode} mode settings from custom dropdown`); }
+            if (debug) { console.log(`Applied ${selectedMode} mode settings from select-Difficulty`); }
         }
     });
 }
@@ -127,5 +149,5 @@ function createCustomDifficultyDropdown() {
 try {
     createCustomDifficultyDropdown();
 } catch (err) {
-    console.error("Custom difficulty dropdown initialization failed:", err);
+    console.error("select-Difficulty dropdown initialization failed:", err);
 }
