@@ -1,32 +1,32 @@
 // Code for mode switching
 const difficultyValue = $(`select[data-name="Difficulty"]`).val() || ''; // Cached at init
 
+// Define modes globally
+const modes = {
+    guided: { 
+        ShowGuided: 'Yes', 
+        ShowAdvanced: 'Yes', 
+        ShowActivity: 'Yes'
+        //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').show(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
+    },
+    advanced: { 
+        ShowGuided: 'No', 
+        ShowAdvanced: 'Yes', 
+        ShowActivity: 'Yes' 
+        //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
+    },
+    expert: { 
+        ShowGuided: 'No', 
+        ShowAdvanced: 'No', 
+        ShowActivity: 'No' 
+        //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').hide(); }
+    }
+};
+
 function modeSwitch() {
     const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null;
     if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
 
-    const modes = {
-        guided: { 
-            ShowGuided: 'Yes', 
-            ShowAdvanced: 'Yes', 
-            ShowActivity: 'Yes'
-            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').show(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
-        },
-        advanced: { 
-            ShowGuided: 'No', 
-            ShowAdvanced: 'Yes', 
-            ShowActivity: 'Yes' 
-            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
-        },
-        expert: { 
-            ShowGuided: 'No', 
-            ShowAdvanced: 'No', 
-            ShowActivity: 'No' 
-            //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').hide(); }
-        }
-    };
-
-    // Original difficulty button
     const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
     const modeKey = modeSwitchSelected ? modeSwitchSelected.toLowerCase() : null;
 
