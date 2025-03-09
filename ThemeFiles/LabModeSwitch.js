@@ -1,7 +1,7 @@
 /*
  * Script Name: LabModeSwitch.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.10
+ * Version: 1.11
  * Date: March 08, 2025
  * Description: Creates a custom dropdown to replace the original difficulty button, 
  *              managing mode switching with a styled div-based UI.
@@ -93,30 +93,28 @@ function createCustomDifficultyDropdown() {
     // Assemble dropdown
     $dropdown.append($selected).append($optionsList);
 
+    // Function to handle outside clicks
+    const outsideClickHandler = (e) => {
+        if (!$dropdown.is(e.target) && !$dropdown.has(e.target).length) {
+            $optionsList.hide();
+            $dropdown.removeClass('expanded');
+            if (debug) { console.log("Clicked outside, options hidden, state reset to default or selected"); }
+        }
+    };
+
     // Toggle dropdown on click
     $dropdown.on('click', (e) => {
         e.stopPropagation(); // Prevent closing immediately
         if ($optionsList.is(':visible')) {
             $dropdown.removeClass('expanded');
+            $(document).off('click', outsideClickHandler); // Remove handler when closing
         } else {
             $dropdown.addClass('expanded');
+            $(document).on('click', outsideClickHandler); // Add handler when opening
         }
         $optionsList.toggle();
         if (debug) { console.log(`Dropdown toggled, options ${$optionsList.is(':visible') ? 'visible' : 'hidden'}, state: ${$dropdown.hasClass('expanded') ? 'expanded' : $dropdown.hasClass('selected') ? 'selected' : 'default'}`); }
     });
-
-    // Close dropdown when clicking outside
-    $(document).on('click', () => {
-        $optionsList.hide();
-        $dropdown.removeClass('expanded');
-        if (debug) { console.log("Clicked outside, options hidden, state reset to default or selected"); }
-    });
-
-    // Apply 'selected' class if default value is a valid mode
-    if (defaultValue.toLowerCase() in modes) {
-        $dropdown.addClass('selected');
-        if (debug) { console.log("Applied 'selected' class for initial value"); }
-    }
 
     // Place inside the same parent <p> as the original
     const $parentP = difficultyButton.closest('p');
@@ -155,7 +153,7 @@ function createCustomDifficultyDropdown() {
         }
     }
 
-    // Apply initial mode settings
+    // Apply initial mode settings (no .selected class yet)
     const initialMode = defaultValue;
     const initialModeKey = initialMode.toLowerCase();
     if (initialModeKey in modes) {
