@@ -1,8 +1,8 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.10
- * Date: March 08, 2025
+ * Version: 1.11
+ * Date: March 09, 2025
  * Description: Translates elements in the HTML to the target language.
  */
 
@@ -52,6 +52,7 @@ if (autoTranslate === 'no') {
             element.textContent = translatedText;
             translatedElements.add(element);
             element.setAttribute('data-original-text', originalText);
+            if (debug) { console.log(`Translated element: ${originalText} -> ${translatedText}`); }
         } catch (error) {
             console.error('Error translating element:', error);
         } finally {
@@ -104,8 +105,20 @@ if (autoTranslate === 'no') {
         }
 
         const elements = parentElement.querySelectorAll(findElements);
+        // Debug: Check if difficulty button is included
+        const difficultyElement = parentElement.querySelector('.difficultybutton p [data-name="Difficulty"]');
+        if (debug) {
+            console.log(`Found difficulty button in '${parent}': ${!!difficultyElement}`);
+            if (difficultyElement) {
+                console.log(`Difficulty button text before translation: ${difficultyElement.textContent}`);
+            }
+        }
+
         await Promise.all(Array.from(elements).map(translateTextNodes));
         if (debug) { console.log(`Completed initial translation for ${elements.length} elements in '${parent}'`); }
+        if (difficultyElement && debug) {
+            console.log(`Difficulty button text after translation: ${difficultyElement.textContent}`);
+        }
     }
 
     function revertTranslations() {
