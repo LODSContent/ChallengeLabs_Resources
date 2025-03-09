@@ -1,9 +1,9 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.13
- * Date: March 09, 2025
- * Description: Translates elements in the HTML to the target language, including dynamic mode changes.
+ * Version: 1.10
+ * Date: March 08, 2025
+ * Description: Translates elements in the HTML to the target language.
  */
 
 // Begin Translation code
@@ -59,9 +59,7 @@ if (autoTranslate === 'no') {
         }
     }
 
-    async function translateTextNodes(element, observer) {
-        if (translatedElements.has(element)) return; // Skip if already translated
-
+    async function translateTextNodes(element) {
         const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
             acceptNode: node => node.parentElement.closest(ignoreElements) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
         });
@@ -77,13 +75,10 @@ if (autoTranslate === 'no') {
             if (!trimmedText) continue;
 
             try {
-                observer?.disconnect(); // Pause observer to prevent loop
                 const translatedText = await translateText(trimmedText, targetLanguage);
                 textNode.nodeValue = originalText.replace(trimmedText, translatedText);
             } catch (error) {
                 console.error('Error translating text node:', error);
-            } finally {
-                observer?.observe(document.body, { childList: true, subtree: true, characterData: true }); // Resume observer
             }
         }
 
@@ -92,17 +87,13 @@ if (autoTranslate === 'no') {
             const trimmedText = originalText.trim();
             if (trimmedText) {
                 try {
-                    observer?.disconnect();
                     const translatedText = await translateText(trimmedText, targetLanguage);
                     element.value = originalText.replace(trimmedText, translatedText);
                 } catch (error) {
                     console.error('Error translating button text:', error);
-                } finally {
-                    observer?.observe(document.body, { childList: true, subtree: true, characterData: true });
                 }
             }
         }
-        translatedElements.add(element); // Mark as translated
     }
 
     async function translateAllElements(parent) {
@@ -113,10 +104,8 @@ if (autoTranslate === 'no') {
         }
 
         const elements = parentElement.querySelectorAll(findElements);
-        const dropdownElement = document.querySelector('.select-Difficulty .selected');
-        const allElements = dropdownElement ? [...elements, dropdownElement] : elements;
-        await Promise.all(Array.from(allElements).map(element => translateTextNodes(element)));
-        if (debug) { console.log(`Completed initial translation for ${allElements.length} elements in '${parent}' plus dropdown`); }
+        await Promise.all(Array.from(elements).map(translateTextNodes));
+        if (debug) { console.log(`Completed initial translation for ${elements.length} elements in '${parent}'`); }
     }
 
     function revertTranslations() {
@@ -140,36 +129,20 @@ if (autoTranslate === 'no') {
             let newElementsTranslated = 0;
 
             mutations.forEach(mutation => {
-                // Handle new nodes
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === 1 && node.closest(parent)) {
                         const tagName = node.tagName.toLowerCase();
                         if (elementArray.includes(tagName) && (node.type === 'button' || tagName !== 'input')) {
-                            translateTextNodes(node, observer);
+                            translateTextNodes(node);
                             newElementsTranslated++;
                         }
                         const languageElements = node.querySelectorAll(findElements);
                         Array.from(languageElements).forEach(element => {
-                            translateTextNodes(element, observer);
+                            translateTextNodes(element);
                             newElementsTranslated++;
                         });
                     }
                 });
-
-                // Handle text changes in .select-Difficulty .selected
-                if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                    const target = mutation.target;
-                    if (target.nodeType === Node.TEXT_NODE) {
-                        const parentElement = target.parentElement;
-                        if (parentElement && parentElement.matches('.select-Difficulty .selected')) {
-                            translateTextNodes(parentElement, observer);
-                            if (debug) { console.log(`Translated mode text change: ${parentElement.textContent}`); }
-                        }
-                    } else if (target.matches('.select-Difficulty .selected')) {
-                        translateTextNodes(target, observer);
-                        if (debug) { console.log(`Translated mode text change: ${target.textContent}`); }
-                    }
-                }
             });
 
             if (debug && newElementsTranslated > 0) {
@@ -178,8 +151,8 @@ if (autoTranslate === 'no') {
         });
 
         translateAllElements(parent);
-        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-        if (debug) { console.log(`Translation observer initialized for '${parent}' with characterData support`); }
+        observer.observe(document.body, { childList: true, subtree: true });
+        if (debug) { console.log(`Translation observer initialized for '${parent}'`); }
 
         window.translatePage = translateAllElements;
         window.revertTranslations = revertTranslations;
