@@ -1,3 +1,11 @@
+/*
+ * Script Name: AutoTranslate.js
+ * Authors: Mark Morgan, Grok 3 (xAI)
+ * Version: 1.10
+ * Date: March 08, 2025
+ * Description: Translates elements in the HTML to the target language.
+ */
+
 // Begin Translation code
 
 // Get AutoTranslate setting
