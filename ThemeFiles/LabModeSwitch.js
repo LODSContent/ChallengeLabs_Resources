@@ -51,8 +51,18 @@ function createCustomDifficultyDropdown() {
     difficultyButton.hide();
     if (debug) { console.log("Hid original difficultybutton [data-name=\"Difficulty\"]"); }
 
-    // Create new dropdown
-    const $newSelect = $('<select class="select-Difficulty" data-name="select-Difficulty"></select>');
+    // Get computed styles from original element
+    const originalStyles = window.getComputedStyle(difficultyButton[0]);
+    const backgroundColor = originalStyles.backgroundColor;
+    const fontFamily = originalStyles.fontFamily;
+    const fontSize = originalStyles.fontSize;
+    const textColor = originalStyles.color;
+    const fontWeight = originalStyles.fontWeight;
+
+    // Create custom dropdown structure
+    const $dropdown = $('<div class="select-Difficulty" data-name="select-Difficulty"></div>');
+    const $selected = $('<span class="selected"></span>').text(defaultValue);
+    const $optionsList = $('<ul class="options" style="display: none;"></ul>');
     const options = [
         { text: 'Guided', value: 'Guided' },
         { text: 'Advanced', value: 'Advanced' },
@@ -66,74 +76,84 @@ function createCustomDifficultyDropdown() {
         if (debug) { console.log("Default value is Advanced, limiting options to Advanced and Expert"); }
     }
 
-    // Get computed styles from original element (matches .instructions #page0 div.difficultybutton)
-    const originalStyles = window.getComputedStyle(difficultyButton[0]);
-    const backgroundColor = originalStyles.backgroundColor;
-    const fontFamily = originalStyles.fontFamily;
-    const fontSize = originalStyles.fontSize;
-    const textColor = originalStyles.color;
-    const fontWeight = originalStyles.fontWeight;
-
-    // Add options to dropdown with matching background and font-weight
+    // Add options to the list
     availableOptions.forEach(option => {
-        const $option = $(`<option value="${option.value}">${option.text}</option>`);
-        if (option.text === defaultValue) {
-            $option.prop('selected', true);
-        }
-        $option.css({
+        const $li = $(`<li>${option.text}</li>`);
+        $li.css({
             'background-color': backgroundColor,
+            'font-family': fontFamily,
+            'font-size': fontSize,
+            'color': textColor,
             'font-weight': fontWeight,
-            'color': textColor // Ensure option text color matches too
+            'padding': '5px 10px',
+            'cursor': 'pointer'
         });
-        $newSelect.append($option);
+        $li.on('click', () => {
+            $selected.text(option.text);
+            $optionsList.hide();
+            handleSelection(option.text);
+            if (debug) { console.log(`Selected ${option.text} from custom dropdown`); }
+        });
+        $optionsList.append($li);
     });
 
-    // Apply styles to new dropdown with enhanced background enforcement
-    $newSelect.css({
+    // Style the dropdown
+    $dropdown.css({
         'background-color': backgroundColor,
         'font-family': fontFamily,
         'font-size': fontSize,
         'color': textColor,
-        'border': 'none',
         'font-weight': fontWeight,
-        '-webkit-appearance': 'none', // Remove default styling (Chrome/Safari)
-        '-moz-appearance': 'none',    // Remove default styling (Firefox)
-        'appearance': 'none'          // Standard removal of native styling
+        'display': 'inline-block',
+        'position': 'relative',
+        'cursor': 'pointer'
     });
-    if (debug) { console.log(`Applied styles to select-Difficulty: background-color=${backgroundColor}, font-family=${fontFamily}, font-size=${fontSize}, color=${textColor}, border=none, font-weight=${fontWeight}`); }
+    $selected.css({
+        'padding': '5px 10px',
+        'display': 'block'
+    });
+    $optionsList.css({
+        'position': 'absolute',
+        'top': '100%',
+        'left': 0,
+        'background-color': backgroundColor,
+        'list-style': 'none',
+        'margin': 0,
+        'padding': 0,
+        'border': '1px solid #ccc', // Optional subtle border
+        'z-index': 1000
+    });
+
+    // Assemble dropdown
+    $dropdown.append($selected).append($optionsList);
+
+    // Toggle dropdown on click
+    $dropdown.on('click', (e) => {
+        e.stopPropagation(); // Prevent closing immediately
+        $optionsList.toggle();
+    });
+
+    // Close dropdown when clicking outside
+    $(document).on('click', () => {
+        $optionsList.hide();
+    });
+
+    if (debug) { console.log(`Applied styles to select-Difficulty: background-color=${backgroundColor}, font-family=${fontFamily}, font-size=${fontSize}, color=${textColor}, font-weight=${fontWeight}`); }
 
     // Place inside the same parent <p> as the original
     const $parentP = difficultyButton.closest('p');
     if ($parentP.length) {
-        $parentP.append($newSelect);
+        $parentP.append($dropdown);
         if (debug) { console.log("Placed select-Difficulty inside parent <p>"); }
     } else {
         if (debug) { console.log("No parent <p> found, appending after difficultyButton"); }
-        difficultyButton.after($newSelect); // Fallback
+        difficultyButton.after($dropdown); // Fallback
     }
 
     if (debug) { console.log(`Created select-Difficulty dropdown with default: ${defaultValue}`); }
 
-    // Apply initial mode settings based on default value
-    const initialMode = $newSelect.val();
-    const initialModeKey = initialMode.toLowerCase();
-    if (initialModeKey in modes) {
-        const settings = modes[initialModeKey];
-        for (const [name, value] of Object.entries(settings)) {
-            if (typeof value === 'function') {
-                value();
-            } else {
-                setSelectValue(name, value);
-            }
-        }
-        if (debug) { console.log(`Applied initial ${initialMode} mode settings from select-Difficulty`); }
-    }
-
-    // Event listener for new dropdown
-    $newSelect.on('change', () => {
-        const selectedMode = $newSelect.val();
-        if (debug) { console.log(`select-Difficulty dropdown changed to: ${selectedMode}`); }
-        
+    // Handle selection logic
+    function handleSelection(selectedMode) {
         // Update original button’s innerHTML (hidden but tracked)
         if (difficultyButton.length) {
             difficultyButton.each((index, element) => {
@@ -155,7 +175,22 @@ function createCustomDifficultyDropdown() {
             }
             if (debug) { console.log(`Applied ${selectedMode} mode settings from select-Difficulty`); }
         }
-    });
+    }
+
+    // Apply initial mode settings
+    const initialMode = defaultValue;
+    const initialModeKey = initialMode.toLowerCase();
+    if (initialModeKey in modes) {
+        const settings = modes[initialModeKey];
+        for (const [name, value] of Object.entries(settings)) {
+            if (typeof value === 'function') {
+                value();
+            } else {
+                setSelectValue(name, value);
+            }
+        }
+        if (debug) { console.log(`Applied initial ${initialMode} mode settings from select-Difficulty`); }
+    }
 }
 
 // Initialize the Mode Switch
