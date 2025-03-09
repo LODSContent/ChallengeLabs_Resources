@@ -72,14 +72,18 @@ function createCustomDifficultyDropdown() {
     const fontFamily = originalStyles.fontFamily;
     const fontSize = originalStyles.fontSize;
     const textColor = originalStyles.color;
+    const fontWeight = originalStyles.fontWeight; // Added font-weight
 
-    // Add options to dropdown with matching background
+    // Add options to dropdown with matching background and font-weight
     availableOptions.forEach(option => {
         const $option = $(`<option value="${option.value}">${option.text}</option>`);
         if (option.text === defaultValue) {
             $option.prop('selected', true);
         }
-        $option.css('background-color', backgroundColor); // Match option background
+        $option.css({
+            'background-color': backgroundColor,
+            'font-weight': fontWeight // Apply to options
+        });
         $newSelect.append($option);
     });
 
@@ -89,9 +93,10 @@ function createCustomDifficultyDropdown() {
         'font-family': fontFamily,
         'font-size': fontSize,
         'color': textColor,
-        'border': 'none'
+        'border': 'none',
+        'font-weight': fontWeight // Apply to select
     });
-    if (debug) { console.log(`Applied styles to select-Difficulty: background-color=${backgroundColor}, font-family=${fontFamily}, font-size=${fontSize}, color=${textColor}, border=none`); }
+    if (debug) { console.log(`Applied styles to select-Difficulty: background-color=${backgroundColor}, font-family=${fontFamily}, font-size=${fontSize}, color=${textColor}, border=none, font-weight=${fontWeight}`); }
 
     // Place inside the same parent <p> as the original
     const $parentP = difficultyButton.closest('p');
