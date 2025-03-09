@@ -66,29 +66,30 @@ function createCustomDifficultyDropdown() {
         if (debug) { console.log("Default value is Advanced, limiting options to Advanced and Expert"); }
     }
 
-    // Add options to dropdown
-    availableOptions.forEach(option => {
-        const $option = $(`<option value="${option.value}">${option.text}</option>`);
-        if (option.text === defaultValue) {
-            $option.prop('selected', true);
-        }
-        $newSelect.append($option);
-    });
-
     // Get computed styles from original element (matches .instructions #page0 div.difficultybutton)
     const originalStyles = window.getComputedStyle(difficultyButton[0]);
     const backgroundColor = originalStyles.backgroundColor;
     const fontFamily = originalStyles.fontFamily;
     const fontSize = originalStyles.fontSize;
-    const textColor = originalStyles.color; // Includes dark grey from CSS
+    const textColor = originalStyles.color;
+
+    // Add options to dropdown with matching background
+    availableOptions.forEach(option => {
+        const $option = $(`<option value="${option.value}">${option.text}</option>`);
+        if (option.text === defaultValue) {
+            $option.prop('selected', true);
+        }
+        $option.css('background-color', backgroundColor); // Match option background
+        $newSelect.append($option);
+    });
 
     // Apply styles to new dropdown
     $newSelect.css({
         'background-color': backgroundColor,
         'font-family': fontFamily,
         'font-size': fontSize,
-        'color': textColor, // Matches dark grey
-        'border': 'none' // Removes border
+        'color': textColor,
+        'border': 'none'
     });
     if (debug) { console.log(`Applied styles to select-Difficulty: background-color=${backgroundColor}, font-family=${fontFamily}, font-size=${fontSize}, color=${textColor}, border=none`); }
 
