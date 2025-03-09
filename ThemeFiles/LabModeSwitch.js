@@ -1,3 +1,7 @@
+/*
+    Author: Mark Morgan and Grok
+    Version: 20250309.01.17
+*/
 // Code for mode switching
 const difficultyValue = $(`select[data-name="Difficulty"]`).val() || ''; // Cached at init
 
@@ -51,18 +55,10 @@ function createCustomDifficultyDropdown() {
     difficultyButton.hide();
     if (debug) { console.log("Hid original difficultybutton [data-name=\"Difficulty\"]"); }
 
-    // Get computed styles from original element
-    const originalStyles = window.getComputedStyle(difficultyButton[0]);
-    const backgroundColor = originalStyles.backgroundColor;
-    const fontFamily = originalStyles.fontFamily;
-    const fontSize = originalStyles.fontSize;
-    const textColor = originalStyles.color;
-    const fontWeight = originalStyles.fontWeight;
-
     // Create custom dropdown structure
     const $dropdown = $('<div class="select-Difficulty" data-name="select-Difficulty"></div>');
     const $selected = $('<span class="selected"></span>').text(defaultValue);
-    const $optionsList = $('<ul class="options" style="display: none;"></ul>');
+    const $optionsList = $('<ul class="options"></ul>').hide(); // Hidden by default
     const options = [
         { text: 'Guided', value: 'Guided' },
         { text: 'Advanced', value: 'Advanced' },
@@ -79,15 +75,6 @@ function createCustomDifficultyDropdown() {
     // Add options to the list
     availableOptions.forEach(option => {
         const $li = $(`<li>${option.text}</li>`);
-        $li.css({
-            'background-color': backgroundColor,
-            'font-family': fontFamily,
-            'font-size': fontSize,
-            'color': textColor,
-            'font-weight': fontWeight,
-            'padding': '5px 10px',
-            'cursor': 'pointer'
-        });
         $li.on('click', () => {
             $selected.text(option.text);
             $optionsList.hide();
@@ -95,33 +82,6 @@ function createCustomDifficultyDropdown() {
             if (debug) { console.log(`Selected ${option.text} from custom dropdown`); }
         });
         $optionsList.append($li);
-    });
-
-    // Style the dropdown
-    $dropdown.css({
-        'background-color': backgroundColor,
-        'font-family': fontFamily,
-        'font-size': fontSize,
-        'color': textColor,
-        'font-weight': fontWeight,
-        'display': 'inline-block',
-        'position': 'relative',
-        'cursor': 'pointer'
-    });
-    $selected.css({
-        'padding': '5px 10px',
-        'display': 'block'
-    });
-    $optionsList.css({
-        'position': 'absolute',
-        'top': '100%',
-        'left': 0,
-        'background-color': backgroundColor,
-        'list-style': 'none',
-        'margin': 0,
-        'padding': 0,
-        'border': '1px solid #ccc', // Optional subtle border
-        'z-index': 1000
     });
 
     // Assemble dropdown
@@ -137,8 +97,6 @@ function createCustomDifficultyDropdown() {
     $(document).on('click', () => {
         $optionsList.hide();
     });
-
-    if (debug) { console.log(`Applied styles to select-Difficulty: background-color=${backgroundColor}, font-family=${fontFamily}, font-size=${fontSize}, color=${textColor}, font-weight=${fontWeight}`); }
 
     // Place inside the same parent <p> as the original
     const $parentP = difficultyButton.closest('p');
