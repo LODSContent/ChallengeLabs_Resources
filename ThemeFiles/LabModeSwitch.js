@@ -1,3 +1,12 @@
+/*
+ * Script Name: LabModeSwitch.js
+ * Authors: Mark Morgan, Grok 3 (xAI)
+ * Version: 1.0
+ * Date: March 08, 2025
+ * Description: Creates a custom dropdown to replace the original difficulty button, 
+ *              managing mode switching with a styled div-based UI.
+ */
+
 // Code for mode switching
 const difficultyValue = $(`select[data-name="Difficulty"]`).val() || ''; // Cached at init
 
@@ -73,10 +82,10 @@ function createCustomDifficultyDropdown() {
         const $li = $(`<li>${option.text}</li>`);
         $li.on('click', () => {
             $selected.text(option.text);
-            $optionsList.hide(); // Hide list after selection
+            $optionsList.hide(); // Ensure list hides after selection
             $dropdown.addClass('selected'); // Mark as selected for arrow
             handleSelection(option.text);
-            if (debug) { console.log(`Selected ${option.text} from custom dropdown`); }
+            if (debug) { console.log(`Selected ${option.text} from custom dropdown, options hidden`); }
         });
         $optionsList.append($li);
     });
@@ -88,11 +97,13 @@ function createCustomDifficultyDropdown() {
     $dropdown.on('click', (e) => {
         e.stopPropagation(); // Prevent closing immediately
         $optionsList.toggle();
+        if (debug) { console.log(`Dropdown toggled, options ${$optionsList.is(':visible') ? 'visible' : 'hidden'}`); }
     });
 
     // Close dropdown when clicking outside
     $(document).on('click', () => {
         $optionsList.hide();
+        if (debug) { console.log("Clicked outside, options hidden"); }
     });
 
     // Place inside the same parent <p> as the original
@@ -108,6 +119,7 @@ function createCustomDifficultyDropdown() {
     // Apply 'selected' class if default value is a valid mode
     if (defaultValue.toLowerCase() in modes) {
         $dropdown.addClass('selected');
+        if (debug) { console.log("Applied 'selected' class for initial value"); }
     }
 
     if (debug) { console.log(`Created select-Difficulty dropdown with default: ${defaultValue}`); }
