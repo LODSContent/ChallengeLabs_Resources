@@ -23,46 +23,6 @@ const modes = {
     }
 };
 
-function modeSwitch() {
-    const modeSwitchSelected = $('[data-name="LabMode"] option:selected').first().text() || null;
-    if (debug) { console.log(`Mode selected: ${modeSwitchSelected}`); }
-
-    const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
-    const modeKey = modeSwitchSelected ? modeSwitchSelected.toLowerCase() : null;
-
-    if (modeKey in modes) {
-        const settings = modes[modeKey];
-        for (const [name, value] of Object.entries(settings)) {
-            if (typeof value === 'function') {
-                value();
-            } else {
-                setSelectValue(name, value);
-            }
-        }
-        if (difficultyButton.length) {
-            difficultyButton.each((index, element) => {
-                element.innerHTML = modeSwitchSelected; // Original case preserved
-            });
-            if (debug) { console.log(`Updated difficultybutton [data-name="Difficulty"] innerHTML to: ${modeSwitchSelected}`); }
-        } else if (debug) {
-            console.log("No difficultybutton [data-name=\"Difficulty\"] element found");
-        }
-        if (debug) { console.log(`Applied ${modeSwitchSelected} mode settings`); }
-    } else if (modeSwitchSelected === null || modeKey === "select lab mode") {
-        if (difficultyButton.length) {
-            difficultyButton.each((index, element) => {
-                element.innerHTML = difficultyValue || '';
-            });
-            if (debug) { console.log(`Updated difficultybutton [data-name="Difficulty"] innerHTML to Difficulty: ${difficultyValue}`); }
-        } else if (debug) {
-            console.log("No difficultybutton [data-name=\"Difficulty\"] element found");
-        }
-        if (debug) { console.log(`No mode applied (modeSwitchSelected: ${modeSwitchSelected})`); }
-    } else if (modeSwitchSelected) {
-        if (debug) { console.log(`Unknown mode: ${modeSwitchSelected}, no changes applied`); }
-    }
-}
-
 // Helper Functions
 function setSelectValue(name, value) {
     const $select = $(`select[data-name="${name}"]`);
@@ -70,7 +30,7 @@ function setSelectValue(name, value) {
     $select.trigger('change');
 }
 
-// Create custom difficulty dropdown
+// Create and manage custom difficulty dropdown
 function createCustomDifficultyDropdown() {
     const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
     if (!difficultyButton.length) {
@@ -119,10 +79,35 @@ function createCustomDifficultyDropdown() {
     difficultyButton.parent().after($newSelect);
     if (debug) { console.log(`Created custom difficulty dropdown with default: ${defaultValue}`); }
 
+    // Apply initial mode settings based on default value
+    const initialMode = $newSelect.val();
+    const initialModeKey = initialMode.toLowerCase();
+    if (initialModeKey in modes) {
+        const settings = modes[initialModeKey];
+        for (const [name, value] of Object.entries(settings)) {
+            if (typeof value === 'function') {
+                value();
+            } else {
+                setSelectValue(name, value);
+            }
+        }
+        if (debug) { console.log(`Applied initial ${initialMode} mode settings from custom dropdown`); }
+    }
+
     // Event listener for new dropdown
     $newSelect.on('change', () => {
         const selectedMode = $newSelect.val();
         if (debug) { console.log(`Custom difficulty dropdown changed to: ${selectedMode}`); }
+        
+        // Update original button’s innerHTML (hidden but tracked)
+        if (difficultyButton.length) {
+            difficultyButton.each((index, element) => {
+                element.innerHTML = selectedMode;
+            });
+            if (debug) { console.log(`Updated difficultybutton [data-name="Difficulty"] innerHTML to: ${selectedMode}`); }
+        }
+
+        // Apply mode settings
         const modeKey = selectedMode.toLowerCase();
         if (modeKey in modes) {
             const settings = modes[modeKey];
@@ -138,25 +123,9 @@ function createCustomDifficultyDropdown() {
     });
 }
 
-// Setup event listeners
-function initializeModeSwitch() {
-    const $modeSwitchItems = $('[data-name="LabMode"]');
-    if (debug) { console.log(`Found ${$modeSwitchItems.length} mode switch elements`); }
-
-    $modeSwitchItems.each((index, element) => {
-        element.addEventListener('click', () => {
-            modeSwitch();
-            if (debug) { console.log(`Mode switch triggered by element ${index}`); }
-        });
-    });
-
-    // Initialize custom dropdown
-    createCustomDifficultyDropdown();
-}
-
 // Initialize the Mode Switch
 try {
-    initializeModeSwitch();
+    createCustomDifficultyDropdown();
 } catch (err) {
-    console.error("Mode switch initialization failed:", err);
+    console.error("Custom difficulty dropdown initialization failed:", err);
 }
