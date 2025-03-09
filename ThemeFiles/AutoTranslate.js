@@ -1,7 +1,7 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.11
+ * Version: 1.12
  * Date: March 09, 2025
  * Description: Translates elements in the HTML to the target language.
  */
@@ -70,6 +70,10 @@ if (autoTranslate === 'no') {
             textNodes.push(node);
         }
 
+        if (debug && element.matches('.difficultybutton p [data-name="Difficulty"]')) {
+            console.log(`Translating difficulty button, found ${textNodes.length} text nodes`);
+        }
+
         for (const textNode of textNodes) {
             const originalText = textNode.nodeValue;
             const trimmedText = originalText.trim();
@@ -78,6 +82,9 @@ if (autoTranslate === 'no') {
             try {
                 const translatedText = await translateText(trimmedText, targetLanguage);
                 textNode.nodeValue = originalText.replace(trimmedText, translatedText);
+                if (debug && element.matches('.difficultybutton p [data-name="Difficulty"]')) {
+                    console.log(`Difficulty button text node: ${originalText} -> ${textNode.nodeValue}`);
+                }
             } catch (error) {
                 console.error('Error translating text node:', error);
             }
@@ -105,7 +112,6 @@ if (autoTranslate === 'no') {
         }
 
         const elements = parentElement.querySelectorAll(findElements);
-        // Debug: Check if difficulty button is included
         const difficultyElement = parentElement.querySelector('.difficultybutton p [data-name="Difficulty"]');
         if (debug) {
             console.log(`Found difficulty button in '${parent}': ${!!difficultyElement}`);
@@ -163,12 +169,12 @@ if (autoTranslate === 'no') {
             }
         });
 
-        translateAllElements(parent);
-        observer.observe(document.body, { childList: true, subtree: true });
-        if (debug) { console.log(`Translation observer initialized for '${parent}'`); }
-
-        window.translatePage = translateAllElements;
-        window.revertTranslations = revertTranslations;
+        // Delay to catch late updates
+        setTimeout(() => {
+            translateAllElements(parent);
+            observer.observe(document.body, { childList: true, subtree: true });
+            if (debug) { console.log(`Translation observer initialized for '${parent}' after delay`); }
+        }, 1000);
     }
 
     // Helper Function
