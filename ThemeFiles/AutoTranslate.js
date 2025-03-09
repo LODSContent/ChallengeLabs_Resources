@@ -1,7 +1,7 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.12
+ * Version: 1.13
  * Date: March 09, 2025
  * Description: Translates elements in the HTML to the target language.
  */
@@ -52,7 +52,6 @@ if (autoTranslate === 'no') {
             element.textContent = translatedText;
             translatedElements.add(element);
             element.setAttribute('data-original-text', originalText);
-            if (debug) { console.log(`Translated element: ${originalText} -> ${translatedText}`); }
         } catch (error) {
             console.error('Error translating element:', error);
         } finally {
@@ -70,10 +69,6 @@ if (autoTranslate === 'no') {
             textNodes.push(node);
         }
 
-        if (debug && element.matches('.difficultybutton p [data-name="Difficulty"]')) {
-            console.log(`Translating difficulty button, found ${textNodes.length} text nodes`);
-        }
-
         for (const textNode of textNodes) {
             const originalText = textNode.nodeValue;
             const trimmedText = originalText.trim();
@@ -82,9 +77,6 @@ if (autoTranslate === 'no') {
             try {
                 const translatedText = await translateText(trimmedText, targetLanguage);
                 textNode.nodeValue = originalText.replace(trimmedText, translatedText);
-                if (debug && element.matches('.difficultybutton p [data-name="Difficulty"]')) {
-                    console.log(`Difficulty button text node: ${originalText} -> ${textNode.nodeValue}`);
-                }
             } catch (error) {
                 console.error('Error translating text node:', error);
             }
@@ -112,19 +104,8 @@ if (autoTranslate === 'no') {
         }
 
         const elements = parentElement.querySelectorAll(findElements);
-        const difficultyElement = parentElement.querySelector('.difficultybutton p [data-name="Difficulty"]');
-        if (debug) {
-            console.log(`Found difficulty button in '${parent}': ${!!difficultyElement}`);
-            if (difficultyElement) {
-                console.log(`Difficulty button text before translation: ${difficultyElement.textContent}`);
-            }
-        }
-
         await Promise.all(Array.from(elements).map(translateTextNodes));
         if (debug) { console.log(`Completed initial translation for ${elements.length} elements in '${parent}'`); }
-        if (difficultyElement && debug) {
-            console.log(`Difficulty button text after translation: ${difficultyElement.textContent}`);
-        }
     }
 
     function revertTranslations() {
@@ -173,7 +154,7 @@ if (autoTranslate === 'no') {
         setTimeout(() => {
             translateAllElements(parent);
             observer.observe(document.body, { childList: true, subtree: true });
-            if (debug) { console.log(`Translation observer initialized for '${parent}' after delay`); }
+            if (debug) { console.log(`Translation observer initialized for '${parent}'`); }
         }, 1000);
     }
 
