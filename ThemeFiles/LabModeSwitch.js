@@ -1,8 +1,8 @@
 /*
  * Script Name: LabModeSwitch.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.14
- * Date: March 08, 2025
+ * Version: 1.15
+ * Date: March 09, 2025
  * Description: Creates a custom dropdown to replace the original difficulty button, 
  *              managing mode switching with a styled div-based UI.
  */
