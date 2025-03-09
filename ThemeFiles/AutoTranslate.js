@@ -19,7 +19,7 @@ if (autoTranslate === 'no') {
 
     // Configuration
     const translatedElements = new Set();
-    const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, input[type="button"], #labNotificationsHeader, .difficultybutton';
+    const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, input[type="button"], #labNotificationsHeader, [data-name="Difficulty"]';
     const elementArray = findElements.replace('[type="button"]', '').split(',').map(s => s.trim().toLowerCase());
     const ignoreElements = 'no-xl8, code, .codeTitle, .typeText, .copyable';
     const targetLanguage = getTargetLanguage();
