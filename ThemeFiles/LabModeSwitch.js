@@ -1,7 +1,7 @@
 /*
  * Script Name: LabModeSwitch.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.16
+ * Version: 1.17
  * Date: March 09, 2025
  * Description: Creates a custom dropdown to replace the original difficulty button, 
  *              managing mode switching with a styled div-based UI.
@@ -59,7 +59,6 @@ function createCustomDifficultyDropdown() {
 
     // Create custom dropdown structure
     const $dropdown = $('<div class="select-Difficulty" data-name="select-Difficulty"></div>');
-    const $selected = $(`<span class="selected">${defaultValue}</span>`); // Initial span
     const $optionsList = $('<ul class="options"></ul>').hide(); // Hidden by default
     const options = [
         { text: 'Guided', value: 'Guided' },
@@ -74,13 +73,16 @@ function createCustomDifficultyDropdown() {
         if (debug) { console.log("Default value is Advanced, limiting options to Advanced and Expert"); }
     }
 
+    // Add initial selected span
+    $dropdown.append($(`<span class="selected">${defaultValue}</span>`));
+
     // Add options to the list
     availableOptions.forEach(option => {
         const $li = $(`<li>${option.text}</li>`);
         $li.on('click', (e) => {
             e.stopPropagation(); // Prevent bubbling to dropdown
-            // Replace old selected span with a new one
-            $selected.remove(); // Remove old span
+            // Remove current selected span and add new one
+            $dropdown.find('.selected').remove(); // Remove existing .selected
             const $newSelected = $(`<span class="selected">${option.text}</span>`);
             $dropdown.prepend($newSelected); // Add new span at the top
             $optionsList.hide(); // Hide list after selection
@@ -92,7 +94,7 @@ function createCustomDifficultyDropdown() {
     });
 
     // Assemble dropdown
-    $dropdown.append($selected).append($optionsList);
+    $dropdown.append($optionsList);
 
     // Function to handle outside clicks
     const outsideClickHandler = (e) => {
@@ -141,7 +143,7 @@ function createCustomDifficultyDropdown() {
 
         // Apply mode settings
         const modeKey = selectedMode.toLowerCase();
-        if (modeKey in modes) {  // Fixed 'IF' to 'if'
+        if (modeKey in modes) {
             const settings = modes[modeKey];
             for (const [name, value] of Object.entries(settings)) {
                 if (typeof value === 'function') {
