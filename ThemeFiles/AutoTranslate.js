@@ -1,7 +1,7 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.12
+ * Version: 1.13
  * Date: March 09, 2025
  * Description: Translates elements in the HTML to the target language, including dynamic mode changes.
  */
@@ -113,8 +113,10 @@ if (autoTranslate === 'no') {
         }
 
         const elements = parentElement.querySelectorAll(findElements);
-        await Promise.all(Array.from(elements).map(element => translateTextNodes(element)));
-        if (debug) { console.log(`Completed initial translation for ${elements.length} elements in '${parent}'`); }
+        const dropdownElement = document.querySelector('.select-Difficulty .selected');
+        const allElements = dropdownElement ? [...elements, dropdownElement] : elements;
+        await Promise.all(Array.from(allElements).map(element => translateTextNodes(element)));
+        if (debug) { console.log(`Completed initial translation for ${allElements.length} elements in '${parent}' plus dropdown`); }
     }
 
     function revertTranslations() {
@@ -155,12 +157,17 @@ if (autoTranslate === 'no') {
                 });
 
                 // Handle text changes in .select-Difficulty .selected
-                if (mutation.type === 'characterData') {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
                     const target = mutation.target;
-                    const parentElement = target.parentElement;
-                    if (parentElement && parentElement.matches('.select-Difficulty .selected')) {
-                        translateTextNodes(parentElement, observer);
-                        if (debug) { console.log(`Translated mode text change: ${parentElement.textContent}`); }
+                    if (target.nodeType === Node.TEXT_NODE) {
+                        const parentElement = target.parentElement;
+                        if (parentElement && parentElement.matches('.select-Difficulty .selected')) {
+                            translateTextNodes(parentElement, observer);
+                            if (debug) { console.log(`Translated mode text change: ${parentElement.textContent}`); }
+                        }
+                    } else if (target.matches('.select-Difficulty .selected')) {
+                        translateTextNodes(target, observer);
+                        if (debug) { console.log(`Translated mode text change: ${target.textContent}`); }
                     }
                 }
             });
