@@ -8,7 +8,7 @@
  */
 
 // Code for mode switching
-const difficultyValue = $(`select[data-name="Difficulty"]`).val() || ''; // Cached at init
+const showLabMode = $(`select[data-name="ShowLabMode"]`).val()?.toLowerCase() || null;
 
 // Define modes globally
 const modes = {
@@ -170,8 +170,11 @@ function createCustomDifficultyDropdown() {
 }
 
 // Initialize the Mode Switch
-try {
-    createCustomDifficultyDropdown();
-} catch (err) {
-    console.error("select-Difficulty dropdown initialization failed:", err);
+if (showLabMode == 'yes') {
+    if (debug) { console.log(`ShowLabMode is on. Initializing Mode Switch.`); }
+    try {
+        createCustomDifficultyDropdown();
+    } catch (err) {
+        console.error("select-Difficulty dropdown initialization failed:", err);
+    }
 }
