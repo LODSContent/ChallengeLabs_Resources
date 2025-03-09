@@ -184,4 +184,6 @@ if (showLabMode == 'yes') {
     } catch (err) {
         console.error("select-Difficulty dropdown initialization failed:", err);
     }
+} else {
+    if (debug) { console.log(`ShowLabMode is off. Skipping Mode Switch initialization.`); }
 }
