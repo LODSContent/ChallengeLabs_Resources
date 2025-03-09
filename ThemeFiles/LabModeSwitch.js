@@ -80,7 +80,8 @@ function createCustomDifficultyDropdown() {
     // Add options to the list
     availableOptions.forEach(option => {
         const $li = $(`<li>${option.text}</li>`);
-        $li.on('click', () => {
+        $li.on('click', (e) => {
+            e.stopPropagation(); // Prevent click from bubbling to dropdown
             $selected.text(option.text);
             $optionsList.hide(); // Hide list after selection
             $dropdown.removeClass('expanded').addClass('selected'); // Switch to selected state
