@@ -1,3 +1,11 @@
+/*
+ * Script Name: AutoTranslate.js
+ * Authors: John Rice, Mark Morgan, Grok 3 (xAI)
+ * Version: 1.10
+ * Date: March 08, 2025
+ * Description: Translates elements in the HTML to the target language.
+ */
+
 // Runs at the end of the lab report
 if (debug) { console.log("Starting end-of-lab report generation"); }
 document.querySelector("body").style.display = "none"; // Blank screen initially
