@@ -24,8 +24,4 @@ ShowAdvanced: @lab.DropDownList(ShowAdvanced)[Yes,No]
 ShowActivity: @lab.DropDownList(ShowActivity)[Yes,No]
 
 AutoTranslate: @lab.DropDownList(AutoTranslate)[Yes,No]
-
-LabMode: @lab.DropDownList(LabMode)[Select Lab Mode,Guided,Advanced,Expert]
-
-Difficulty: @lab.DropDownList(Difficulty)[Guided,Advanced,Expert]
 :::
