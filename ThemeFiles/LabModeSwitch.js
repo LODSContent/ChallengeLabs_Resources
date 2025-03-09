@@ -16,19 +16,16 @@ const modes = {
         ShowGuided: 'Yes', 
         ShowAdvanced: 'Yes', 
         ShowActivity: 'Yes'
-        //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').show(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
     },
     advanced: { 
         ShowGuided: 'No', 
         ShowAdvanced: 'Yes', 
         ShowActivity: 'Yes' 
-        //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').show(); }
     },
     expert: { 
         ShowGuided: 'No', 
         ShowAdvanced: 'No', 
         ShowActivity: 'No' 
-        //visibility: () => { $('.hint, .hint-icon, .hintLink, .hiddenItem, .HiddenItem, .hiddenitem, .ShowGuided').hide(); $('.knowledge, .know-icon, .knowledgeLink, .moreKnowledge, .ShowAdvanced').hide(); }
     }
 };
 
@@ -62,7 +59,7 @@ function createCustomDifficultyDropdown() {
 
     // Create custom dropdown structure
     const $dropdown = $('<div class="select-Difficulty" data-name="select-Difficulty"></div>');
-    const $selected = $('<span class="selected"></span>').text(defaultValue);
+    const $selected = $(`<span class="selected">${defaultValue}</span>`); // Initial span
     const $optionsList = $('<ul class="options"></ul>').hide(); // Hidden by default
     const options = [
         { text: 'Guided', value: 'Guided' },
@@ -81,8 +78,11 @@ function createCustomDifficultyDropdown() {
     availableOptions.forEach(option => {
         const $li = $(`<li>${option.text}</li>`);
         $li.on('click', (e) => {
-            e.stopPropagation(); // Prevent click from bubbling to dropdown
-            $selected.text(option.text);
+            e.stopPropagation(); // Prevent bubbling to dropdown
+            // Replace old selected span with a new one
+            $selected.remove(); // Remove old span
+            const $newSelected = $(`<span class="selected">${option.text}</span>`);
+            $dropdown.prepend($newSelected); // Add new span at the top
             $optionsList.hide(); // Hide list after selection
             $dropdown.removeClass('expanded').addClass('selected'); // Switch to selected state
             handleSelection(option.text);
@@ -124,7 +124,7 @@ function createCustomDifficultyDropdown() {
         if (debug) { console.log("Placed select-Difficulty inside parent <p>"); }
     } else {
         if (debug) { console.log("No parent <p> found, appending after difficultyButton"); }
-        difficultyButton.after($dropdown); // Fallback
+        difficultyButton.after($($dropdown)); // Fallback
     }
 
     if (debug) { console.log(`Created select-Difficulty dropdown with default: ${defaultValue}`); }
@@ -140,8 +140,7 @@ function createCustomDifficultyDropdown() {
         }
 
         // Apply mode settings
-        const modeKey = selectedMode.toLowerCase();
-        if (modeKey in modes) {
+        const modeKey = selectedMode.toLowerCase	IF (modeKey in modes) {
             const settings = modes[modeKey];
             for (const [name, value] of Object.entries(settings)) {
                 if (typeof value === 'function') {
