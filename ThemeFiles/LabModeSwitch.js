@@ -1,7 +1,3 @@
-/*
-    Author: Mark Morgan and Grok
-    Version: 20250309.01.17
-*/
 // Code for mode switching
 const difficultyValue = $(`select[data-name="Difficulty"]`).val() || ''; // Cached at init
 
@@ -77,7 +73,8 @@ function createCustomDifficultyDropdown() {
         const $li = $(`<li>${option.text}</li>`);
         $li.on('click', () => {
             $selected.text(option.text);
-            $optionsList.hide();
+            $optionsList.hide(); // Hide list after selection
+            $dropdown.addClass('selected'); // Mark as selected for arrow
             handleSelection(option.text);
             if (debug) { console.log(`Selected ${option.text} from custom dropdown`); }
         });
@@ -106,6 +103,11 @@ function createCustomDifficultyDropdown() {
     } else {
         if (debug) { console.log("No parent <p> found, appending after difficultyButton"); }
         difficultyButton.after($dropdown); // Fallback
+    }
+
+    // Apply 'selected' class if default value is a valid mode
+    if (defaultValue.toLowerCase() in modes) {
+        $dropdown.addClass('selected');
     }
 
     if (debug) { console.log(`Created select-Difficulty dropdown with default: ${defaultValue}`); }
