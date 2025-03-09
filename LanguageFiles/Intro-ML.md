@@ -17,6 +17,8 @@ Challenge Overview
 :::HiddenVariables(ShowVariables=Yes)
 ShowToggle: @lab.DropDownList(ShowToggle)[Yes,No]
 
+ShowLabMode: @lab.DropDownList(ShowLabMode)[Yes,No]
+
 ShowGuided: @lab.DropDownList(ShowGuided)[Yes,No]
 
 ShowAdvanced: @lab.DropDownList(ShowAdvanced)[Yes,No]
