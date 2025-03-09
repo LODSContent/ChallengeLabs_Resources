@@ -72,7 +72,7 @@ function createCustomDifficultyDropdown() {
     const fontFamily = originalStyles.fontFamily;
     const fontSize = originalStyles.fontSize;
     const textColor = originalStyles.color;
-    const fontWeight = originalStyles.fontWeight; // Added font-weight
+    const fontWeight = originalStyles.fontWeight;
 
     // Add options to dropdown with matching background and font-weight
     availableOptions.forEach(option => {
@@ -82,19 +82,23 @@ function createCustomDifficultyDropdown() {
         }
         $option.css({
             'background-color': backgroundColor,
-            'font-weight': fontWeight // Apply to options
+            'font-weight': fontWeight,
+            'color': textColor // Ensure option text color matches too
         });
         $newSelect.append($option);
     });
 
-    // Apply styles to new dropdown
+    // Apply styles to new dropdown with enhanced background enforcement
     $newSelect.css({
         'background-color': backgroundColor,
         'font-family': fontFamily,
         'font-size': fontSize,
         'color': textColor,
         'border': 'none',
-        'font-weight': fontWeight // Apply to select
+        'font-weight': fontWeight,
+        '-webkit-appearance': 'none', // Remove default styling (Chrome/Safari)
+        '-moz-appearance': 'none',    // Remove default styling (Firefox)
+        'appearance': 'none'          // Standard removal of native styling
     });
     if (debug) { console.log(`Applied styles to select-Difficulty: background-color=${backgroundColor}, font-family=${fontFamily}, font-size=${fontSize}, color=${textColor}, border=none, font-weight=${fontWeight}`); }
 
