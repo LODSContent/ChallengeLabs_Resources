@@ -1,5 +1,5 @@
 /*
- * Script Name: AutoTranslate.js
+ * Script Name: EOLReport.js
  * Authors: John Rice, Mark Morgan, Grok 3 (xAI)
  * Version: 1.10
  * Date: March 08, 2025
