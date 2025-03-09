@@ -85,8 +85,6 @@ function createCustomDifficultyDropdown() {
             $optionsList.hide(); // Hide list after selection
             $dropdown.removeClass('expanded').addClass('selected'); // Switch to selected state
             handleSelection(option.text);
-            $optionsList.hide();
-            $dropdown.removeClass('expanded');
             if (debug) { console.log(`Selected ${option.text} from custom dropdown, options hidden`); }
         });
         $optionsList.append($li);
