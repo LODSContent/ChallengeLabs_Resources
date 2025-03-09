@@ -1,7 +1,7 @@
 /*
  * Script Name: LabModeSwitch.js
  * Authors: Mark Morgan, Grok 3 (xAI)
- * Version: 1.0
+ * Version: 1.10
  * Date: March 08, 2025
  * Description: Creates a custom dropdown to replace the original difficulty button, 
  *              managing mode switching with a styled div-based UI.
@@ -82,8 +82,8 @@ function createCustomDifficultyDropdown() {
         const $li = $(`<li>${option.text}</li>`);
         $li.on('click', () => {
             $selected.text(option.text);
-            $optionsList.hide(); // Ensure list hides after selection
-            $dropdown.addClass('selected'); // Mark as selected for arrow
+            $optionsList.hide(); // Hide list after selection
+            $dropdown.removeClass('expanded').addClass('selected'); // Switch to selected state
             handleSelection(option.text);
             if (debug) { console.log(`Selected ${option.text} from custom dropdown, options hidden`); }
         });
@@ -96,15 +96,27 @@ function createCustomDifficultyDropdown() {
     // Toggle dropdown on click
     $dropdown.on('click', (e) => {
         e.stopPropagation(); // Prevent closing immediately
+        if ($optionsList.is(':visible')) {
+            $dropdown.removeClass('expanded');
+        } else {
+            $dropdown.addClass('expanded');
+        }
         $optionsList.toggle();
-        if (debug) { console.log(`Dropdown toggled, options ${$optionsList.is(':visible') ? 'visible' : 'hidden'}`); }
+        if (debug) { console.log(`Dropdown toggled, options ${$optionsList.is(':visible') ? 'visible' : 'hidden'}, state: ${$dropdown.hasClass('expanded') ? 'expanded' : $dropdown.hasClass('selected') ? 'selected' : 'default'}`); }
     });
 
     // Close dropdown when clicking outside
     $(document).on('click', () => {
         $optionsList.hide();
-        if (debug) { console.log("Clicked outside, options hidden"); }
+        $dropdown.removeClass('expanded');
+        if (debug) { console.log("Clicked outside, options hidden, state reset to default or selected"); }
     });
+
+    // Apply 'selected' class if default value is a valid mode
+    if (defaultValue.toLowerCase() in modes) {
+        $dropdown.addClass('selected');
+        if (debug) { console.log("Applied 'selected' class for initial value"); }
+    }
 
     // Place inside the same parent <p> as the original
     const $parentP = difficultyButton.closest('p');
@@ -114,12 +126,6 @@ function createCustomDifficultyDropdown() {
     } else {
         if (debug) { console.log("No parent <p> found, appending after difficultyButton"); }
         difficultyButton.after($dropdown); // Fallback
-    }
-
-    // Apply 'selected' class if default value is a valid mode
-    if (defaultValue.toLowerCase() in modes) {
-        $dropdown.addClass('selected');
-        if (debug) { console.log("Applied 'selected' class for initial value"); }
     }
 
     if (debug) { console.log(`Created select-Difficulty dropdown with default: ${defaultValue}`); }
