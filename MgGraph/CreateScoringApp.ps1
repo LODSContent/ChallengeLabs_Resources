@@ -1,10 +1,38 @@
-﻿param (
-        $tenant
-      )
+param (
+    [Parameter(Mandatory = $true)]
+    $tenant
+)
 
-# Creates a new application for scoring (old method)
+# Ensure required modules are imported
+Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
+try {
+    Import-Module MSAL.PS -ErrorAction Stop
+} catch {
+    throw "MSAL.PS module is required. Install it with: Install-Module MSAL.PS"
+}
 
-Connect-MgGraph -Tenant "$tenant" -Scopes "User.ReadWrite.All","Group.ReadWrite.All","AppRoleAssignment.ReadWrite.All","Application.ReadWrite.All","DelegatedPermissionGrant.ReadWrite.All","RoleManagement.ReadWrite.Directory","Directory.ReadWrite.All"
+# Define scopes
+$scopes = @("User.ReadWrite.All", "Group.ReadWrite.All", "AppRoleAssignment.ReadWrite.All", "Application.ReadWrite.All", "DelegatedPermissionGrant.ReadWrite.All", "RoleManagement.ReadWrite.Directory", "Directory.ReadWrite.All")
+
+# Get Graph token via MSAL.PS
+try {
+    $msalToken = Get-MsalToken -ClientId "1950a258-227b-4e31-a9cf-717495945fc2" -TenantId $tenant -Scopes "https://graph.microsoft.com/.default" -Interactive -ErrorAction Stop
+    $graphToken = $msalToken.AccessToken
+    if ($scriptDebug) { Write-Output "Retrieved Graph token via MSAL.PS: $($graphToken.Substring(0,10))..." }
+} catch {
+    throw "Failed to retrieve Graph token via MSAL.PS: $_"
+}
+
+# Convert the token string to SecureString
+$secureGraphToken = ConvertTo-SecureString -String $graphToken -AsPlainText -Force
+
+# Connect to Microsoft Graph using the MSAL token
+try {
+    Connect-MgGraph -AccessToken $secureGraphToken -ErrorAction Stop
+    if ($scriptDebug) { Write-Output "Successfully connected to Microsoft Graph with MSAL token" }
+} catch {
+    throw "Failed to connect to Microsoft Graph: $_"
+}
 
 # Check if app exists
 $existingApp = Get-MgApplication -Filter "displayName eq 'Scripting Engine'"
@@ -24,16 +52,7 @@ if (-not $existingApp) {
     # Application permissions
     $sp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"  # Graph AppId
     $appPermissions = $sp.AppRoles | Where-Object { $_.Value -like "*.read.*" -or $_.Value -like "*security*" -or $_.Value -like "Policy*" } | Select-Object -ExpandProperty Value
-    $appPermissions += 'Application.ReadWrite.All'
-    $appPermissions += 'User.ReadWrite.All'
-    $appPermissions += 'Group.ReadWrite.All'
-    $appPermissions += 'Policy.ReadWrite.ConditionalAccess'
-    $appPermissions += 'Policy.ReadWrite.Security'
-    $appPermissions += 'Directory.ReadWrite.All'
-    $appPermissions += 'RoleManagement.ReadWrite.All'
-    $appPermissions += 'RoleManagement.ReadWrite.Directory'
-    $appPermissions += 'Files.ReadWrite.All'
-    $appPermissions += 'Files.ReadWrite.AppFolder'
+    $appPermissions += 'Application.ReadWrite.All', 'User.ReadWrite.All', 'Group.ReadWrite.All', 'Policy.ReadWrite.ConditionalAccess', 'Policy.ReadWrite.Security', 'Directory.ReadWrite.All', 'RoleManagement.ReadWrite.All', 'RoleManagement.ReadWrite.Directory', 'Files.ReadWrite.All', 'Files.ReadWrite.AppFolder'
 
     foreach ($permission in $appPermissions) {
         $reqPermission = $sp.AppRoles | Where-Object { $_.Value -eq $permission }
@@ -91,10 +110,6 @@ if (-not $existingApp) {
 
     $appId = $app.AppId
 
-    # Get current Graph token
-    $context = Get-MgContext
-    $graphToken = (Get-MgContext).AccessToken
-
     # Exchange Graph token for AD management token (OBO flow)
     $consentBody = @{
         "grant_type" = "urn:ietf:params:oauth:grant-type:jwt-bearer"
@@ -103,9 +118,14 @@ if (-not $existingApp) {
         "requested_token_use" = "on_behalf_of"
         "resource" = "74658136-14ec-4630-ad9b-26e160ff0fc6"  # Azure AD management resource
     }
-    
-    $consentResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenant/oauth2/token" -Method Post -Body $consentBody -ContentType "application/x-www-form-urlencoded"
-    $token = $consentResponse.access_token
+
+    try {
+        $consentResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenant/oauth2/token" -Method Post -Body $consentBody -ContentType "application/x-www-form-urlencoded" -ErrorAction Stop
+        $token = $consentResponse.access_token
+        if ($scriptDebug) { Write-Output "Successfully exchanged token for AD management" }
+    } catch {
+        throw "Failed to exchange token for AD management: $_"
+    }
 
     # Headers for consent request
     $headers = @{
@@ -121,15 +141,14 @@ if (-not $existingApp) {
     do {
         try {
             Invoke-RestMethod -Uri $url -Headers $headers -Method POST -ErrorAction Stop | Out-Null
-            $ConsentFinished = $True
+            $ConsentFinished = $true
         } catch {
             $ConsentFinished = $false
-            if ($scriptDebug) {Write-Output "Failed to Consent to all permissions"}
+            if ($scriptDebug) { Write-Output "Failed to Consent to all permissions: $_" }
         }
         $retries++
-        if ($scriptDebug) {Write-Output "Retry #$retries"}
+        if ($scriptDebug) { Write-Output "Retry #$retries" }
     } until ($ConsentFinished -or $retries -ge 3)
-
 
     if ($scriptDebug) { Write-Output "Created the Scripting Engine application" }
 } else {
@@ -137,8 +156,8 @@ if (-not $existingApp) {
 }
 
 # Give time for the consent to settle
-Start-Sleep 60
+Start-Sleep -Seconds 60
 
 # Save the AppId and Secret
-MD C:\Temp -ErrorAction SilentlyContinue | Out-Null
-New-Object PSObject -Property @{AppId=$newApp.AppId;SecretText=$secret.SecretText} | ConvertTo-Json | Out-File C:\Temp\ScriptingApp.json
+$null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
+New-Object PSObject -Property @{AppId=$app.AppId;SecretText=$secret.SecretText} | ConvertTo-Json | Out-File C:\Temp\ScriptingApp.json
