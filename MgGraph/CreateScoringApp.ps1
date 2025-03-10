@@ -3,6 +3,8 @@ param (
     $tenant
 )
 
+$ScriptDebug = $True
+
 # Ensure required modules are imported
 Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
 try {
@@ -110,45 +112,31 @@ if (-not $existingApp) {
 
     $appId = $app.AppId
 
-    # Exchange Graph token for AD management token (OBO flow)
-    $consentBody = @{
-        "grant_type" = "urn:ietf:params:oauth:grant-type:jwt-bearer"
-        "client_id" = "1950a258-227b-4e31-a9cf-717495945fc2"  # Azure PowerShell client ID
-        "assertion" = $graphToken
-        "requested_token_use" = "on_behalf_of"
-        "resource" = "74658136-14ec-4630-ad9b-26e160ff0fc6"  # Azure AD management resource
-    }
-
+    # Grant admin consent via Graph instead of OBO
     try {
-        $consentResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenant/oauth2/token" -Method Post -Body $consentBody -ContentType "application/x-www-form-urlencoded" -ErrorAction Stop
-        $token = $consentResponse.access_token
-        if ($scriptDebug) { Write-Output "Successfully exchanged token for AD management" }
-    } catch {
-        throw "Failed to exchange token for AD management: $_"
-    }
+        $servicePrincipal = New-MgServicePrincipal -AppId $appId -ErrorAction Stop
+        if ($scriptDebug) { Write-Output "Created service principal for app" }
 
-    # Headers for consent request
-    $headers = @{
-        'Authorization'          = "Bearer $token"
-        'X-Requested-With'       = 'XMLHttpRequest'
-        'x-ms-client-request-id' = [guid]::NewGuid().ToString()
-        'x-ms-correlation-id'    = [guid]::NewGuid().ToString()
-    }
-
-    # Consent endpoint
-    $url = "https://main.iam.ad.ext.azure.com/api/RegisteredApplications/$appId/Consent?onBehalfOfAll=true"
-    $retries = 0
-    do {
-        try {
-            Invoke-RestMethod -Uri $url -Headers $headers -Method POST -ErrorAction Stop | Out-Null
-            $ConsentFinished = $true
-        } catch {
-            $ConsentFinished = $false
-            if ($scriptDebug) { Write-Output "Failed to Consent to all permissions: $_" }
+        $graphSpId = $graphSP.Id
+        foreach ($resource in $requiredResourceAccess) {
+            foreach ($access in $resource.resourceAccess) {
+                if ($access.type -eq "Scope") {
+                    $grantBody = @{
+                        "clientId" = $servicePrincipal.Id
+                        "consentType" = "AllPrincipals"
+                        "principalId" = $null
+                        "resourceId" = $graphSpId
+                        "scope" = ($sp.OAuth2PermissionScopes | Where-Object { $_.Id -eq $access.id }).Value
+                    }
+                    Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
+                }
+            }
         }
-        $retries++
-        if ($scriptDebug) { Write-Output "Retry #$retries" }
-    } until ($ConsentFinished -or $retries -ge 3)
+        if ($scriptDebug) { Write-Output "Admin consent granted via Graph" }
+    } catch {
+        if ($scriptDebug) { Write-Output "Failed to grant admin consent via Graph: $_" }
+        throw "Consent process failed: $_"
+    }
 
     if ($scriptDebug) { Write-Output "Created the Scripting Engine application" }
 } else {
