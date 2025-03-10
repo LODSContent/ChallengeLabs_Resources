@@ -1,9 +1,10 @@
 param (
     [Parameter(Mandatory = $true)]
-    $tenant
+    $tenant,
+    [switch]$Debug=$False
 )
 
-$ScriptDebug = $True
+$ScriptDebug = $Debug
 
 # Ensure required modules are imported
 Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
@@ -112,27 +113,40 @@ if (-not $existingApp) {
 
     $appId = $app.AppId
 
-    # Grant admin consent via Graph instead of OBO
+    # Grant admin consent via Graph
     try {
         $servicePrincipal = New-MgServicePrincipal -AppId $appId -ErrorAction Stop
-        if ($scriptDebug) { Write-Output "Created service principal for app" }
+        if ($scriptDebug) { Write-Output "Created service principal for app: $($servicePrincipal.Id)" }
 
         $graphSpId = $graphSP.Id
-        foreach ($resource in $requiredResourceAccess) {
-            foreach ($access in $resource.resourceAccess) {
-                if ($access.type -eq "Scope") {
-                    $grantBody = @{
-                        "clientId" = $servicePrincipal.Id
-                        "consentType" = "AllPrincipals"
-                        "principalId" = $null
-                        "resourceId" = $graphSpId
-                        "scope" = ($sp.OAuth2PermissionScopes | Where-Object { $_.Id -eq $access.id }).Value
-                    }
-                    Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
+        $existingGrants = Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants?`$filter=clientId eq '$($servicePrincipal.Id)' and resourceId eq '$graphSpId'" | Select-Object -ExpandProperty value
+
+        $desiredScopes = $delegatedPermissions -join " "
+        if ($existingGrants) {
+            # Update existing grant if scopes differ
+            $existingGrant = $existingGrants[0]  # Assuming one grant per clientId/resourceId pair
+            $currentScopes = $existingGrant.scope
+            if ($currentScopes -ne $desiredScopes) {
+                $grantBody = @{
+                    "scope" = $desiredScopes
                 }
+                Invoke-MgGraphRequest -Method PATCH -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants/$($existingGrant.id)" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
+                if ($scriptDebug) { Write-Output "Updated existing admin consent with scopes: $desiredScopes" }
+            } else {
+                if ($scriptDebug) { Write-Output "Admin consent already granted with correct scopes: $currentScopes" }
             }
+        } else {
+            # Create new grant
+            $grantBody = @{
+                "clientId" = $servicePrincipal.Id
+                "consentType" = "AllPrincipals"
+                "principalId" = $null
+                "resourceId" = $graphSpId
+                "scope" = $desiredScopes
+            }
+            Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
+            if ($scriptDebug) { Write-Output "Created new admin consent with scopes: $desiredScopes" }
         }
-        if ($scriptDebug) { Write-Output "Admin consent granted via Graph" }
     } catch {
         if ($scriptDebug) { Write-Output "Failed to grant admin consent via Graph: $_" }
         throw "Consent process failed: $_"
