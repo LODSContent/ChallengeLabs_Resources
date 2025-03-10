@@ -4,6 +4,11 @@ param (
     [switch]$ScriptDebug = $False
 )
 
+if (-not (Get-Module MSAL.PS -ListAvailable)) {
+    Write-Host "Installing the MSAL.PS module."
+    Install-Module MSAL.PS -SkipPublisherCheck -AcceptLicense -Scope AllUsers -Force
+}
+
 Write-Host "Authenticating."
 
 # Define scopes
