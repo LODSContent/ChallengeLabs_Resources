@@ -44,7 +44,7 @@ function createCustomDifficultyDropdown() {
         return;
     }
 
-    const defaultValue = difficultyButton[0].innerHTML.trim(); // Get original innerHTML
+    let defaultValue = difficultyButton[0].innerHTML.trim(); // Get original innerHTML
     if (debug) { console.log(`Original difficulty button value: ${defaultValue}`); }
 
     // If Expert, skip and leave original
