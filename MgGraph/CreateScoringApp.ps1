@@ -136,4 +136,4 @@ Start-Sleep 60
 
 # Save the AppId and Secret
 MD C:\Temp -ErrorAction SilentlyContinue | Out-Null
-New-Object PSObject -Property @{AppId=$newApp.AppId;SecretText=$secret.SecretText} | ConvertTo-Json | C:\Temp\ScriptingApp.json
+New-Object PSObject -Property @{AppId=$newApp.AppId;SecretText=$secret.SecretText} | ConvertTo-Json | Out-File C:\Temp\ScriptingApp.json
