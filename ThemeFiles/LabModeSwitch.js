@@ -45,6 +45,7 @@ function createCustomDifficultyDropdown() {
     }
 
     let defaultValue = difficultyButton[0].innerHTML.trim(); // Get original innerHTML
+    let initialMode = defaultValue;
     if (debug) { console.log(`Original difficulty button value: ${defaultValue}`); }
 
     // If Expert, skip and leave original
@@ -160,7 +161,7 @@ function createCustomDifficultyDropdown() {
     }
 
     // Apply initial mode settings (no .selected class yet)
-    const initialMode = defaultValue;
+    //const initialMode = defaultValue;
     const initialModeKey = initialMode.toLowerCase();
     if (initialModeKey in modes) {
         const settings = modes[initialModeKey];
