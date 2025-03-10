@@ -93,11 +93,11 @@ if (-not $existingApp) {
 
     # Get token for iam.ad.ext.azure.com (consent endpoint)
     $consentBody = @{
-        "grant_type"    = "password"
-        "client_id"     = "1950a258-227b-4e31-a9cf-717495945fc2"  # Same public client ID
-        "username"      = $username
-        "password"      = $password
-        "resource"      = "74658136-14ec-4630-ad9b-26e160ff0fc6"  # Azure AD management resource
+        "grant_type" = "urn:ietf:params:oauth:grant-type:jwt-bearer"
+        "client_id" = "1950a258-227b-4e31-a9cf-717495945fc2"
+        "assertion" = $graphToken
+        "requested_token_use" = "on_behalf_of"
+        "resource" = "74658136-14ec-4630-ad9b-26e160ff0fc6"
     }
     $consentResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenant/oauth2/token" -Method Post -Body $consentBody -ContentType "application/x-www-form-urlencoded"
     $token = $consentResponse.access_token
