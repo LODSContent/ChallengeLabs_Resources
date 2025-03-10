@@ -53,6 +53,9 @@ function createCustomDifficultyDropdown() {
         return;
     }
 
+    // Setting default to Select Lab Mode if not expert
+    defaultValue = "Select lab mode"
+
     // Hide original button
     difficultyButton.hide();
     if (debug) { console.log("Hid original difficultybutton [data-name=\"Difficulty\"]"); }
