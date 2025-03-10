@@ -4,13 +4,7 @@ param (
     [switch]$ScriptDebug = $False
 )
 
-# Ensure required modules are imported
-Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
-try {
-    Import-Module MSAL.PS -ErrorAction Stop
-} catch {
-    throw "MSAL.PS module is required. Install it with: Install-Module MSAL.PS"
-}
+Write-Host "Authenticating."
 
 # Define scopes
 $scopes = @("User.ReadWrite.All", "Group.ReadWrite.All", "AppRoleAssignment.ReadWrite.All", "Application.ReadWrite.All", "DelegatedPermissionGrant.ReadWrite.All", "RoleManagement.ReadWrite.Directory", "Directory.ReadWrite.All")
@@ -29,7 +23,7 @@ $secureGraphToken = ConvertTo-SecureString -String $graphToken -AsPlainText -For
 
 # Connect to Microsoft Graph using the MSAL token
 try {
-    Connect-MgGraph -AccessToken $secureGraphToken -ErrorAction Stop
+    Connect-MgGraph -AccessToken $secureGraphToken -ErrorAction Stop -NoWelcome
     if ($ScriptDebug) { Write-Output "Successfully connected to Microsoft Graph with MSAL token" }
 } catch {
     throw "Failed to connect to Microsoft Graph: $_"
@@ -94,6 +88,8 @@ if (-not $existingApp) {
         -Body $appBody `
         -ContentType "application/json"
 
+    Write-Host "Application created."
+
     # Add password credential
     Start-Sleep -Seconds 10
     $secretBody = @{
@@ -128,7 +124,7 @@ if (-not $existingApp) {
                 $grantBody = @{
                     "scope" = $desiredScopes
                 }
-                Invoke-MgGraphRequest -Method PATCH -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants/$($existingGrant.id)" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
+                $null = Invoke-MgGraphRequest -Method PATCH -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants/$($existingGrant.id)" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
                 if ($ScriptDebug) { Write-Output "Updated existing admin consent with scopes: $desiredScopes" }
             } else {
                 if ($ScriptDebug) { Write-Output "Admin consent already granted with correct scopes: $currentScopes" }
@@ -141,7 +137,7 @@ if (-not $existingApp) {
                 "resourceId" = $graphSpId
                 "scope" = $desiredScopes
             }
-            Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
+            $null = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
             if ($ScriptDebug) { Write-Output "Created new admin consent with scopes: $desiredScopes" }
         }
 
@@ -149,6 +145,7 @@ if (-not $existingApp) {
         $existingAppRoles = Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipal.Id)/appRoleAssignments" | Select-Object -ExpandProperty value
         $existingAppRoleIds = $existingAppRoles | Select-Object -ExpandProperty appRoleId
 
+        Write-Host "Granting app roles" -NoNewline
         foreach ($resource in $requiredResourceAccess) {
             foreach ($access in $resource.resourceAccess) {
                 if ($access.type -eq "Role" -and $access.id -notin $existingAppRoleIds) {
@@ -157,27 +154,35 @@ if (-not $existingApp) {
                         "resourceId" = $graphSpId
                         "appRoleId" = $access.id
                     }
-                    Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipal.Id)/appRoleAssignments" -Body ($roleBody | ConvertTo-Json) -ContentType "application/json"
-                    $roleValue = ($sp.AppRoles | Where-Object { $_.Id -eq $access.id }).Value
-                    if ($ScriptDebug) { Write-Output "Granted app role: $roleValue" }
+                    try {
+                        $null = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipal.Id)/appRoleAssignments" -Body ($roleBody | ConvertTo-Json) -ContentType "application/json"
+                        $roleValue = ($sp.AppRoles | Where-Object { $_.Id -eq $access.id }).Value
+                        if ($ScriptDebug) { Write-Output "Granted app role: $roleValue" }
+                        Write-Host "." -NoNewline
+                    } catch {
+                        if ($ScriptDebug) { Write-Output "Failed to grant approle: $roleValue" }
+                    }
                 }
             }
         }
+        Write-Host ""
 
         if ($ScriptDebug) { Write-Output "Admin consent completed for all permissions" }
     } catch {
         if ($ScriptDebug) { Write-Output "Failed to grant admin consent via Graph: $_" }
         throw "Consent process failed: $_"
     }
-
-    if ($ScriptDebug) { Write-Output "Created the Scripting Engine application" }
 } else {
     if ($ScriptDebug) { Write-Output "Scripting Engine application already exists" }
 }
 
 # Give time for the consent to settle
-Start-Sleep -Seconds 60
+Write-Host "Waiting for the Scripting Engine Application to become ready."
+#Start-Sleep -Seconds 60
+60..1 | ForEach-Object { Write-Host "$_ seconds remaining" -NoNewline; Start-Sleep -Seconds 1; Write-Host "`r" -NoNewline }
 
 # Save the AppId and Secret
 $null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
 New-Object PSObject -Property @{AppId=$app.AppId;SecretText=$secret.SecretText} | ConvertTo-Json | Out-File C:\Temp\ScriptingApp.json
+
+Write-Host "Script complete. AppId and Secret saved."
