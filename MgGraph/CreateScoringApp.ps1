@@ -1,10 +1,8 @@
 param (
     [Parameter(Mandatory = $true)]
     $tenant,
-    [switch]$Debug=$False
+    [switch]$ScriptDebug = $False
 )
-
-$ScriptDebug = $Debug
 
 # Ensure required modules are imported
 Import-Module Microsoft.Graph.Authentication -ErrorAction Stop
@@ -21,7 +19,7 @@ $scopes = @("User.ReadWrite.All", "Group.ReadWrite.All", "AppRoleAssignment.Read
 try {
     $msalToken = Get-MsalToken -ClientId "1950a258-227b-4e31-a9cf-717495945fc2" -TenantId $tenant -Scopes "https://graph.microsoft.com/.default" -Interactive -ErrorAction Stop
     $graphToken = $msalToken.AccessToken
-    if ($scriptDebug) { Write-Output "Retrieved Graph token via MSAL.PS: $($graphToken.Substring(0,10))..." }
+    if ($ScriptDebug) { Write-Output "Retrieved Graph token via MSAL.PS: $($graphToken.Substring(0,10))..." }
 } catch {
     throw "Failed to retrieve Graph token via MSAL.PS: $_"
 }
@@ -32,7 +30,7 @@ $secureGraphToken = ConvertTo-SecureString -String $graphToken -AsPlainText -For
 # Connect to Microsoft Graph using the MSAL token
 try {
     Connect-MgGraph -AccessToken $secureGraphToken -ErrorAction Stop
-    if ($scriptDebug) { Write-Output "Successfully connected to Microsoft Graph with MSAL token" }
+    if ($ScriptDebug) { Write-Output "Successfully connected to Microsoft Graph with MSAL token" }
 } catch {
     throw "Failed to connect to Microsoft Graph: $_"
 }
@@ -116,27 +114,26 @@ if (-not $existingApp) {
     # Grant admin consent via Graph
     try {
         $servicePrincipal = New-MgServicePrincipal -AppId $appId -ErrorAction Stop
-        if ($scriptDebug) { Write-Output "Created service principal for app: $($servicePrincipal.Id)" }
+        if ($ScriptDebug) { Write-Output "Created service principal for app: $($servicePrincipal.Id)" }
 
         $graphSpId = $graphSP.Id
-        $existingGrants = Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants?`$filter=clientId eq '$($servicePrincipal.Id)' and resourceId eq '$graphSpId'" | Select-Object -ExpandProperty value
 
+        # Grant delegated permissions (Scopes)
+        $existingGrants = Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants?`$filter=clientId eq '$($servicePrincipal.Id)' and resourceId eq '$graphSpId'" | Select-Object -ExpandProperty value
         $desiredScopes = $delegatedPermissions -join " "
         if ($existingGrants) {
-            # Update existing grant if scopes differ
-            $existingGrant = $existingGrants[0]  # Assuming one grant per clientId/resourceId pair
+            $existingGrant = $existingGrants[0]
             $currentScopes = $existingGrant.scope
             if ($currentScopes -ne $desiredScopes) {
                 $grantBody = @{
                     "scope" = $desiredScopes
                 }
                 Invoke-MgGraphRequest -Method PATCH -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants/$($existingGrant.id)" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
-                if ($scriptDebug) { Write-Output "Updated existing admin consent with scopes: $desiredScopes" }
+                if ($ScriptDebug) { Write-Output "Updated existing admin consent with scopes: $desiredScopes" }
             } else {
-                if ($scriptDebug) { Write-Output "Admin consent already granted with correct scopes: $currentScopes" }
+                if ($ScriptDebug) { Write-Output "Admin consent already granted with correct scopes: $currentScopes" }
             }
         } else {
-            # Create new grant
             $grantBody = @{
                 "clientId" = $servicePrincipal.Id
                 "consentType" = "AllPrincipals"
@@ -145,16 +142,37 @@ if (-not $existingApp) {
                 "scope" = $desiredScopes
             }
             Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" -Body ($grantBody | ConvertTo-Json) -ContentType "application/json"
-            if ($scriptDebug) { Write-Output "Created new admin consent with scopes: $desiredScopes" }
+            if ($ScriptDebug) { Write-Output "Created new admin consent with scopes: $desiredScopes" }
         }
+
+        # Grant application permissions (Roles)
+        $existingAppRoles = Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipal.Id)/appRoleAssignments" | Select-Object -ExpandProperty value
+        $existingAppRoleIds = $existingAppRoles | Select-Object -ExpandProperty appRoleId
+
+        foreach ($resource in $requiredResourceAccess) {
+            foreach ($access in $resource.resourceAccess) {
+                if ($access.type -eq "Role" -and $access.id -notin $existingAppRoleIds) {
+                    $roleBody = @{
+                        "principalId" = $servicePrincipal.Id
+                        "resourceId" = $graphSpId
+                        "appRoleId" = $access.id
+                    }
+                    Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($servicePrincipal.Id)/appRoleAssignments" -Body ($roleBody | ConvertTo-Json) -ContentType "application/json"
+                    $roleValue = ($sp.AppRoles | Where-Object { $_.Id -eq $access.id }).Value
+                    if ($ScriptDebug) { Write-Output "Granted app role: $roleValue" }
+                }
+            }
+        }
+
+        if ($ScriptDebug) { Write-Output "Admin consent completed for all permissions" }
     } catch {
-        if ($scriptDebug) { Write-Output "Failed to grant admin consent via Graph: $_" }
+        if ($ScriptDebug) { Write-Output "Failed to grant admin consent via Graph: $_" }
         throw "Consent process failed: $_"
     }
 
-    if ($scriptDebug) { Write-Output "Created the Scripting Engine application" }
+    if ($ScriptDebug) { Write-Output "Created the Scripting Engine application" }
 } else {
-    if ($scriptDebug) { Write-Output "Scripting Engine application already exists" }
+    if ($ScriptDebug) { Write-Output "Scripting Engine application already exists" }
 }
 
 # Give time for the consent to settle
