@@ -184,7 +184,7 @@ if (-not $existingApp) {
 # Give time for the consent to settle
 Write-Host "Waiting for the Scripting Engine Application to become ready."
 #Start-Sleep -Seconds 60
-60..1 | ForEach-Object { Write-Host "$_ seconds remaining" -NoNewline; Start-Sleep -Seconds 1; Write-Host "`r" -NoNewline }
+10..1 | ForEach-Object { Write-Host "$_ seconds remaining" -NoNewline; Start-Sleep -Seconds 1; Write-Host "`r" -NoNewline }
 
 # Save the AppId and Secret
 $null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
