@@ -181,13 +181,13 @@ if (-not $existingApp) {
     if ($ScriptDebug) { Write-Output "Scripting application already exists" }
 }
 
+# Save the AppId and Secret
+$null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
+New-Object PSObject -Property @{AppId=$app.AppId;SecretText=$secret.SecretText} | ConvertTo-Json | Out-File C:\Temp\ScriptingApp.json
+
 # Give time for the consent to settle
 Write-Host "Waiting for the Scripting Application to become ready."
 #Start-Sleep -Seconds 60
 10..1 | ForEach-Object { Write-Host "$_ seconds remaining" -NoNewline; Start-Sleep -Seconds 1; Write-Host "`r" -NoNewline }
-
-# Save the AppId and Secret
-$null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
-New-Object PSObject -Property @{AppId=$app.AppId;SecretText=$secret.SecretText} | ConvertTo-Json | Out-File C:\Temp\ScriptingApp.json
 
 Write-Host "Script complete. AppId and Secret saved."
