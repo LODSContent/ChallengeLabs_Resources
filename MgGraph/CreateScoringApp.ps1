@@ -35,7 +35,7 @@ try {
 }
 
 # Check if app exists
-$existingApp = Get-MgApplication -Filter "displayName eq 'Scripting Engine'"
+$existingApp = Get-MgApplication -Filter "displayName eq 'Scripting app'"
 if (-not $existingApp) {
     # Get Microsoft Graph service principal
     $graphSP = Get-MgServicePrincipal -Filter "displayName eq 'Microsoft Graph'"
@@ -78,8 +78,8 @@ if (-not $existingApp) {
 
     # Create the application
     $appBody = @{
-        "displayName" = "Scripting Engine"
-        "Description" = "Scripting Engine app for tenant: $tenant"
+        "displayName" = "Scripting app"
+        "Description" = "Scripting app for tenant: $tenant"
         "signInAudience" = "AzureADMyOrg"
         "web" = @{
             "redirectUris" = @("http://localhost")
@@ -178,11 +178,11 @@ if (-not $existingApp) {
         throw "Consent process failed: $_"
     }
 } else {
-    if ($ScriptDebug) { Write-Output "Scripting Engine application already exists" }
+    if ($ScriptDebug) { Write-Output "Scripting application already exists" }
 }
 
 # Give time for the consent to settle
-Write-Host "Waiting for the Scripting Engine Application to become ready."
+Write-Host "Waiting for the Scripting Application to become ready."
 #Start-Sleep -Seconds 60
 10..1 | ForEach-Object { Write-Host "$_ seconds remaining" -NoNewline; Start-Sleep -Seconds 1; Write-Host "`r" -NoNewline }
 
