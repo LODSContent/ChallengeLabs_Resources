@@ -17,16 +17,17 @@ $scopes = @("User.ReadWrite.All", "Group.ReadWrite.All", "AppRoleAssignment.Read
 # Get Graph token via MSAL.PS
 try {
     $msalToken = Get-MsalToken -ClientId "1950a258-227b-4e31-a9cf-717495945fc2" -TenantId $tenant -Scopes "https://graph.microsoft.com/.default" -Interactive -ErrorAction Stop
-    $graphToken = $msalToken.AccessToken
-    if ($ScriptDebug) { Write-Output "Retrieved Graph token via MSAL.PS: $($graphToken.Substring(0,10))..." }
+    $accessToken = $msalToken.AccessToken
+    if ($ScriptDebug) { Write-Output "Retrieved Graph token via MSAL.PS: $($AccessToken.Substring(0,10))..." }
 } catch {
     throw "Failed to retrieve Graph token via MSAL.PS: $_"
 }
 
 # Convert the token string to SecureString
-$secureGraphToken = ConvertTo-SecureString -String $graphToken -AsPlainText -Force
+$secureAccessToken = ConvertTo-SecureString -String $graphToken -AsPlainText -Force
 
-Set-LabVariable -Name GraphToken -Value $graphToken
-Set-LabVariable -Name SecureGraphToken -Value $SecureGraphToken
+# Save the Graph Token
+$null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
+New-Object PSObject -Property @{AccessToken=$accessToken;SecureAccessToken=$secureAccessToken} | ConvertTo-Json | Out-File C:\Temp\AccessToken.json
 
-Write-Host "Finished authentication and created Graph Token lab variables."
+Write-Host "Finished authentication and created Access Token file."
