@@ -24,7 +24,7 @@ try {
 }
 
 # Convert the token string to SecureString
-$secureAccessToken = ConvertTo-SecureString -String $graphToken -AsPlainText -Force
+$secureAccessToken = ConvertTo-SecureString -String $accessToken -AsPlainText -Force
 
 # Save the Graph Token
 $null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
