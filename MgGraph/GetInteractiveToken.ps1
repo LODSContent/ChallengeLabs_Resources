@@ -23,11 +23,8 @@ try {
     throw "Failed to retrieve Graph token via MSAL.PS: $_"
 }
 
-# Convert the token string to SecureString
-$secureAccessToken = ConvertTo-SecureString -String $accessToken -AsPlainText -Force
-
 # Save the Graph Token
 $null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
-New-Object PSObject -Property @{AccessToken=$accessToken;SecureAccessToken=$secureAccessToken} | ConvertTo-Json | Out-File C:\Temp\AccessToken.json
+New-Object PSObject -Property @{AccessToken=$accessToken} | ConvertTo-Json | Out-File C:\Temp\AccessToken.json
 
 Write-Host "Finished authentication and created Access Token file."
