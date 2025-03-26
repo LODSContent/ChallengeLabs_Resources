@@ -22,10 +22,16 @@ A: Click on "Forgot Password" and follow the instructions sent to your email.
 """
 }
 
-# Write documents to text files
+# Write documents to text files and add metadata_content property
+documents = []
 for filename, content in qa_documents.items():
     with open(os.path.join(qa_folder, filename), "w", encoding="utf-8") as f:
         f.write(content)
+    document = {
+        "id": filename,
+        "metadata_content": content
+    }
+    documents.append(document)
 
 # Zip the folder
 zip_filename = "Enterprise_QA_Documents.zip"
@@ -62,3 +68,7 @@ with open("House_Prices.csv", "w", newline="", encoding="utf-8") as f:
     writer.writerows(house_prices)
 
 print("House_Prices.csv created successfully!")
+
+# Print documents with metadata_content property
+for doc in documents:
+    print(doc)
