@@ -122,7 +122,7 @@ if ($UserName -ne $null -or $UserName -ne '') {
         if ($_.Exception.Response.StatusCode -eq 409) {
             if ($ScriptDebug) { Send-NtfyDebug "Global Administrator role already exists for $TapUser" }
         } else {
-            if ($ScriptDebug) { Send-NtfyDebug "Failed to assign Global Administrator role to $TapUser : $($_.Exception.Message)" }
+            if ($ScriptDebug) { Send-NtfyDebug "Failed to assign Global Administrator role to $TapUser or it already exists: $($_.Exception.Message)" }
         }
     }
 
