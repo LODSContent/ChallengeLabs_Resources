@@ -22,19 +22,22 @@ $TapUser = "LabAdmin@$TenantName"
 $LegacyPassword = $Password
 $Lifetime = 120
 
-function Send-NtfyDebug {
+function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$Message
     )
     
     $ntfyUrl = "https://ntfy.sh/PSO78HOMAXEXKSaQ"
-    try {
-        Invoke-WebRequest -Uri $ntfyUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
-    } catch {
-        # Silently fail to avoid disrupting the script; optionally log locally if desired
-        Write-Warning "Failed to send ntfy debug message: $_"
-    }
+    if ($ntfyUrl) {
+       try {
+           Invoke-WebRequest -Uri $ntfyUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
+       } catch {
+           # Silently fail to avoid disrupting the script; optionally log locally if desired
+           Write-Warning "Failed to send ntfy debug message: $_"
+       }
+   }
+   Write-Output $Message
 }
 
 # Check for credential pool and set variables
@@ -52,9 +55,9 @@ if ($UserName -ne $null -or $UserName -ne '') {
     try {
         $AuthRequest = Invoke-RestMethod -Uri $azureUri -Method Post -Body $body -ErrorAction Stop
         $token = $AuthRequest.access_token
-        if ($ScriptDebug) { Send-NtfyDebug "Successfully acquired access token" }
+        if ($ScriptDebug) { Send-DebugMessage "Successfully acquired access token" }
     } catch {
-        if ($ScriptDebug) { Send-NtfyDebug "Failed to acquire access token: $($_.Exception.Message)" }
+        if ($ScriptDebug) { Send-DebugMessage "Failed to acquire access token: $($_.Exception.Message)" }
         return $false
     }
 
@@ -70,10 +73,10 @@ if ($UserName -ne $null -or $UserName -ne '') {
             -Uri "https://graph.microsoft.com/v1.0/users/$TapUser" `
             -Headers $headers `
             -ErrorAction Stop
-        if ($ScriptDebug) { Send-NtfyDebug "User $TapUser exists" }
+        if ($ScriptDebug) { Send-DebugMessage "User $TapUser exists" }
     } catch {
         if ($_.Exception.Response.StatusCode -eq 404) {
-            if ($ScriptDebug) { Send-NtfyDebug "User $TapUser does not exist, creating..." }
+            if ($ScriptDebug) { Send-DebugMessage "User $TapUser does not exist, creating..." }
             $userDetails = @{
                 "accountEnabled"    = $true
                 "displayName"       = $TapUser.Split('@')[0]
@@ -91,12 +94,12 @@ if ($UserName -ne $null -or $UserName -ne '') {
                     -Headers $headers `
                     -Body ($userDetails | ConvertTo-Json) `
                     -ErrorAction Stop
-                if ($ScriptDebug) { Send-NtfyDebug "User $TapUser created successfully" }
+                if ($ScriptDebug) { Send-DebugMessage "User $TapUser created successfully" }
             } catch {
-                if ($ScriptDebug) { Send-NtfyDebug "Failed to create user $TapUser : $($_.Exception.Message)" }
+                if ($ScriptDebug) { Send-DebugMessage "Failed to create user $TapUser : $($_.Exception.Message)" }
             }
         } else {
-            if ($ScriptDebug) { Send-NtfyDebug "Error checking user $TapUser : $($_.Exception.Message)" }
+            if ($ScriptDebug) { Send-DebugMessage "Error checking user $TapUser : $($_.Exception.Message)" }
         }
     }
 
@@ -117,12 +120,12 @@ if ($UserName -ne $null -or $UserName -ne '') {
             -Headers $headers `
             -Body ($roleAssignmentBody | ConvertTo-Json) `
             -ErrorAction Stop | Out-Null
-        if ($ScriptDebug) { Send-NtfyDebug "Global Administrator role assigned to $TapUser" }
+        if ($ScriptDebug) { Send-DebugMessage "Global Administrator role assigned to $TapUser" }
     } catch {
         if ($_.Exception.Response.StatusCode -eq 409) {
-            if ($ScriptDebug) { Send-NtfyDebug "Global Administrator role already exists for $TapUser" }
+            if ($ScriptDebug) { Send-DebugMessage "Global Administrator role already exists for $TapUser" }
         } else {
-            if ($ScriptDebug) { Send-NtfyDebug "Failed to assign Global Administrator role to $TapUser or it already exists: $($_.Exception.Message)" }
+            if ($ScriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $TapUser or it already exists: $($_.Exception.Message)" }
         }
     }
 
@@ -133,9 +136,9 @@ if ($UserName -ne $null -or $UserName -ne '') {
             -Headers $headers `
             -ErrorAction Stop
         $availableSkus = @($skusResponse.value | Where-Object { ($_.prepaidUnits.enabled - $_.consumedUnits) -gt 0 })
-        if ($availableSkus.Count -eq 0 -and $ScriptDebug) { Send-NtfyDebug "No available licenses found in tenant" }
+        if ($availableSkus.Count -eq 0 -and $ScriptDebug) { Send-DebugMessage "No available licenses found in tenant" }
     } catch {
-        if ($ScriptDebug) { Send-NtfyDebug "Failed to retrieve SKUs: $($_.Exception.Message)" }
+        if ($ScriptDebug) { Send-DebugMessage "Failed to retrieve SKUs: $($_.Exception.Message)" }
     }
 
     # Assign licenses (ignore if exists)
@@ -155,12 +158,12 @@ if ($UserName -ne $null -or $UserName -ne '') {
                 -Headers $headers `
                 -Body ($licenseAssignmentBody | ConvertTo-Json -Depth 3) `
                 -ErrorAction Stop | Out-Null
-            if ($ScriptDebug) { Send-NtfyDebug "Licenses assigned to $TapUser" }
+            if ($ScriptDebug) { Send-DebugMessage "Licenses assigned to $TapUser" }
         } catch {
             if ($_.Exception.Response.StatusCode -eq 400 -and $_.Exception.Message -match "already assigned") {
-                if ($ScriptDebug) { Send-NtfyDebug "Licenses already assigned to $TapUser" }
+                if ($ScriptDebug) { Send-DebugMessage "Licenses already assigned to $TapUser" }
             } else {
-                if ($ScriptDebug) { Send-NtfyDebug "Failed to assign licenses to $TapUser : $($_.Exception.Message)" }
+                if ($ScriptDebug) { Send-DebugMessage "Failed to assign licenses to $TapUser : $($_.Exception.Message)" }
             }
         }
     }
@@ -191,9 +194,9 @@ if ($UserName -ne $null -or $UserName -ne '') {
             -Headers $headers `
             -Body ($policyPayload | ConvertTo-Json) `
             -ErrorAction Stop
-        if ($ScriptDebug) { Send-NtfyDebug "TAP policy updated to allow multiple uses" }
+        if ($ScriptDebug) { Send-DebugMessage "TAP policy updated to allow multiple uses" }
     } catch {
-        if ($ScriptDebug) { Send-NtfyDebug "Failed to update TAP policy: $($_.Exception.Message)" }
+        if ($ScriptDebug) { Send-DebugMessage "Failed to update TAP policy: $($_.Exception.Message)" }
     }
 
     # Define TAP details
@@ -210,9 +213,9 @@ if ($UserName -ne $null -or $UserName -ne '') {
             -Body ($tapDetails | ConvertTo-Json) `
             -ErrorAction Stop
         $TapPassword = $TAP.temporaryAccessPass
-        if ($ScriptDebug) { Send-NtfyDebug "TAP Password: $TapPassword created for: $TapUser" }
+        if ($ScriptDebug) { Send-DebugMessage "TAP Password: $TapPassword created for: $TapUser" }
     } catch {
-        if ($ScriptDebug) { Send-NtfyDebug "Failed to create TAP for $TapUser : $($_.Exception.Message)" }
+        if ($ScriptDebug) { Send-DebugMessage "Failed to create TAP for $TapUser : $($_.Exception.Message)" }
     }
 
     # Update lab variables based on TAP success
@@ -226,7 +229,7 @@ if ($UserName -ne $null -or $UserName -ne '') {
          Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
          Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
          Set-LabVariable -Name CredentialPool -Value 'Yes'
-        if ($ScriptDebug) { Send-NtfyDebug "TAP User setup complete" }
+        if ($ScriptDebug) { Send-DebugMessage "TAP User setup complete" }
     } else {
          Set-LabVariable -Name UserName -Value $UserName
          Set-LabVariable -Name Password -Value $Password
@@ -235,11 +238,11 @@ if ($UserName -ne $null -or $UserName -ne '') {
          Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
          Set-LabVariable -Name TAPLifetime -Value "Error"
          Set-LabVariable -Name CredentialPool -Value 'Yes'
-        if ($ScriptDebug) { Send-NtfyDebug "TAP user setup failed. Falling back on default Pool credentials." }
+        if ($ScriptDebug) { Send-DebugMessage "TAP user setup failed. Falling back on default Pool credentials." }
     }
 } else {
     Set-LabVariable -Name CredentialPool -Value 'No'
-    if ($ScriptDebug) { Send-NtfyDebug "Credential Pool not available. Falling back on manual credentials." }
+    if ($ScriptDebug) { Send-DebugMessage "Credential Pool not available. Falling back on manual credentials." }
 }
 
 return $true
