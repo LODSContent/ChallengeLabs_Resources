@@ -80,6 +80,16 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Users could not be removed."}
     }
 
+    # Purge all deleted users
+    try {
+        Get-MgDirectoryDeletedItemAsUser | ForEach-Object {
+            Remove-MgDirectoryDeletedItem -DirectoryObjectId $_.Id -Confirm:$false -ErrorAction SilentlyContinue
+        }
+        if ($ScriptDebug) {Send-DebugMessage "Purged all deleted users"}
+    } catch {
+        if ($ScriptDebug) {Send-DebugMessage "Some or all deleted users could not be purged."}
+    }
+
     # Remove groups
     try {
         Get-MgGroup -All | ForEach-Object {
