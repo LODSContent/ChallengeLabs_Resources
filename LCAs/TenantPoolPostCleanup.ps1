@@ -17,12 +17,15 @@ function Send-DebugMessage {
     )
     
     $ntfyUrl = "https://ntfy.sh/PSO78HOMAXEXKSaQ"
-    try {
-        Invoke-WebRequest -Uri $ntfyUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
-    } catch {
-        # Silently fail to avoid disrupting the script; optionally log locally if desired
-        Write-Warning "Failed to send ntfy debug message: $_"
-    }
+    if ($ntfyUrl) {
+       try {
+           Invoke-WebRequest -Uri $ntfyUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
+       } catch {
+           # Silently fail to avoid disrupting the script; optionally log locally if desired
+           Write-Warning "Failed to send ntfy debug message: $_"
+       }
+   }
+   Write-Output $Message
 }
 
 if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Variable*") {
