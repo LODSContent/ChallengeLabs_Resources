@@ -154,6 +154,16 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Custom domains could not be removed."}
     }
 
+    # Set passwords to never expire for all domains
+    try {
+        Get-MgDomain | ForEach-Object { 
+            Update-MgDomain -DomainId $_.Id -PasswordValidityPeriodInDays 2147483647 
+        }
+        if ($ScriptDebug) {Send-DebugMessage "Set password validity to never expire for all domains"}
+    } catch {
+        if ($ScriptDebug) {Send-DebugMessage "Failed to set password validity to never expire"}
+    }    
+
     # Remove technical contact from Entra ID tenant
     try {
         Update-MgOrganization -OrganizationId (Get-MgOrganization).Id -TechnicalNotificationMails @() -ErrorAction Stop
