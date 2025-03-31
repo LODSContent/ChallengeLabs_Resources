@@ -12,8 +12,7 @@ param (
     $UserName,
     $Password,
     $ScriptingAppId,
-    $ScriptingAppSecret, 
-    [switch]$SetLabVariables = $True,
+    $ScriptingAppSecret,
     [switch]$ScriptDebug
 )
 
@@ -203,28 +202,24 @@ if ($UserName -ne $null -or $UserName -ne '') {
 
     # Update lab variables based on TAP success
     if ($TapPassword) {
-        if ($SetLabVariables) {
-            Set-LabVariable -Name UserName -Value $TapUser
-            Set-LabVariable -Name Password -Value $TapPassword
-            Set-LabVariable -Name TenantName -Value $TenantName
-            Set-LabVariable -Name PoolUserName -Value $PoolUserName
-            Set-LabVariable -Name PoolPassword -Value $PoolPassword
-            Set-LabVariable -Name TAPLifetime -Value $Lifetime
-            Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
-            Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
-            Set-LabVariable -Name CredentialPool -Value 'Yes'
-        }
+         Set-LabVariable -Name UserName -Value $TapUser
+         Set-LabVariable -Name Password -Value $TapPassword
+         Set-LabVariable -Name TenantName -Value $TenantName
+         Set-LabVariable -Name PoolUserName -Value $PoolUserName
+         Set-LabVariable -Name PoolPassword -Value $PoolPassword
+         Set-LabVariable -Name TAPLifetime -Value $Lifetime
+         Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
+         Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
+         Set-LabVariable -Name CredentialPool -Value 'Yes'
         if ($ScriptDebug) { Write-Output "TAP User setup complete" }
     } else {
-        if ($SetLabVariables) {
-            Set-LabVariable -Name UserName -Value $UserName
-            Set-LabVariable -Name Password -Value $Password
-            Set-LabVariable -Name TenantName -Value $TenantName
-            Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
-            Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
-            Set-LabVariable -Name TAPLifetime -Value "Error"
-            Set-LabVariable -Name CredentialPool -Value 'Yes'
-        }
+         Set-LabVariable -Name UserName -Value $UserName
+         Set-LabVariable -Name Password -Value $Password
+         Set-LabVariable -Name TenantName -Value $TenantName
+         Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
+         Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
+         Set-LabVariable -Name TAPLifetime -Value "Error"
+         Set-LabVariable -Name CredentialPool -Value 'Yes'
         if ($ScriptDebug) { Write-Output "TAP user setup failed. Falling back on default Pool credentials." }
     }
 } else {
