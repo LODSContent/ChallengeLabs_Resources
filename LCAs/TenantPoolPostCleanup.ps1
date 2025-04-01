@@ -13,16 +13,20 @@ param (
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string]$Message
+        [string]$Message,
+        [string]$DebugUrl = "https://ntfy.sh/PSO78HOMAXEXKSaQ"
     )
+
+    if ($global:DebugUrl) {
+      $DebugUrl = $global:DebugUrl
+    }
     
-    $ntfyUrl = "https://ntfy.sh/PSO78HOMAXEXKSaQ"
-    if ($ntfyUrl) {
+    if ($DebugUrl) {
        try {
-           Invoke-WebRequest -Uri $ntfyUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
+           Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
        } catch {
            # Silently fail to avoid disrupting the script; optionally log locally if desired
-           Write-Warning "Failed to send ntfy debug message: $_"
+           Write-Warning "Failed to send debug message: $_"
        }
    }
    Write-Output $Message
