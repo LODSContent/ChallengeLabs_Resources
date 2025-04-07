@@ -1,6 +1,6 @@
 /*
  * Script Name: ToggleHandler.js
- * Authors: John Rice, Mark Morgan, Grok 3 (xAI)
+ * Authors: John Rice, Mark Morgan
  * Version: 1.10
  * Date: March 08, 2025
  * Description: Translates elements in the HTML to the target language.
