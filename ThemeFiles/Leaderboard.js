@@ -75,10 +75,9 @@ function setLabVariable(name,value) {
 
 // end shared functions
 
+// begin leaderboard lab code
 let leaderboard = getLabVariable('Leaderboard');
-if (leaderboard.toLowerCase() == "true") {  
-
-  // begin leaderboard lab code
+if (leaderboard == "True") {  
   // initialize the player on the leaderboard
   function initPlayer() {
     var lab = JSON.parse($('[data-name="labVariables"]').val());
