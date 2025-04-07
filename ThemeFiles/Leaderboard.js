@@ -127,7 +127,7 @@ if (leaderboard.toLowerCase() == "true") {
       }      
     } else if (lab.Variable.leaderboard.toLowerCase() === "marcoscore" && lab.Variable.gameID.length > 1) {
         //let leaderboardURL = 'https://marcoscore.cyberjunk.com/submit'; // Our endpoint, assuming port 443
-        let leaderboardURL = 'https://localhost/submit'; // Our endpoint, assuming port 443
+        let leaderboardURL = 'https://' + lab.Variable.serverAddress + '/submit';
         let xhttp = new XMLHttpRequest();
         let json = JSON.stringify({
             "gameID": lab.Variable.gameID,          // Game ID from your variable
@@ -183,7 +183,7 @@ if (leaderboard.toLowerCase() == "true") {
       xhttp.send(json);
     } else if (lab.Variable.leaderboard.toLowerCase() === "marcoscore" && lab.Variable.gameID.length > 1) {
         //let leaderboardURL = 'https://marcoscore.cyberjunk.com/submit'; // Our endpoint, assuming port 443
-        let leaderboardURL = 'https://localhost/submit'; // Our endpoint, assuming port 443
+        let leaderboardURL = 'https://' + lab.Variable.serverAddress + '/submit';
         let xhttp = new XMLHttpRequest();
         let json = JSON.stringify({
             "gameID": lab.Variable.gameID,          // Game ID from your variable
