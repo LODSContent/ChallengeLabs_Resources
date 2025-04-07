@@ -125,6 +125,7 @@ if (leaderboard == "True") {
         }
       }      
     } else if (lab.Variable.leaderboard.toLowerCase() === "marcoscore" && lab.Variable.gameID.length > 1) {
+        console.log("Initializing player with marcoscore");
         //let leaderboardURL = 'https://marcoscore.cyberjunk.com/submit'; // Our endpoint, assuming port 443
         let leaderboardURL = 'https://' + lab.Variable.serverAddress + '/submit';
         let xhttp = new XMLHttpRequest();
@@ -349,7 +350,7 @@ if (leaderboard == "True") {
   
       // Show the leaderboardPopup if variable is set
       if (lab.Variable.leaderboard != 'False') {
-  
+        console.log("Showing popup.");
         html = `
           <div tabindex="0" aria-describedby="notificationContent0">
           <span class="screen-reader-only">Alert</span>
