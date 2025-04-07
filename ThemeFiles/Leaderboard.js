@@ -83,7 +83,7 @@ if (leaderboard == "True") {
     var lab = JSON.parse($('[data-name="labVariables"]').val());
     lab.Variable.playerName = $('[name="playerName"]').val();
     lab.Variable.gameID = $('[name="gameID"]').val();
-    //lab.Variable.serverAddress = $('[name="serverAddress"]').val()
+    lab.Variable.serverAddress = $('[name="serverAddress"]').val()
     if (lab.Variable.leaderboard.toLowerCase() == "keepthescore" && lab.Variable.playerName.length > 1 && lab.Variable.gameID.length > 1) {
       let leaderboardURL = 'https://keepthescore.com/api/' + lab.Variable.gameID + '/player/';
       let xhttp = new XMLHttpRequest();
