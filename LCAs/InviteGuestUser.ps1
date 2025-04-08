@@ -8,7 +8,7 @@
 
 param (
     $SubscriptionTenant,
-    $SubscriptionUser = "@lab.CloudSubscription.UserName",
+    $SubscriptionUser,
     $SubscriptionPassword,
     $TenantName,
     $Password,
@@ -36,8 +36,7 @@ function Send-DebugMessage {
     Write-Output $Message
 }
 
-# Parameters: Derived from lab environment
-$LabInstance = "@lab.LabInstance.Id"
+# Parameters
 $globalAdminRoleId = "62e90394-69f5-4237-9190-012177145e10"  # Global Administrator role ID
 $result = $false
 
@@ -124,7 +123,7 @@ if ($tapResponse) {
     $tapPassword = $tapResponse.TemporaryAccessPass
     if ($ScriptDebug) { Send-DebugMessage "TAP created for '$SubscriptionUser'. TAP Password: $tapPassword" }
     # Store TAP in lab variable for potential use
-    Set-LabVariable -Name GuestUserTAP -Value $tapPassword
+    Set-LabVariable -Name Password -Value $tapPassword
 } else {
     if ($ScriptDebug) { Send-DebugMessage "Failed to create TAP for '$SubscriptionUser'." }
 }
