@@ -154,15 +154,7 @@ try {
     } catch {
         if ($ScriptDebug) { Send-DebugMessage "Administrative Units could not be removed: $([string]$_.Exception.Message)" }
     }
-
-    # Disable Self-Service Password Reset (SSPR) for the tenant
-    try {
-       Update-MgPolicyAuthorizationPolicy -SelfServicePasswordReset @{ Enabled = $false } -ErrorAction SilentlyContinue
-       if ($ScriptDebug) { Send-DebugMessage "Disabled Self-Service Password Reset (SSPR)" }
-    } catch {
-       if ($ScriptDebug) { Send-DebugMessage "Failed to disable Self-Service Password Reset (SSPR): $([string]$_.Exception.Message)" }
-    }
-    
+   
     # Remove devices
     try {
         Get-MgDevice -All | Remove-MgDevice -Confirm:$false -ErrorAction SilentlyContinue
