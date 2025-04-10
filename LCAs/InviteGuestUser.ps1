@@ -7,12 +7,13 @@
 #>
 
 param (
-    $SubscriptionTenant,
-    $SubscriptionUser,
-    $SubscriptionPassword,
-    $TenantName,
-    $Password,
-    [switch]$ScriptDebug    
+    [Parameter(Mandatory = $true)]
+    [string]$SubscriptionTenant,      # Tenant ID of Tenant A (original tenant)
+    [Parameter(Mandatory = $true)]
+    [string]$SubscriptionUser,        # Email of the user in Tenant A (e.g., user@tenantA.onmicrosoft.com)
+    [Parameter(Mandatory = $true)]
+    [string]$TenantName,              # Tenant ID of Tenant B (target tenant)
+    [switch]$ScriptDebug              # Enable debug output
 )
 
 function Send-DebugMessage {
@@ -26,120 +27,76 @@ function Send-DebugMessage {
         $DebugUrl = $global:DebugUrl
     }
     
-    if ($DebugUrl) {
+    if ($DebugUrl -and $ScriptDebug) {
         try {
             Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
         } catch {
             Write-Warning "Failed to send debug message: $_"
         }
     }
-    Write-Output $Message
-}
-
-# Parameters
-$globalAdminRoleId = "62e90394-69f5-4237-9190-012177145e10"  # Global Administrator role ID
-$result = $false
-
-if ($ScriptDebug) { Send-DebugMessage "Starting script execution." }
-
-# MgGraph Authentication block (Cloud Subscription Target)
-$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
-$SecureToken = ConvertTo-SecureString $AccessToken -AsPlainText -Force
-Connect-MgGraph -AccessToken $SecureToken -NoWelcome
-
-if ($ScriptDebug) { Send-DebugMessage "Connected to Microsoft Graph for tenant: $TenantName" }
-
-# Check if the user is already in the tenant (as a member or guest)
-$existingUser = Get-MgUser -UserId $SubscriptionUser
-
-if ($existingUser) {
-    if ($ScriptDebug) { Send-DebugMessage "User '$SubscriptionUser' already exists in the tenant as a member or guest." }
-    $userId = $existingUser.Id
-} else {
-    # Invite the subscription user as a guest
-    $invitationParams = @{
-        InvitedUserEmailAddress = $SubscriptionUser
-        InviteRedirectUrl = "https://portal.azure.com"
-        SendInvitationMessage = $true
-    }
-    $invitation = New-MgInvitation @invitationParams
-    
-    if ($invitation) {
-        if ($ScriptDebug) { Send-DebugMessage "Invitation sent to '$SubscriptionUser'. Invited User ID: $($invitation.InvitedUser.Id)" }
-        $userId = $invitation.InvitedUser.Id
-    } else {
-        if ($ScriptDebug) { Send-DebugMessage "Failed to send invitation to '$SubscriptionUser'." }
-        return $false
+    if ($ScriptDebug) {
+        Write-Output $Message
     }
 }
 
-# Assign Global Administrator role if not already assigned
-$roleAssignment = Get-MgDirectoryRoleMember -DirectoryRoleId $globalAdminRoleId | Where-Object { $_.Id -eq $userId }
-if (-not $roleAssignment) {
-    $roleAssignmentParams = @{
-        "@odata.type" = "#microsoft.graph.unifiedRoleAssignment"
-        PrincipalId = $userId
-        RoleDefinitionId = $globalAdminRoleId
-        DirectoryScopeId = "/"
+# Ensure Microsoft.Graph module is loaded
+if (-not (Get-Module -Name Microsoft.Graph -ListAvailable)) {
+    Send-DebugMessage "Microsoft.Graph module not found. Please install it using 'Install-Module -Name Microsoft.Graph'."
+    exit 1
+}
+
+try {
+    # Connect to Tenant B (assumes pre-authenticated session or credentials available)
+    Send-DebugMessage "Connecting to Microsoft Graph for tenant: $TenantName"
+    $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
+    $SecureToken = ConvertTo-SecureString $AccessToken -AsPlainText -Force
+    Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+
+    # Invite the user from Tenant A as a guest to Tenant B
+    Send-DebugMessage "Inviting user $SubscriptionUser as a guest to tenant $TenantName"
+    $guestUserParams = @{
+        invitedUserEmailAddress = $SubscriptionUser
+        inviteRedirectUrl       = "https://myapps.microsoft.com"  # Optional redirect after sign-in
+        sendInvitationMessage   = $false                          # No email sent for silent operation
     }
-    New-MgRoleManagementDirectoryRoleAssignment -BodyParameter $roleAssignmentParams
-    if ($ScriptDebug) { Send-DebugMessage "Assigned Global Administrator role to '$SubscriptionUser'." }
-} else {
-    if ($ScriptDebug) { Send-DebugMessage "User '$SubscriptionUser' already has Global Administrator role." }
+    $invitation = New-MgInvitation -BodyParameter $guestUserParams -ErrorAction Stop
+    $userId = $invitation.InvitedUser.Id
+    Send-DebugMessage "Guest user created with ID: $userId"
+
+    # Assign Global Administrator role
+    Send-DebugMessage "Assigning Global Administrator role to user $SubscriptionUser"
+    $roleDefinition = Get-MgDirectoryRole -Filter "displayName eq 'Global Administrator'" -ErrorAction Stop
+    if (-not $roleDefinition) {
+        # If role isn't activated, activate it by scoping it
+        $roleTemplate = Get-MgDirectoryRoleTemplate -Filter "displayName eq 'Global Administrator'" -ErrorAction Stop
+        New-MgDirectoryRole -RoleTemplateId $roleTemplate.Id -ErrorAction Stop
+        $roleDefinition = Get-MgDirectoryRole -Filter "displayName eq 'Global Administrator'" -ErrorAction Stop
+    }
+    $roleId = $roleDefinition.Id
+    New-MgDirectoryRoleMember -DirectoryRoleId $roleId -DirectoryObjectId $userId -ErrorAction Stop
+    Send-DebugMessage "Global Administrator role assigned successfully"
+
+    # Optional: Create a Temporary Access Pass (TAP) - Uncomment if needed
+    # Note: TAP is typically for native users, not B2B guests, unless resetting auth methods
+    <#
+    Send-DebugMessage "Creating Temporary Access Pass for user $SubscriptionUser"
+    $tapParams = @{
+        isUsableOnce = $true
+        lifetimeInMinutes = 60
+    }
+    $tap = New-MgUserAuthenticationTemporaryAccessPassMethod -UserId $userId -BodyParameter $tapParams -ErrorAction Stop
+    Send-DebugMessage "TAP created: $($tap.TemporaryAccessPass)"
+    #>
+
+    # Verify the user
+    $user = Get-MgUser -UserId $userId -ErrorAction Stop
+    Send-DebugMessage "User created: UPN = $($user.UserPrincipalName), UserType = $($user.UserType)"
+
+} catch {
+    Send-DebugMessage "Error occurred: $_"
+    throw
+} finally {
+    # Disconnect from Graph (optional, depending on your session management)
+    Disconnect-MgGraph -ErrorAction SilentlyContinue
+    Send-DebugMessage "Script execution completed"
 }
-
-# Enable TAP policy in the tenant (multi-use configuration)
-$tapPolicyParams = @{
-    "@odata.type" = "#microsoft.graph.temporaryAccessPassAuthenticationMethodConfiguration"
-    Id = "TemporaryAccessPass"
-    State = "enabled"
-    IncludeTargets = @(
-        @{
-            TargetType = "group"
-            Id = "all_users"  # Applies to all users in the tenant
-            IsRegistrationRequired = $false
-        }
-    )
-    DefaultLifetimeInMinutes = 60
-    DefaultLength = 8
-    MinimumLifetimeInMinutes = 60
-    MaximumLifetimeInMinutes = 480
-    IsUsableOnce = $false  # Multi-use TAP
-}
-Update-MgBetaPolicyAuthenticationMethodPolicyAuthenticationMethodConfiguration `
-    -AuthenticationMethodConfigurationId "TemporaryAccessPass" `
-    -BodyParameter $tapPolicyParams
-
-if ($ScriptDebug) { Send-DebugMessage "TAP policy enabled with multi-use configuration in tenant '$TenantName'." }
-
-# Create TAP for the guest user
-$tapParams = @{
-    LifetimeInMinutes = 120
-    IsUsableOnce = $false  # Multi-use TAP
-}
-$tapResponse = New-MgBetaUserAuthenticationTemporaryAccessPassMethod -UserId $userId -BodyParameter $tapParams
-
-if ($tapResponse) {
-    $tapPassword = $tapResponse.TemporaryAccessPass
-    if ($ScriptDebug) { Send-DebugMessage "TAP created for '$SubscriptionUser'. TAP Password: $tapPassword" }
-    # Store TAP in lab variable for potential use
-    Set-LabVariable -Name Password -Value $tapPassword
-} else {
-    if ($ScriptDebug) { Send-DebugMessage "Failed to create TAP for '$SubscriptionUser'." }
-}
-
-# Validate the user exists and has the role
-$queryReturn = Get-MgUser -UserId $SubscriptionUser
-$roleCheck = Get-MgDirectoryRoleMember -DirectoryRoleId $globalAdminRoleId | Where-Object { $_.Id -eq $queryReturn.Id }
-
-if ($queryReturn -and $roleCheck) {
-    $result = $true
-    if ($ScriptDebug) { Send-DebugMessage "Validation successful. User '$SubscriptionUser' exists, has Global Administrator role, and TAP assigned." }
-} else {
-    $result = $false
-    if ($ScriptDebug) { Send-DebugMessage "Validation failed. User '$SubscriptionUser' not found or lacks Global Administrator role." }
-}
-
-if ($ScriptDebug) { Send-DebugMessage "Script execution completed." }
-
-return $result
