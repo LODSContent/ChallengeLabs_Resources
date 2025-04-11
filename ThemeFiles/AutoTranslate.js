@@ -182,7 +182,11 @@ if (autoTranslate === 'no') {
     // Start Translation
     let parentSelector;
     if (window.location.pathname.indexOf("ExamResult") < 0) {
-        parentSelector = '.instructions';
+        if (languageOverride) {
+            parentSelector = '.instructions-client';
+        } else {
+            parentSelector = '.instructions';
+        }
     } else {
         parentSelector = '.end-of-lab-report';
     }
