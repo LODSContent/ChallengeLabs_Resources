@@ -9,7 +9,8 @@
 // Begin Translation code
 
 // Get AutoTranslate setting
-const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
+//const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
+const autoTranslate = $('.variable[data-name="AutoTranslate"]').text()?.toLowerCase() || null;
 if (autoTranslate !== "yes" && autoTranslate !== "no" && autoTranslate !== null) {
     languageOverride = true;
 } else {
