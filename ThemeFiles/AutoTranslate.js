@@ -167,10 +167,10 @@ if (autoTranslate === 'no') {
     // Helper Function
     function getTargetLanguage() {
         if (languageOverride) {
-            let lang = autoTranslate;
+            lang = autoTranslate;
             document.documentElement.lang = autoTranslate;
         } else {
-            let lang = document.documentElement.lang || "en-US";
+            lang = document.documentElement.lang || "en-US";
         }
         const langPrefix = lang.substr(0, 2).toLowerCase();
         if (langPrefix === "ja" || langPrefix === "ko") {
