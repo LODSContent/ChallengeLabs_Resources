@@ -12,8 +12,10 @@
 const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
 if (autoTranslate !== "yes" && autoTranslate !== "no" && autoTranslate !== null) {
     languageOverride = true;
+    if (debug) { console.log("languageOverride is 'true'."); }
 } else {
     languageOverride = false;
+    if (debug) { console.log("languageOverride is 'false'."); }
 }
 
 if (debug) { console.log(`AutoTranslate setting: ${autoTranslate}`); }
