@@ -11,14 +11,6 @@
 // Get AutoTranslate setting
 //const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
 const autoTranslate = $('.variable[data-name="AutoTranslate"]').text()?.toLowerCase() || null;
-if (autoTranslate !== "yes" && autoTranslate !== "no" && autoTranslate !== null) {
-    languageOverride = true;
-} else {
-    languageOverride = false;
-    
-}
-if (debug) { console.log("languageOverride is:", languageOverride); }
-
 if (debug) { console.log(`AutoTranslate setting: ${autoTranslate}`); }
 
 if (autoTranslate === 'no') {
@@ -28,7 +20,7 @@ if (autoTranslate === 'no') {
 
     // Configuration
     const translatedElements = new Set();
-    const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, div, button, input[type="button"], #labNotificationsHeader';
+    const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, input[type="button"], #labNotificationsHeader';
     const elementArray = findElements.replace('[type="button"]', '').split(',').map(s => s.trim().toLowerCase());
     const ignoreElements = 'no-xl8, code, .codeTitle, .typeText, .copyable';
     const targetLanguage = getTargetLanguage();
@@ -169,12 +161,7 @@ if (autoTranslate === 'no') {
 
     // Helper Function
     function getTargetLanguage() {
-        if (languageOverride) {
-            lang = autoTranslate;
-            document.documentElement.lang = autoTranslate;
-        } else {
-            lang = document.documentElement.lang || "en-US";
-        }
+        let lang = document.documentElement.lang || "en-US";
         const langPrefix = lang.substr(0, 2).toLowerCase();
         if (langPrefix === "ja" || langPrefix === "ko") {
             lang = langPrefix;
@@ -185,11 +172,7 @@ if (autoTranslate === 'no') {
     // Start Translation
     let parentSelector;
     if (window.location.pathname.indexOf("ExamResult") < 0) {
-        if (languageOverride) {
-            parentSelector = '.instructions-client';
-        } else {
-            parentSelector = '.instructions';
-        }
+        parentSelector = '.instructions';
     } else {
         parentSelector = '.end-of-lab-report';
     }
