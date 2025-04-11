@@ -10,6 +10,12 @@
 
 // Get AutoTranslate setting
 const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
+if (autoTranslate != "yes" && autoTranslate != "no" && autoTranslate != null) {
+    const langOverride = true;
+} else {
+    const langOverride = false;
+}
+
 if (debug) { console.log(`AutoTranslate setting: ${autoTranslate}`); }
 
 if (autoTranslate === 'no') {
@@ -160,7 +166,11 @@ if (autoTranslate === 'no') {
 
     // Helper Function
     function getTargetLanguage() {
-        let lang = document.documentElement.lang || "en-US";
+        if (languageOverride) {
+            let lang = autoTranslate;
+        } else {
+            let lang = document.documentElement.lang || "en-US";
+        }
         const langPrefix = lang.substr(0, 2).toLowerCase();
         if (langPrefix === "ja" || langPrefix === "ko") {
             lang = langPrefix;
