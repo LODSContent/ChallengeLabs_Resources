@@ -168,6 +168,7 @@ if (autoTranslate === 'no') {
     function getTargetLanguage() {
         if (languageOverride) {
             let lang = autoTranslate;
+            document.documentElement.lang = autoTranslate;
         } else {
             let lang = document.documentElement.lang || "en-US";
         }
