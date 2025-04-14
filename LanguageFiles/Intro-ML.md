@@ -25,5 +25,7 @@ ShowAdvanced: @lab.DropDownList(ShowAdvanced)[Yes,No]
 
 ShowActivity: @lab.DropDownList(ShowActivity)[Yes,No]
 
+ShowMCQ: @lab.DropDownList(ShowMCQ)[Yes,No]
+
 AutoTranslate: @lab.Variable(AutoTranslate)
 :::
