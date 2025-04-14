@@ -14,17 +14,20 @@ const showLabMode = $(`select[data-name="ShowLabMode"]`).val()?.toLowerCase() ||
 const modes = {
     guided: { 
         ShowGuided: 'Yes', 
-        ShowAdvanced: 'Yes', 
-        ShowActivity: 'Yes'
+        ShowAdvanced: 'Yes',
+        ShowMCQ: 'Yes',
+        ShowActivity: 'No'
     },
     advanced: { 
         ShowGuided: 'No', 
         ShowAdvanced: 'Yes', 
+        ShowMCQ: 'No',        
         ShowActivity: 'Yes' 
     },
     expert: { 
         ShowGuided: 'No', 
         ShowAdvanced: 'No', 
+        ShowMCQ: 'No',        
         ShowActivity: 'No' 
     }
 };
