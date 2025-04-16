@@ -183,22 +183,11 @@ try {
 
    # Remove technical contact and reset notification email and privacy statement from Entra ID tenant
    try {
-       $orgId = (Get-MgOrganization).Id
-       
-       # Remove technical contact
-       Update-MgOrganization -OrganizationId $orgId -TechnicalNotificationMails @() -ErrorAction Stop
-       if ($ScriptDebug) {Send-DebugMessage "Removed Technical Contact"}
-       
-       # Reset notification email
-       Update-MgOrganization -OrganizationId $orgId -MarketingNotificationEmails @() -ErrorAction Stop
-       if ($ScriptDebug) {Send-DebugMessage "Reset Notification Email"}
-       
-       # Reset privacy statement URL
-       Update-MgOrganization -OrganizationId $orgId -PrivacyProfile @{ PrivacyStatementUrl = $null } -ErrorAction Stop
-       if ($ScriptDebug) {Send-DebugMessage "Reset Privacy Statement URL"}
-       
+      $orgId = (Get-MgOrganization).Id
+      $bodyTech = @{ privacyProfile = @{contactEmail = $null};technicalNotificationMails = @() } | ConvertTo-Json
+      $techResponse = Invoke-MgGraphRequest -Method PATCH -Uri "v1.0/organization/$orgId" -Body $bodyTech -ContentType "application/json" -OutputType Http -ErrorAction Stop    
    } catch {
-       if ($ScriptDebug) {Send-DebugMessage "Error during tenant cleanup: $_"}
+       if ($ScriptDebug) {Send-DebugMessage "Error cleaning technical contact info: $_"}
    }
 
     # Delete Conditional Access policies
