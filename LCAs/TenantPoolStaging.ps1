@@ -44,6 +44,11 @@ function Send-DebugMessage {
    Write-Output $Message
 }
 
+# MgGraph Authentication block (Cloud Subscription Target)
+$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
+$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
+Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+
 # Check for credential pool and set variables
 if ($UserName -ne $null -or $UserName -ne '') {
 
@@ -221,6 +226,134 @@ if ($UserName -ne $null -or $UserName -ne '') {
     } catch {
         if ($ScriptDebug) { Send-DebugMessage "Failed to create TAP for $TapUser : $($_.Exception.Message)" }
     }
+
+   # ReCreate standard lab users and groups
+   try {
+      # Create Lab Users
+      $plaintextPwd = "Passw0rd!"
+      $users = @'
+SAM,Fname,DisplayName,Department,City,State,Title
+AzUser01,AzUser01,AzUser01,IT,Seattle,WA,ITPro
+AzUser02,AzUser02,AzUser02,HR,Seattle,WA,Manager
+AzUser03,AzUser03,AzUser03,Finance,Seattle,WA,Accountant
+AzUser04,AzUser04,AzUser04,IT,Seattle,WA,Manager
+AzUser05,AzUser05,AzUser05,HR,Boston,MA,Manager
+AzUser06,AzUser06,AzUser06,Finance,Boston,MA,Accountant
+AzUser07,AzUser07,AzUser07,IT,Boston,MA,ITPro
+AzUser08,AzUser08,AzUser08,HR,Boston,MA,Support
+AzUser09,AzUser09,AzUser09,Finance,Boston,MA,Manager
+AzUser10,AzUser10,AzUser10,IT,Seattle,WA,ITPro
+AzUser11,AzUser11,AzUser11,HR,Seattle,WA,Manager
+AzUser12,AzUser12,AzUser12,Finance,Seattle,WA,Accountant
+AzUser13,AzUser13,AzUser13,IT,Seattle,WA,Manager
+AzUser14,AzUser14,AzUser14,HR,Boston,MA,Manager
+AzUser15,AzUser15,AzUser15,Finance,Boston,MA,Accountant
+AzUser16,AzUser16,AzUser16,IT,Boston,MA,ITPro
+AzUser17,AzUser17,AzUser17,HR,Boston,MA,Support
+AzUser18,AzUser18,AzUser18,Finance,Boston,MA,Manager
+AzUser19,AzUser19,AzUser19,HR,Boston,MA,Support
+AzUser20,AzUser20,AzUser20,Finance,Boston,MA,Manager
+SAM,Fname,Lname,DisplayName,Department,City,State,Title
+PeterH,Peter,Houston,Peter Houston,IT,Seattle,WA,ITPro
+CraigD,Craig,Dewar,Craig Dewar,HR,Seattle,WA,Manager
+JeffW,Jeff,Wang,Jeff Wang,Finance,Seattle,WA,Accountant
+AmyR,Amy,Rusko,Amy Rusko,IT,Seattle,WA,Manager
+AnnB,Ann,Beebe,Ann Beebe,HR,Boston,MA,Manager
+MichelleF,Michelle,Fredette,Michelle Fredette,Finance,Boston,MA,Accountant
+DanP,Dan,Park,Dan Park,IT,Boston,MA,ITPro
+HeidiS,Heidi,Steene,Heidi Steene,HR,Boston,MA,Support
+LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
+'@
+      
+       # Create users with Invoke-MgGraphRequest (Linux workaround)
+       $users | ConvertFrom-Csv | ForEach-Object {
+           $userBody = @{
+               "userPrincipalName" = "$($_.SAM)@$TenantName"
+               "displayName" = $_.DisplayName
+               "givenName" = $_.Fname
+               "department" = $_.Department
+               "city" = $_.City
+               "state" = $_.State
+               "jobTitle" = $_.Title
+               "usageLocation" = "US"
+               "mailNickname" = $_.SAM
+               "accountEnabled" = $true
+               "passwordProfile" = @{
+                   "password" = $plaintextPwd
+                   "forceChangePasswordNextSignIn" = $false
+               }
+           } | ConvertTo-Json -Depth 10
+   
+           Invoke-MgGraphRequest `
+               -Method POST `
+               -Uri "https://graph.microsoft.com/v1.0/users" `
+               -Body $userBody `
+               -ContentType "application/json" | Out-Null
+       }
+   
+       # Create groups
+       New-MgGroup -DisplayName "Mobile Users"  -MailNickname "MobileUsers" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+       New-MgGroup -DisplayName "Managers"  -MailNickname "Managers" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+       New-MgGroup -DisplayName "Regular Employees"  -MailNickname "RegularEmployees" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+   
+       # Pause for 30 seconds to ensure Azure AD objects are populated
+       Start-Sleep -Seconds 30
+   
+       # Assign users to groups
+       $managersGroup = Get-MgGroup -Filter "displayName eq 'Managers'"
+       $managerIds = (Get-MgUser -All | Where-Object { $_.JobTitle -eq "Manager" }).Id
+       foreach ($userId in $managerIds) {
+           $memberRef = @{ "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/$userId" } | ConvertTo-Json
+           Invoke-MgGraphRequest `
+               -Method POST `
+               -Uri "https://graph.microsoft.com/v1.0/groups/$($managersGroup.Id)/members/%24ref" `
+               -Body $memberRef `
+               -ContentType "application/json" | Out-Null
+       }
+       if ($scriptDebug) { Write-Output "Created lab user accounts" }
+   } catch {
+      if ($ScriptDebug) {Send-DebugMessage "Failure creating lab user accounts."}
+   }
+
+   # Assign licenses to selected lab users
+   try {
+       # Licenses to assign (SKU part numbers)
+       $skuNumbers = "SPB", "Power_BI_PRO", "SPE_E5", "AAD_PREMIUM_P2", "Microsoft_Entra_ID_Governance", "Microsoft_365_E5_(no_Teams)", "Microsoft_Entra_Suite"
+   
+       # Get users
+       $users = Get-MgUser -All -Filter "displayName le 'AzUser05' or displayName ge 'AzUser21'" -Property Id, DisplayName
+   
+       # Get subscriptions (SKUs)
+       $subscriptions = Get-MgSubscribedSku | Where-Object { $_.SkuPartNumber -in $skuNumbers }
+   
+       foreach ($subscription in $subscriptions) {
+           # Define license payload for API call
+           $licensePayload = @{
+               "addLicenses" = @(
+                   @{
+                       "skuId" = $subscription.SkuId
+                   }
+               )  
+               "removeLicenses" = @()
+           } | ConvertTo-Json -Depth 10
+   
+           foreach ($user in $users) {
+               try {
+                   Invoke-MgGraphRequest `
+                           -Method POST `
+                           -Uri "https://graph.microsoft.com/v1.0/users/$($user.Id)/assignLicense" `
+                           -Body $licensePayload `
+                           -ContentType "application/json" | Out-Null
+   
+                   if ($scriptDebug) { Write-Output "Assigned license: $($subscription.SkuPartNumber) to user $($user.DisplayName)" }
+               } catch {
+                   if ($scriptDebug) { Write-Output "Failed to assign license: $($subscription.SkuPartNumber) to user $($user.DisplayName). (May already be assigned.)" }
+               }
+           }
+       }
+   } catch {
+      if ($ScriptDebug) {Send-DebugMessage "Failure assigning licenses to selected user accounts."}
+   }    
 
     # Update lab variables based on TAP success
     if ($TapPassword) {
