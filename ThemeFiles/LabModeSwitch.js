@@ -12,19 +12,29 @@ const showLabMode = $(`select[data-name="ShowLabMode"]`).val()?.toLowerCase() ||
 
 // Define modes globally
 const modes = {
-    guided: { 
+    learn: { 
+        ShowLearn: 'Yes',
         ShowGuided: 'Yes', 
         ShowAdvanced: 'Yes',
         ShowMCQ: 'Yes',
         ShowActivity: 'No'
     },
+    guided: { 
+        ShowLearn: 'No',        
+        ShowGuided: 'Yes', 
+        ShowAdvanced: 'Yes',
+        ShowMCQ: 'No',
+        ShowActivity: 'Yes'
+    },
     advanced: { 
+        ShowLearn: 'No',        
         ShowGuided: 'No', 
         ShowAdvanced: 'Yes', 
         ShowMCQ: 'No',        
         ShowActivity: 'Yes' 
     },
     expert: { 
+        ShowLearn: 'No',        
         ShowGuided: 'No', 
         ShowAdvanced: 'No', 
         ShowMCQ: 'No',        
@@ -68,6 +78,7 @@ function createCustomDifficultyDropdown() {
     const $dropdown = $('<div class="select-Difficulty" data-name="select-Difficulty"></div>');
     const $optionsList = $('<ul class="options"></ul>').hide(); // Hidden by default
     const options = [
+        { text: 'Learn', value: 'Learn' },        
         { text: 'Guided', value: 'Guided' },
         { text: 'Advanced', value: 'Advanced' },
         { text: 'Expert', value: 'Expert' }
