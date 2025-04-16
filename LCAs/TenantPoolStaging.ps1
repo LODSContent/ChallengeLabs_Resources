@@ -310,7 +310,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
                -Body $memberRef `
                -ContentType "application/json" | Out-Null
        }
-       if ($scriptDebug) { Write-Output "Created lab user accounts" }
+       if ($scriptDebug) { Send-DebugMessage "Created lab user accounts" }
    } catch {
       if ($ScriptDebug) {Send-DebugMessage "Failure creating lab user accounts."}
    }
@@ -345,9 +345,9 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
                            -Body $licensePayload `
                            -ContentType "application/json" | Out-Null
    
-                   if ($scriptDebug) { Write-Output "Assigned license: $($subscription.SkuPartNumber) to user $($user.DisplayName)" }
+                   if ($scriptDebug) { Send-DebugMessage "Assigned license: $($subscription.SkuPartNumber) to user $($user.DisplayName)" }
                } catch {
-                   if ($scriptDebug) { Write-Output "Failed to assign license: $($subscription.SkuPartNumber) to user $($user.DisplayName). (May already be assigned.)" }
+                   if ($scriptDebug) { Send-DebugMessage "Failed to assign license: $($subscription.SkuPartNumber) to user $($user.DisplayName). (May already be assigned.)" }
                }
            }
        }
