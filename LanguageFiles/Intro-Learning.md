@@ -13,6 +13,8 @@ ShowToggle: @lab.DropDownList(ShowToggle)[Yes,No]
 
 ShowLabMode: @lab.DropDownList(ShowLabMode)[Yes,No]
 
+ShowLearn: @lab.DropDownList(ShowLearn)[Yes,No]
+
 ShowGuided: @lab.DropDownList(ShowGuided)[Yes,No]
 
 ShowAdvanced: @lab.DropDownList(ShowAdvanced)[Yes,No]
