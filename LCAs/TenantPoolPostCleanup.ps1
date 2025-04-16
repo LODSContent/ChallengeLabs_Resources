@@ -181,13 +181,25 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Failed to set password validity to never expire"}
     }    
 
-    # Remove technical contact from Entra ID tenant
-    try {
-        Update-MgOrganization -OrganizationId (Get-MgOrganization).Id -TechnicalNotificationMails @() -ErrorAction Stop
-        if ($ScriptDebug) {Send-DebugMessage "Removed Technical Contact"}
-    } catch {
-        if ($ScriptDebug) {Send-DebugMessage "Technical contact could not be removed"}
-    }
+   # Remove technical contact and reset notification email and privacy statement from Entra ID tenant
+   try {
+       $orgId = (Get-MgOrganization).Id
+       
+       # Remove technical contact
+       Update-MgOrganization -OrganizationId $orgId -TechnicalNotificationMails @() -ErrorAction Stop
+       if ($ScriptDebug) {Send-DebugMessage "Removed Technical Contact"}
+       
+       # Reset notification email
+       Update-MgOrganization -OrganizationId $orgId -MarketingNotificationEmails @() -ErrorAction Stop
+       if ($ScriptDebug) {Send-DebugMessage "Reset Notification Email"}
+       
+       # Reset privacy statement URL
+       Update-MgOrganization -OrganizationId $orgId -PrivacyProfile @{ PrivacyStatementUrl = $null } -ErrorAction Stop
+       if ($ScriptDebug) {Send-DebugMessage "Reset Privacy Statement URL"}
+       
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Error during tenant cleanup: $_"}
+   }
 
     # Delete Conditional Access policies
     try{ 
