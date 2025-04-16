@@ -1,4 +1,4 @@
-# Create TAP enabled user and establish credential variables
+# Create TAP enabled user, establish credential variables and configure the Tenant for lab use
 <#
    Title: Create TAP enabled user and establish credential variables
    Description: Creates a new user with a Temporary Access Password and establishes credential variables for the lab.
