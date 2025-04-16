@@ -185,7 +185,8 @@ try {
    try {
       $orgId = (Get-MgOrganization).Id
       $bodyTech = @{ privacyProfile = @{contactEmail = $null};technicalNotificationMails = @() } | ConvertTo-Json
-      $techResponse = Invoke-MgGraphRequest -Method PATCH -Uri "v1.0/organization/$orgId" -Body $bodyTech -ContentType "application/json" -OutputType Http -ErrorAction Stop    
+      $techResponse = Invoke-MgGraphRequest -Method PATCH -Uri "v1.0/organization/$orgId" -Body $bodyTech -ContentType "application/json" -OutputType Http -ErrorAction Stop
+      if ($ScriptDebug) {Send-DebugMessage "Cleared technical contact, notification email and privacy statement."}
    } catch {
        if ($ScriptDebug) {Send-DebugMessage "Error cleaning technical contact info: $_"}
    }
