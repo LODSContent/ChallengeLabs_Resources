@@ -278,6 +278,7 @@ try {
    # ReCreate standard lab users and groups
    try {
       # Create Lab Users
+      $plaintextPwd = "Passw0rd!"
       $users = @'
 SAM,Fname,DisplayName,Department,City,State,Title
 AzUser01,AzUser01,AzUser01,IT,Seattle,WA,ITPro
