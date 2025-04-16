@@ -254,7 +254,6 @@ AzUser17,AzUser17,AzUser17,HR,Boston,MA,Support
 AzUser18,AzUser18,AzUser18,Finance,Boston,MA,Manager
 AzUser19,AzUser19,AzUser19,HR,Boston,MA,Support
 AzUser20,AzUser20,AzUser20,Finance,Boston,MA,Manager
-SAM,Fname,Lname,DisplayName,Department,City,State,Title
 PeterH,Peter,Houston,Peter Houston,IT,Seattle,WA,ITPro
 CraigD,Craig,Dewar,Craig Dewar,HR,Seattle,WA,Manager
 JeffW,Jeff,Wang,Jeff Wang,Finance,Seattle,WA,Accountant
