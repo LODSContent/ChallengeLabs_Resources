@@ -226,7 +226,7 @@ if ($UserName -ne $null -or $UserName -ne '') {
     } catch {
         if ($ScriptDebug) { Send-DebugMessage "Failed to create TAP for $TapUser : $($_.Exception.Message)" }
     }
-<#
+
    if ($CreateLabUsers) {
       # ReCreate standard lab users and groups
       try {
@@ -356,7 +356,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
          if ($ScriptDebug) {Send-DebugMessage "Failure assigning licenses to selected user accounts."}
       }    
    }
-   #>
+
     # Update lab variables based on TAP success
     if ($TapPassword) {
          Set-LabVariable -Name UserName -Value $TapUser
