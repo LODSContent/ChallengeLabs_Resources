@@ -165,7 +165,7 @@ try {
 
     # Remove Device Registrations
     try {
-        Get-MgDevice -All | Remove-MgDevice -Confirm:$false -ErrorAction SilentlyContinue
+        Get-MgDevice -All | foreach {Remove-MgDevice -DeviceId $_.Id -Confirm:$false -ErrorAction SilentlyContinue}
         if ($ScriptDebug) {Send-DebugMessage "Removed Devices"}
     } catch {
         if ($ScriptDebug) {Send-DebugMessage "Devices could not be removed."}
