@@ -155,13 +155,64 @@ try {
         if ($ScriptDebug) { Send-DebugMessage "Administrative Units could not be removed: $([string]$_.Exception.Message)" }
     }
    
-    # Remove devices
+    # Remove terms and conditions
+    try {
+        Get-MgAgreement | Remove-MgAgreement -ErrorAction SilentlyContinue
+        if ($ScriptDebug) {Send-DebugMessage "Removed terms and conditions"}
+    } catch {
+        if ($ScriptDebug) {Send-DebugMessage "Terms and conditions could not be removed."}
+    }
+
+    # Remove terms and conditions
     try {
         Get-MgDevice -All | Remove-MgDevice -Confirm:$false -ErrorAction SilentlyContinue
         if ($ScriptDebug) {Send-DebugMessage "Removed Devices"}
     } catch {
         if ($ScriptDebug) {Send-DebugMessage "Devices could not be removed."}
     }
+
+   # Remove Deviceregistrationpolicy settings via direct mggraph request
+   try {   
+      $uri = "https://graph.microsoft.com/beta/policies/deviceRegistrationPolicy"
+      $body = '{
+      "@odata.context":"https://graph.microsoft.com/beta/$metadata#policies/deviceRegistrationPolicy/$entity",
+      "multiFactorAuthConfiguration":"notRequired",
+      "id":"deviceRegistrationPolicy",
+      "displayName":"Device Registration Policy",
+      "description":"Tenant-wide policy that manages initial provisioning controls using quota restrictions, additional authentication and authorization checks",
+      "userDeviceQuota":50,
+      "azureADRegistration":{
+      	"isAdminConfigurable":false,
+      	"allowedToRegister":{
+      		"@odata.type":"#microsoft.graph.allDeviceRegistrationMembership",
+      		"users": null,
+      		"groups": null
+      		}
+      	},
+      "azureADJoin":{
+      	"isAdminConfigurable":true,
+      	"allowedToJoin":{
+      		"@odata.type":"#microsoft.graph.allDeviceRegistrationMembership",
+      		"users":null,
+      		"groups": null
+      		},
+      	"localAdmins":{
+      		"enableGlobalAdmins":true,
+      		"registeringUsers":{
+      			"@odata.type":"#microsoft.graph.allDeviceRegistrationMembership"
+      			}
+      		}
+      	},
+      "localAdminPassword":{
+      	"isEnabled": false
+      	}
+      }'      
+      
+      Invoke-MgGraphRequest -uri $uri -body $body -contenttype "application/json" -method PUT | Out-Null
+      if ($ScriptDebug) {Send-DebugMessage "Reset Device Registration Policy"}
+   } catch {
+      if ($ScriptDebug) {Send-DebugMessage "Device Registration Policy could not be reset."}
+   }
 
     # Remove custom domains
     try {
