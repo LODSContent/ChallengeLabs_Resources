@@ -157,7 +157,7 @@ try {
    
     # Remove terms and conditions
     try {
-        Get-MgAgreement | Remove-MgAgreement -ErrorAction SilentlyContinue
+        Get-MgAgreement | foreach {Remove-mgagreement -AgreementId $_.id -ErrorAction SilentlyContinue} 
         if ($ScriptDebug) {Send-DebugMessage "Removed terms and conditions"}
     } catch {
         if ($ScriptDebug) {Send-DebugMessage "Terms and conditions could not be removed."}
