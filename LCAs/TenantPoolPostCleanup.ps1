@@ -163,7 +163,7 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Terms and conditions could not be removed."}
     }
 
-    # Remove terms and conditions
+    # Remove Device Registrations
     try {
         Get-MgDevice -All | Remove-MgDevice -Confirm:$false -ErrorAction SilentlyContinue
         if ($ScriptDebug) {Send-DebugMessage "Removed Devices"}
