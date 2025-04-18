@@ -171,6 +171,15 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Devices could not be removed."}
     }
 
+    # Reset authorization policy
+    try {
+      $params = @{AllowInvitesFrom = "everyone"}
+      Update-mgpolicyauthorizationpolicy -BodyParameter $params -erroraction ignore
+      if ($ScriptDebug) {Send-DebugMessage "Reset authorization policy"}
+    } catch {
+      if ($ScriptDebug) {Send-DebugMessage "Failed to reset authorization policy"}
+    }
+
    # Remove Deviceregistrationpolicy settings via direct mggraph request
    try {   
       $uri = "https://graph.microsoft.com/beta/policies/deviceRegistrationPolicy"
