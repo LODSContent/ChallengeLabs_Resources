@@ -223,6 +223,23 @@ try {
       if ($ScriptDebug) {Send-DebugMessage "Device Registration Policy could not be reset."}
    }
 
+   # Disable MFA registration enforcement and set SSPR to None
+   try {
+       $body = @{
+           registrationEnforcement = @{
+               authenticationMethodsRegistrationCampaign = @{
+                   snoozeDurationInDays = 0
+                   state = "disabled"
+                   includeTargets = @()
+               }
+           }
+       } | ConvertTo-Json -Depth 10
+       Invoke-MgGraphRequest -Method PATCH -Uri "v1.0/policies/authenticationMethodsPolicy" -Body $body -ContentType "application/json" -ErrorAction Stop
+       if ($ScriptDebug) {Send-DebugMessage "Disabled MFA registration enforcement and set SSPR to None"}
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Failed to disable MFA registration enforcement or SSPR: $_"}
+   }
+
     # Remove custom domains
     try {
         Get-MgDomain | Where-Object { $_.IsDefault -eq $false } | Remove-MgDomain -Confirm:$false -ErrorAction SilentlyContinue
