@@ -147,6 +147,19 @@ try {
     
     #>
 
+    # Remove applications (only those listed)
+    try {
+        Get-MgApplication -All | Where-Object { 
+            $_.DisplayName -like "CorpPartsDepot*" -or
+            $_.DisplayName -eq "Adobe Sign" 
+        } | ForEach-Object {
+            Remove-MgApplication -ApplicationId $_.Id -Confirm:$false -ErrorAction SilentlyContinue
+        }
+        if ($ScriptDebug) {Send-DebugMessage "Removed Applications"}
+    } catch {
+        if ($ScriptDebug) {Send-DebugMessage "Applications could not be removed."}
+    }
+
     # Remove all Entra ID Administrative Units
     try {
         Get-MgDirectoryAdministrativeUnit -All | foreach {Remove-MgDirectoryAdministrativeUnit -AdministrativeUnitId $_.Id -Confirm:$false  -ErrorAction SilentlyContinue}
