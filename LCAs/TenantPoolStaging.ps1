@@ -49,6 +49,216 @@ $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -Te
 $SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
 Connect-MgGraph -AccessToken $SecureToken -NoWelcome
 
+# Update Service Principal Permissions
+$Permissions = @'
+AdministrativeUnit.ReadWrite.All
+Agreement.ReadWrite.All
+AppCatalog.ReadWrite.All
+Application.ReadWrite.All
+AppRoleAssignment.ReadWrite.All
+AttackSimulation.ReadWrite.All
+AuditLog.Read.All
+Calendars.ReadWrite
+Chat.ReadWrite.All
+CloudPC.ReadWrite.All
+ConsentRequest.ReadWrite.All
+CustomDetection.ReadWrite.All
+DelegatedAdminRelationship.ReadWrite.All
+DelegatedPermissionGrant.ReadWrite.All
+Device.ReadWrite.All
+DeviceLocalCredential.Read.All
+DeviceManagementApps.ReadWrite.All
+DeviceManagementCloudCA.ReadWrite.All
+DeviceManagementConfiguration.ReadWrite.All
+DeviceManagementManagedDevices.ReadWrite.All
+DeviceManagementRBAC.ReadWrite.All
+DeviceManagementScripts.ReadWrite.All
+DeviceManagementServiceConfig.ReadWrite.All
+DeviceTemplate.ReadWrite.All
+Directory.ReadWrite.All
+DirectoryRecommendations.ReadWrite.All
+Domain.ReadWrite.All
+EntitlementManagement.ReadWrite.All
+EventListener.ReadWrite.All
+ExternalConnection.ReadWrite.All
+ExternalItem.ReadWrite.All
+Files.ReadWrite.All
+Group.ReadWrite.All
+GroupMember.ReadWrite.All
+HealthMonitoringAlert.ReadWrite.All
+HealthMonitoringAlertConfig.ReadWrite.All
+IdentityRiskEvent.ReadWrite.All
+IdentityRiskyServicePrincipal.ReadWrite.All
+IdentityRiskyUser.ReadWrite.All
+LicenseAssignment.ReadWrite.All
+Mail.ReadWrite
+MultiTenantOrganization.ReadWrite.All
+NetworkAccess.ReadWrite.All
+OnPremisesPublishingProfiles.ReadWrite.All
+Organization.ReadWrite.All
+Policy.Read.All
+Policy.ReadWrite.AccessReview
+Policy.ReadWrite.ApplicationConfiguration
+Policy.ReadWrite.AuthenticationFlows
+Policy.ReadWrite.AuthenticationMethod
+Policy.ReadWrite.Authorization
+Policy.ReadWrite.ConditionalAccess
+Policy.ReadWrite.ConsentRequest
+Policy.ReadWrite.CrossTenantAccess
+Policy.ReadWrite.DeviceConfiguration
+Policy.ReadWrite.ExternalIdentities
+Policy.ReadWrite.FeatureRollout
+Policy.ReadWrite.FedTokenValidation
+Policy.ReadWrite.IdentityProtection
+Policy.ReadWrite.PermissionGrant
+Policy.ReadWrite.SecurityDefaults
+Policy.ReadWrite.TrustFramework
+Presence.ReadWrite.All
+PrivilegedAccess.ReadWrite.AzureAD
+PrivilegedAccess.ReadWrite.AzureADGroup
+PrivilegedAccess.ReadWrite.AzureResources
+PrivilegedAssignmentSchedule.ReadWrite.AzureADGroup
+PrivilegedEligibilitySchedule.ReadWrite.AzureADGroup
+PublicKeyInfrastructure.ReadWrite.All
+Reports.Read.All
+RiskPreventionProviders.ReadWrite.All
+RoleManagement.ReadWrite.CloudPC
+RoleManagement.ReadWrite.Defender
+RoleManagement.ReadWrite.Directory
+RoleManagement.ReadWrite.Exchange
+RoleManagementAlert.ReadWrite.Directory
+RoleManagementPolicy.ReadWrite.AzureADGroup
+RoleManagementPolicy.ReadWrite.Directory
+SecurityActions.ReadWrite.All
+SecurityAlert.ReadWrite.All
+SecurityAnalyzedMessage.ReadWrite.All
+SecurityEvents.ReadWrite.All
+SecurityIdentitiesHealth.ReadWrite.All
+SecurityIdentitiesSensors.ReadWrite.All
+SecurityIdentitiesUserActions.ReadWrite.All
+SecurityIncident.ReadWrite.All
+ServiceHealth.Read.All
+ServiceMessage.Read.All
+ServicePrincipalEndpoint.ReadWrite.All
+Sites.ReadWrite.All
+Synchronization.ReadWrite.All
+Tasks.ReadWrite.All
+TeamSettings.ReadWrite.All
+ThreatAssessment.Read.All
+ThreatHunting.Read.All
+ThreatIndicators.ReadWrite.OwnedBy
+ThreatSubmission.ReadWrite.All
+ThreatSubmissionPolicy.ReadWrite.All
+TrustFrameworkKeySet.ReadWrite.All
+User-ConvertToInternal.ReadWrite.All
+User-LifeCycleInfo.ReadWrite.All
+User-Mail.ReadWrite.All
+User-PasswordProfile.ReadWrite.All
+User-Phone.ReadWrite.All
+User.ReadWrite.All
+UserAuthenticationMethod.ReadWrite.All
+UserAuthMethod-Passkey.ReadWrite.All
+UserNotification.ReadWrite.CreatedByApp
+UserShiftPreferences.ReadWrite.All
+WindowsUpdates.ReadWrite.All
+WorkforceIntegration.ReadWrite.All
+'@ -split '\r?\n'
+
+# Get Microsoft Graph Service Principal
+$graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
+
+# Get existing Service Principal
+$sp = Get-MgServicePrincipal -Filter "appId eq '$AppId'" -ErrorAction SilentlyContinue
+
+# Get the current permissions of the service principal
+$appPerms = (get-mgcontext).Scopes | Sort-Object
+
+if ($graphSp -and $sp) { 
+	# Grant delegated permissions (clear existing and re-add fresh)
+	if ($ScriptDebug) { Send-DebugMessage "Clearing and re-granting delegated permissions" }
+
+	# Remove all existing OAuth2 permission grants for this SP
+	$existingGrants = Get-MgOauth2PermissionGrant -Filter "clientId eq '$($sp.Id)' and resourceId eq '$($graphSp.Id)'"
+	if ($existingGrants) {
+		foreach ($grant in $existingGrants) {
+			Remove-MgOauth2PermissionGrant -OAuth2PermissionGrantId $grant.Id -ErrorAction SilentlyContinue
+		}
+		if ($ScriptDebug) { Send-DebugMessage "Removed existing grants." }
+	}
+	Start-Sleep -Seconds 10           
+
+	# Grant delegated permissions (split into multiple grants if necessary)
+	$desiredScopes = $Permissions -join " "
+	$maxScopeLength = 4000  # Arbitrary limit to avoid potential Graph API issues; adjust if needed
+	if ($desiredScopes.Length -gt $maxScopeLength) {
+		if ($ScriptDebug) { Send-DebugMessage "Scope string exceeds $maxScopeLength characters; splitting into multiple grants" }
+		$scopeChunks = [System.Collections.ArrayList]::new()
+		$currentChunk = ""
+		foreach ($perm in $Permissions) {
+			if (($currentChunk.Length + $perm.Length + 1) -gt $maxScopeLength) {
+				$scopeChunks.Add($currentChunk.Trim()) | Out-Null
+				$currentChunk = $perm
+			} else {
+				$currentChunk += " $perm"
+			}
+		}
+		if ($currentChunk) { $scopeChunks.Add($currentChunk.Trim()) | Out-Null }
+
+		if ($ScriptDebug) { Send-DebugMessage "Granting delegated permissions in chunks" }
+		foreach ($chunk in $scopeChunks) {
+			$grantBody = @{
+				"clientId" = $sp.Id
+				"consentType" = "AllPrincipals"
+				"principalId" = $null
+				"resourceId" = $graphSp.Id
+				"scope" = $chunk
+			}
+			$null = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" `
+				-Body ($grantBody | ConvertTo-Json) -ContentType "application/json" -SkipHttpErrorCheck
+		}
+	} else {
+		$grantBody = @{
+			"clientId" = $sp.Id
+			"consentType" = "AllPrincipals"
+			"principalId" = $null
+			"resourceId" = $graphSp.Id
+			"scope" = $desiredScopes
+		}
+		$null = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" `
+			-Body ($grantBody | ConvertTo-Json) -ContentType "application/json" -SkipHttpErrorCheck
+		if ($ScriptDebug) { Send-DebugMessage "Granted delegated permissions" }
+	}
+
+	# Grant application permissions
+	if ($ScriptDebug) {Send-DebugMessage "Granting app permissions (Async): "}
+	if ($appPerms.Count -gt 0) {
+		$Permissions = $Permissions | Where-Object {$appPerms -notcontains $_}
+	}
+
+	if ($Permissions) {
+		# Pair items with their indices
+		$indexedPermissions = $Permissions | ForEach-Object { [PSCustomObject]@{ Index = $Permissions.IndexOf($_); Value = $_ } }
+		# Process permissions in parallel (for PowerShell 7.0+ only)
+		$indexedPermissions | ForEach-Object -ThrottleLimit 25 -Parallel {
+			$permission = $_.Value
+			$index = $_.Index
+			$role = $Using:graphSp.AppRoles | Where-Object { $_.Value -eq $permission }
+			if ($role) {
+				$roleBody = @{
+					"principalId" = $Using:sp.Id
+					"resourceId" = $Using:graphSp.Id
+					"appRoleId" = $role.Id
+				}
+				$null = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($Using:sp.Id)/appRoleAssignments" `
+					-Body ($roleBody | ConvertTo-Json) -ContentType "application/json" -SkipHttpErrorCheck
+			} 
+		} 
+	}               
+	if ($ScriptDebug) {Send-DebugMessage "Finished updating permissions for: $TenantName"}
+} else {
+	if ($ScriptDebug) {Send-DebugMessage "Failed to update service principal permissions."}
+}
+
 # Check for credential pool and set variables
 if ($UserName -ne $null -or $UserName -ne '') {
 
