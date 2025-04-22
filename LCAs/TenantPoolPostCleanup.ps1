@@ -150,9 +150,9 @@ try {
     # Remove applications (only those listed)
     try {
         Get-MgApplication -All | Where-Object { 
-            $_.DisplayName -eq "CorpPartsDepot" -or
-            $_.DisplayName -eq "InventoryTracker" -or
-            $_.DisplayName -eq "Adobe Sign" 
+            $_.DisplayName -like "CorpPartsDepot*" -or
+            $_.DisplayName -like "InventoryTracker*" -or
+            $_.DisplayName -like "Adobe Sign*" 
         } | ForEach-Object {
             Remove-MgApplication -ApplicationId $_.Id -Confirm:$false -ErrorAction SilentlyContinue
         }
