@@ -44,6 +44,28 @@ function Send-DebugMessage {
    Write-Output $Message
 }
 
+# Cleanup before staging
+# Define the parameters in a hash table
+$params = @{
+    TenantName = $TenantName
+    Password = $Password
+    ScriptDebug = $ScriptDebug    
+}
+
+# URL of the script on GitHub
+$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup.ps1"
+
+# Fetch the script content using Invoke-WebRequest
+$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
+
+$CleanupResult = & $scriptBlock @Params
+
+if ($scriptDebug) {
+	Send-DebugMessage "Cleanup completed successfully for $TenantName"
+} else {
+	Send-DebugMessage "Problem running cleanup for $TenantName"
+}
+
 # MgGraph Authentication block (Cloud Subscription Target)
 $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
 $SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
