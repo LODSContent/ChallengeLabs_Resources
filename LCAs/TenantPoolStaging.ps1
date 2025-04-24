@@ -61,9 +61,9 @@ $scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasi
 $CleanupResult = & $scriptBlock @Params
 
 if ($scriptDebug) {
-	Send-DebugMessage "Cleanup completed successfully for $TenantName"
+	if ($ScriptDebug) { Send-DebugMessage "Cleanup completed successfully for $TenantName" }
 } else {
-	Send-DebugMessage "Problem running cleanup for $TenantName"
+	if ($ScriptDebug) { Send-DebugMessage "Possible errors running cleanup for $TenantName" }
 }
 
 # MgGraph Authentication block (Cloud Subscription Target)
