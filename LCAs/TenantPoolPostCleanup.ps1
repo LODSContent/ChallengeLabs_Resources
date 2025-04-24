@@ -170,6 +170,14 @@ try {
     } catch {
         if ($ScriptDebug) { Send-DebugMessage "Administrative Units could not be removed: $([string]$_.Exception.Message)" }
     }
+
+    # Remove Access Packages
+    try {
+        get-mgentitlementmanagementaccesspackage | ForEach-Object {Remove-MgEntitlementManagementAccessPackage -AccessPackageId $_.Id}
+        if ($ScriptDebug) { Send-DebugMessage "Removed Access Packages" }
+    } catch {
+        if ($ScriptDebug) { Send-DebugMessage "Access Packages could not be removed: $([string]$_.Exception.Message)" }
+    }
    
     # Remove terms and conditions
     try {
