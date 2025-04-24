@@ -153,7 +153,8 @@ try {
             $_.DisplayName -like "CorpPartsDepot*" -or
             $_.DisplayName -like "InventoryTracker*" -or
             $_.DisplayName -like "Demo app*" -or
-            $_.DisplayName -like "Adobe Sign*" 
+            $_.DisplayName -like "Adobe Sign*" -or 
+            $_.DisplayName -like "Microsoft Entra SAML Toolkit"
         } | ForEach-Object {
             Remove-MgApplication -ApplicationId $_.Id -Confirm:$false -ErrorAction SilentlyContinue
         }
