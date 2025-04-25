@@ -73,6 +73,7 @@ Connect-MgGraph -AccessToken $SecureToken -NoWelcome
 
 # Update Service Principal Permissions
 $Permissions = @'
+AccessReview.ReadWrite.All
 AdministrativeUnit.ReadWrite.All
 Agreement.ReadWrite.All
 AppCatalog.ReadWrite.All
