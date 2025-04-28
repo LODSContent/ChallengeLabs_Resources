@@ -178,6 +178,17 @@ try {
     } catch {
         if ($ScriptDebug) { Send-DebugMessage "Access Packages could not be removed: $([string]$_.Exception.Message)" }
     }
+
+   # Remove Entra ID Access Reviews
+   try {
+       $accessReviews = Invoke-MgGraphRequest -Method GET -Uri "v1.0/identityGovernance/accessReviews/definitions" -ErrorAction Stop
+       foreach ($review in $accessReviews.value) {
+           Invoke-MgGraphRequest -Method DELETE -Uri "v1.0/identityGovernance/accessReviews/definitions/$($review.id)" -ErrorAction Stop
+       }
+       if ($ScriptDebug) {Send-DebugMessage "Removed all Entra ID Access Reviews"}
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Failed to remove Entra ID Access Reviews: $_"}
+   }
    
     # Remove terms and conditions
     try {
