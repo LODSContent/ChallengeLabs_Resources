@@ -55,47 +55,80 @@ try {
     # Get the current authenticated user's ID (works in delegated context)
     $currentUserId = (Get-MgContext).Account
 
-    # Preserve user "admin" (by displayName and UPN) and first user
-    $preserveUser = "admin"
-    $preserveFirstUserUpn = "admin@$TenantName.onmicrosoft.com"  # Adjust if different
-    $preserveAdminUpn = "admin@$TenantName.onmicrosoft.com"      # Explicitly preserve admin UPN
-
-    # Remove users (except "admin", first user, ExternalAzureAD identities, and current user)
-    try {
-        Get-MgUser -All | Where-Object { 
-            $_.DisplayName -ne $preserveUser -and 
-            $_.UserPrincipalName -ne $preserveFirstUserUpn -and 
-            $_.UserPrincipalName -ne $preserveAdminUpn -and 
-            $_.UserType -ne "Guest" -and  # Preserve all Guest users (covers most ExternalAzureAD cases)
-            $_.Id -ne $currentUserId
-        } | ForEach-Object {
-            # Remove role assignments for the user
-            $userId = $_.Id
-            Get-MgDirectoryRole -All | ForEach-Object {
-                $roleId = $_.Id
-                $members = Get-MgDirectoryRoleMember -DirectoryRoleId $roleId | Where-Object { $_.Id -eq $userId }
-                if ($members) {
-                    Remove-MgDirectoryRoleMemberByRef -DirectoryRoleId $roleId -DirectoryObjectId $userId -ErrorAction SilentlyContinue
-                    if ($ScriptDebug) {Send-DebugMessage "Removed role '$($_.DisplayName)' from user '$($_.DisplayName)'"}
-                }
-            }
-            # Now delete the user
-            Remove-MgUser -UserId $userId -Confirm:$false -ErrorAction SilentlyContinue
-        }
-        if ($ScriptDebug) {Send-DebugMessage "Removed Users"}
-    } catch {
-        if ($ScriptDebug) {Send-DebugMessage "Users could not be removed."}
-    }
-
-    # Purge all deleted users
-    try {
-        Get-MgDirectoryDeletedItemAsUser | ForEach-Object {
-            Remove-MgDirectoryDeletedItem -DirectoryObjectId $_.Id -Confirm:$false -ErrorAction SilentlyContinue
-        }
-        if ($ScriptDebug) {Send-DebugMessage "Purged all deleted users"}
-    } catch {
-        if ($ScriptDebug) {Send-DebugMessage "Some or all deleted users could not be purged."}
-    }
+   # Preserve user "admin" (by displayName and UPN) and first user
+   $preserveUser = "admin"
+   $preserveFirstUserUpn = "admin@$TenantName.onmicrosoft.com"  # Adjust if different
+   $preserveAdminUpn = "admin@$TenantName.onmicrosoft.com"      # Explicitly preserve admin UPN
+   
+   # Remove users (except "admin", first user, ExternalAzureAD identities, and current user)
+   try {
+       $usersToDelete = Get-MgUser -All | Where-Object { 
+           $_.DisplayName -ne $preserveUser -and 
+           $_.UserPrincipalName -ne $preserveFirstUserUpn -and 
+           $_.UserPrincipalName -ne $preserveAdminUpn -and 
+           $_.UserType -ne "Guest" -and  # Preserve all Guest users (covers most ExternalAzureAD cases)
+           $_.Id -ne $currentUserId
+       }
+       $failedUsers = @()
+       foreach ($user in $usersToDelete) {
+           $userId = $user.Id
+           $userDisplayName = $user.DisplayName
+           try {
+               # Remove directory role assignments
+               $roleAssignments = Invoke-MgGraphRequest -Method GET -Uri "v1.0/roleManagement/directory/roleAssignments?`$filter=principalId eq '$userId'" -ErrorAction Stop
+               foreach ($assignment in $roleAssignments.value) {
+                   try {
+                       Invoke-MgGraphRequest -Method DELETE -Uri "v1.0/roleManagement/directory/roleAssignments/$($assignment.id)" -ErrorAction Stop
+                       if ($ScriptDebug) {Send-DebugMessage "Removed role assignment '$($assignment.roleDefinitionId)' for user '$userDisplayName'"}
+                   } catch {
+                       if ($ScriptDebug) {Send-DebugMessage "Failed to remove role assignment '$($assignment.roleDefinitionId)' for user '$userDisplayName': $_"}
+                       $failedUsers += $user
+                       continue
+                   }
+               }
+   
+               # Remove PIM role eligibility (if applicable)
+               $pimAssignments = Invoke-MgGraphRequest -Method GET -Uri "v1.0/roleManagement/directory/roleEligibilitySchedules?`$filter=principalId eq '$userId'" -ErrorAction SilentlyContinue
+               foreach ($pimAssignment in $pimAssignments.value) {
+                   try {
+                       Invoke-MgGraphRequest -Method DELETE -Uri "v1.0/roleManagement/directory/roleEligibilitySchedules/$($pimAssignment.id)" -ErrorAction Stop
+                       if ($ScriptDebug) {Send-DebugMessage "Removed PIM role eligibility '$($pimAssignment.roleDefinitionId)' for user '$userDisplayName'"}
+                   } catch {
+                       if ($ScriptDebug) {Send-DebugMessage "Failed to remove PIM role eligibility '$($pimAssignment.roleDefinitionId)' for user '$userDisplayName': $_"}
+                       $failedUsers += $user
+                       continue
+                   }
+               }
+   
+               # Delete the user if no role removal failures
+               if ($failedUsers -notcontains $user) {
+                   Remove-MgUser -UserId $userId -Confirm:$false -ErrorAction Stop
+                   if ($ScriptDebug) {Send-DebugMessage "Deleted user '$userDisplayName'"}
+               } else {
+                   if ($ScriptDebug) {Send-DebugMessage "Skipped deletion of user '$userDisplayName' due to role assignment issues"}
+               }
+           } catch {
+               if ($ScriptDebug) {Send-DebugMessage "Failed to process user '$userDisplayName': $_"}
+           }
+       }
+       if ($failedUsers) {
+           if ($ScriptDebug) {Send-DebugMessage "Users with role assignment issues (skipped deletion): $($failedUsers.DisplayName -join ', ')"}
+       } else {
+           if ($ScriptDebug) {Send-DebugMessage "Removed all eligible users"}
+       }
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Critical failure in user removal: $_"}
+   }
+   
+   # Purge all deleted users
+   try {
+       Get-MgDirectoryDeletedItemAsUser | ForEach-Object {
+           Remove-MgDirectoryDeletedItem -DirectoryObjectId $_.Id -Confirm:$false -ErrorAction SilentlyContinue
+       }
+       if ($ScriptDebug) {Send-DebugMessage "Purged all deleted users"}
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Some or all deleted users could not be purged: $_"}
+   }
 
     # Remove groups
     try {
