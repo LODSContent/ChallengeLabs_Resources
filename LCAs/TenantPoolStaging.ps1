@@ -26,6 +26,7 @@ $PoolPassword = $Password
 $TapUser = "LabAdmin@$TenantName"
 $LegacyPassword = $Password
 $Lifetime = 120
+
 $DebugMessages = $Null
 
 function Send-DebugMessage {
@@ -41,7 +42,7 @@ function Send-DebugMessage {
     
     if ($DebugUrl) {
        try {
-           Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
+           #Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
        } catch {
            # Silently fail to avoid disrupting the script; optionally log locally if desired
            Write-Warning "Failed to send debug message: $_"
@@ -53,9 +54,6 @@ function Send-DebugMessage {
 
 # Run cleanup routine
 if (!$SkipCleanup) {
-	# Cleanup before staging
-	if ($ScriptDebug) { Send-DebugMessage "Starting cleanup for $TenantName" }
- 	
   	# Define the parameters in a hash table
 	$params = @{
 	    TenantName = $TenantName
@@ -474,10 +472,9 @@ if ($UserName -ne $null -or $UserName -ne '') {
 
    if ($CreateLabUsers) {
       # ReCreate standard lab users and groups
-      try {
-         # Create Lab Users
-         $plaintextPwd = "Passw0rd!"
-         $users = @'
+      # Create Lab Users
+      $plaintextPwd = "Passw0rd!"
+      $users = @'
 SAM,Fname,DisplayName,Department,City,State,Title
 AzUser01,AzUser01,AzUser01,IT,Seattle,WA,ITPro
 AzUser02,AzUser02,AzUser02,HR,Seattle,WA,Manager
@@ -510,55 +507,58 @@ HeidiS,Heidi,Steene,Heidi Steene,HR,Boston,MA,Support
 LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 '@
       
-          # Create users with Invoke-MgGraphRequest (Linux workaround)
-          $users | ConvertFrom-Csv | ForEach-Object {
-              $userBody = @{
-                  "userPrincipalName" = "$($_.SAM)@$TenantName"
-                  "displayName" = $_.DisplayName
-                  "givenName" = $_.Fname
-                  "department" = $_.Department
-                  "city" = $_.City
-                  "state" = $_.State
-                  "jobTitle" = $_.Title
-                  "usageLocation" = "US"
-                  "mailNickname" = $_.SAM
-                  "accountEnabled" = $true
-                  "passwordProfile" = @{
-                      "password" = $plaintextPwd
-                      "forceChangePasswordNextSignIn" = $false
-                  }
-              } | ConvertTo-Json -Depth 10
+        # Create users with Invoke-MgGraphRequest (Linux workaround)
+        $users | ConvertFrom-Csv | ForEach-Object {
+            $userBody = @{
+                "userPrincipalName" = "$($_.SAM)@$TenantName"
+                "displayName" = $_.DisplayName
+                "givenName" = $_.Fname
+                "department" = $_.Department
+                "city" = $_.City
+                "state" = $_.State
+                "jobTitle" = $_.Title
+                "usageLocation" = "US"
+                "mailNickname" = $_.SAM
+                "accountEnabled" = $true
+                "passwordProfile" = @{
+                    "password" = $plaintextPwd
+                    "forceChangePasswordNextSignIn" = $false
+                }
+            } | ConvertTo-Json -Depth 10
       
-              Invoke-MgGraphRequest `
-                  -Method POST `
-                  -Uri "https://graph.microsoft.com/v1.0/users" `
-                  -Body $userBody `
-                  -ContentType "application/json" | Out-Null
-          }
+            try {
+                Invoke-MgGraphRequest `
+                -Method POST `
+                -Uri "https://graph.microsoft.com/v1.0/users" `
+                -Body $userBody `
+                -ContentType "application/json" | Out-Null
+            } catch {}
+        }
       
-          # Create groups
-          New-MgGroup -DisplayName "Mobile Users"  -MailNickname "MobileUsers" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
-          New-MgGroup -DisplayName "Managers"  -MailNickname "Managers" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
-          New-MgGroup -DisplayName "Regular Employees"  -MailNickname "RegularEmployees" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+        # Create groups
+        try {New-MgGroup -DisplayName "Mobile Users"  -MailNickname "MobileUsers" -MailEnabled:$False -SecurityEnabled:$True | Out-Null} catch {}
+        try {New-MgGroup -DisplayName "Managers"  -MailNickname "Managers" -MailEnabled:$False -SecurityEnabled:$True | Out-Null} catch {}
+        try {New-MgGroup -DisplayName "Regular Employees"  -MailNickname "RegularEmployees" -MailEnabled:$False -SecurityEnabled:$True | Out-Null} catch {}
       
-          # Pause for 30 seconds to ensure Azure AD objects are populated
-          Start-Sleep -Seconds 30
+        # Pause for 30 seconds to ensure Azure AD objects are populated
+        if ($scriptDebug) { Send-DebugMessage "Created lab user accounts. Sleeping for 30 seconds before assigning groups." }
+        Start-Sleep -Seconds 30
       
-          # Assign users to groups
-          $managersGroup = Get-MgGroup -Filter "displayName eq 'Managers'"
-          $managerIds = (Get-MgUser -All | Where-Object { $_.JobTitle -eq "Manager" }).Id
-          foreach ($userId in $managerIds) {
-              $memberRef = @{ "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/$userId" } | ConvertTo-Json
-              Invoke-MgGraphRequest `
-                  -Method POST `
-                  -Uri "https://graph.microsoft.com/v1.0/groups/$($managersGroup.Id)/members/%24ref" `
-                  -Body $memberRef `
-                  -ContentType "application/json" | Out-Null
-          }
-          if ($scriptDebug) { Send-DebugMessage "Created lab user accounts" }
-      } catch {
-         if ($ScriptDebug) {Send-DebugMessage "Failure creating lab user accounts."}
-      }
+        # Assign users to groups
+        try {$managersGroup = Get-MgGroup -Filter "displayName eq 'Managers'"} catch {}
+        try {$managerIds = (Get-MgUser -All | Where-Object { $_.JobTitle -eq "Manager" }).Id} catch {}
+        foreach ($userId in $managerIds) {
+            $memberRef = @{ "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/$userId" } | ConvertTo-Json
+            try {
+                Invoke-MgGraphRequest `
+                -Method POST `
+                -Uri "https://graph.microsoft.com/v1.0/groups/$($managersGroup.Id)/members/%24ref" `
+                -Body $memberRef `
+                -ContentType "application/json" | Out-Null
+            } catch {}
+        }
+        if ($scriptDebug) { Send-DebugMessage "Assigned users to groups." }
+
    
       # Assign licenses to selected lab users
       try {
@@ -589,13 +589,10 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
                               -Uri "https://graph.microsoft.com/v1.0/users/$($user.Id)/assignLicense" `
                               -Body $licensePayload `
                               -ContentType "application/json" | Out-Null
-      
-                      if ($scriptDebug) { Send-DebugMessage "Assigned license: $($subscription.SkuPartNumber) to user $($user.DisplayName)" }
-                  } catch {
-                      if ($scriptDebug) { Send-DebugMessage "Failed to assign license: $($subscription.SkuPartNumber) to user $($user.DisplayName). (May already be assigned.)" }
-                  }
+                  } catch {}
               }
           }
+          if ($scriptDebug) { Send-DebugMessage "Assigned licenses to users." }
       } catch {
          if ($ScriptDebug) {Send-DebugMessage "Failure assigning licenses to selected user accounts."}
       }    
