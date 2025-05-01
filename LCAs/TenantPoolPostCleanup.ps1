@@ -248,7 +248,24 @@ try {
        if ($ScriptDebug) {Send-DebugMessage "Removed all Autopilot Deployment Profiles"}
    } catch {
        if ($ScriptDebug) {Send-DebugMessage "Failed to remove Autopilot Deployment Profiles: $_"}
-   }    
+   }
+
+   # Remove all Enrollment Status Pages
+   try {
+       $espConfigs = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/deviceEnrollmentConfigurations" -ErrorAction Stop
+       $espProfiles = $espConfigs.value | Where-Object { $_.'@odata.type' -eq '#microsoft.graph.windows10EnrollmentCompletionPageConfiguration' -and $_.DisplayName -ne "All users and all devices"}
+       if ($espProfiles -and $espProfiles.Count -gt 0) {
+           foreach ($profile in $espProfiles) {
+               Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/deviceEnrollmentConfigurations/$($profile.id)" -ErrorAction SilentlyContinue
+               if ($ScriptDebug) {Send-DebugMessage "Removed Enrollment Status Page '$($profile.displayName)'"}
+           }
+           if ($ScriptDebug) {Send-DebugMessage "Removed all Enrollment Status Pages ($($espProfiles.Count))"}
+       } else {
+           if ($ScriptDebug) {Send-DebugMessage "No Enrollment Status Pages found in tenant; skipping deletion"}
+       }
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Failed to remove Enrollment Status Pages: $_"}
+   }   
 
     # Reset authorization policy
     try {
