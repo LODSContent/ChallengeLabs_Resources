@@ -29,6 +29,7 @@ $PoolPassword = $Password
 $TapUser = "LabAdmin@$TenantName"
 $LegacyPassword = $Password
 $Lifetime = 120
+$DebugMessages = $Null
 
 function Send-DebugMessage {
     param (
@@ -50,6 +51,7 @@ function Send-DebugMessage {
        }
    }
    #Write-Host $Message
+   $global:DebugMessages += "`n`n$Message"
 }
 
 # Run cleanup routine
@@ -628,5 +630,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
     Set-LabVariable -Name CredentialPool -Value 'No'
     if ($ScriptDebug) { Send-DebugMessage "Credential Pool not available. Falling back on manual credentials." }
 }
+
+if ($ScriptDebug) { try {Send-LabNotification -Message $DebugMessages} catch {} }
+$DebugMessages = $Null
 
 return $true
