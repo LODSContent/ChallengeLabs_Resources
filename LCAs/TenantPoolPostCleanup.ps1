@@ -33,7 +33,7 @@ function Send-DebugMessage {
 }
 
 if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Variable*") {
-    if ($ScriptDebug) { Send-NtryDebug "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process." }
+    if ($ScriptDebug) { Send-DebugMessage "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process." }
     Throw "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process."
 } 
 
@@ -417,28 +417,40 @@ try {
         } | ConvertTo-Json -Depth 10
 
         # Create the user via Graph API
-        $user = Invoke-MgGraphRequest `
-            -Method POST `
-            -Uri "https://graph.microsoft.com/v1.0/users" `
-            -Body $userBody `
-            -ContentType "application/json"
-
+        try {
+           $user = Invoke-MgGraphRequest `
+               -Method POST `
+               -Uri "https://graph.microsoft.com/v1.0/users" `
+               -Body $userBody `
+               -ContentType "application/json"
+           if ($scriptDebug) { Send-DebugMessage "Created user: $globalAdmin" }
+         } catch {
+           if ($scriptDebug) { Send-DebugMessage "Failed to create user: $globalAdmin" }
+         }
         # Assign the role via Graph API with explicit URI encoding
         $userRef = @{ "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/$($user.id)" } | ConvertTo-Json -Depth 10
-    
-        $role = Get-MgDirectoryRole | Where-Object { $_.DisplayName -eq "Global Administrator" }
-    
+
+        try {
+           $role = Get-MgDirectoryRole -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq "Global Administrator" }
+        } catch {}
+        
         $roleUri = "https://graph.microsoft.com/v1.0/directoryRoles/$($role.Id)/members/`$ref"
-        Invoke-MgGraphRequest `
-            -Method POST `
-            -Uri $roleUri `
-            -Body $userRef `
-            -ContentType "application/json"
-          
-        if ($scriptDebug) { Send-DebugMessage "Created: $globalAdmin" }
+        try {
+           Invoke-MgGraphRequest `
+               -Method POST `
+               -Uri $roleUri `
+               -Body $userRef `
+               -ContentType "application/json"
+           if ($scriptDebug) { Send-DebugMessage "Added Global Administrator role to: $globalAdmin" }
+         } catch {
+           if ($scriptDebug) { Send-DebugMessage "Failed to add Global Administrator role to: $globalAdmin" }
+         }
     }
 
     if ($ScriptDebug) {Send-DebugMessage "Success: Tenant resources and settings cleared (preserved 'admin', first user '$preserveFirstUserUpn', 'cloud-slice-app', apps/SPs starting with 'Scripting', and ExternalAzureAD users)."}
+
+   if ($ScriptDebug) { Send-LabNotification -Message $DebugMessages }
+   $DebugMessages = $Null
 
     Return $newAdminPassword
 
