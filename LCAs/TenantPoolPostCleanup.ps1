@@ -201,7 +201,7 @@ try {
         Get-MgDirectoryAdministrativeUnit -All | foreach {Remove-MgDirectoryAdministrativeUnit -AdministrativeUnitId $_.Id -Confirm:$false  -ErrorAction SilentlyContinue}
         if ($ScriptDebug) { Send-DebugMessage "Removed Administrative Units" }
     } catch {
-        if ($ScriptDebug) { Send-DebugMessage "Administrative Units could not be removed: $([string]$_.Exception.Message)" }
+        if ($ScriptDebug) { Send-DebugMessage "Administrative Units could not be removed." }
     }
 
     # Remove Access Packages
@@ -209,7 +209,7 @@ try {
         get-mgentitlementmanagementaccesspackage | ForEach-Object {Remove-MgEntitlementManagementAccessPackage -AccessPackageId $_.Id}
         if ($ScriptDebug) { Send-DebugMessage "Removed Access Packages" }
     } catch {
-        if ($ScriptDebug) { Send-DebugMessage "Access Packages could not be removed: $([string]$_.Exception.Message)" }
+        if ($ScriptDebug) { Send-DebugMessage "Access Packages could not be removed." }
     }
 
    # Remove Entra ID Access Reviews
@@ -220,7 +220,7 @@ try {
        }
        if ($ScriptDebug) {Send-DebugMessage "Removed all Entra ID Access Reviews"}
    } catch {
-       if ($ScriptDebug) {Send-DebugMessage "Failed to remove Entra ID Access Reviews: $_"}
+       if ($ScriptDebug) {Send-DebugMessage "Failed to remove Entra ID Access Reviews."}
    }
    
     # Remove terms and conditions
@@ -333,7 +333,7 @@ try {
        Invoke-MgGraphRequest -Method PATCH -Uri "v1.0/policies/authenticationMethodsPolicy" -Body $body -ContentType "application/json" -ErrorAction Stop
        if ($ScriptDebug) {Send-DebugMessage "Disabled MFA registration enforcement and set SSPR to None"}
    } catch {
-       if ($ScriptDebug) {Send-DebugMessage "Failed to disable MFA registration enforcement or SSPR: $_"}
+       if ($ScriptDebug) {Send-DebugMessage "Failed to disable MFA registration enforcement or SSPR."}
    }
 
     # Remove custom domains
