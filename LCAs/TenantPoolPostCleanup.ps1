@@ -27,7 +27,7 @@ function Send-DebugMessage {
     
     if ($DebugUrl) {
        try {
-           Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
+           #Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
        } catch {
            # Silently fail to avoid disrupting the script; optionally log locally if desired
            Write-Warning "Failed to send debug message: $_"
