@@ -239,17 +239,6 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Devices could not be removed."}
     }
 
-   # Remove all Autopilot Deployment Profiles
-   try {
-       $profiles = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
-       foreach ($profile in $profiles.value) {
-           Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles/$($profile.id)" -ErrorAction Stop
-       }
-       if ($ScriptDebug) {Send-DebugMessage "Removed all Autopilot Deployment Profiles"}
-   } catch {
-       if ($ScriptDebug) {Send-DebugMessage "Failed to remove Autopilot Deployment Profiles: $_"}
-   }  
-
     # Reset authorization policy
     try {
       $params = @{AllowInvitesFrom = "everyone"}
