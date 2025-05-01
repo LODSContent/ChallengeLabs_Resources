@@ -60,7 +60,7 @@ if (!$SkipCleanup) {
 	# Fetch the script content using Invoke-WebRequest
 	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
 	
-	$CleanupResult = & $scriptBlock @Params
+	$PoolPassword = & $scriptBlock @Params
 	
 	if ($scriptDebug) {
 		if ($ScriptDebug) { Send-DebugMessage "Cleanup completed successfully for $TenantName" }
