@@ -387,7 +387,7 @@ if ($UserName -ne $null -or $UserName -ne '') {
         $availableSkus = @($skusResponse.value | Where-Object { ($_.prepaidUnits.enabled - $_.consumedUnits) -gt 0 })
         if ($availableSkus.Count -eq 0 -and $ScriptDebug) { Send-DebugMessage "No available licenses found in tenant" }
     } catch {
-        if ($ScriptDebug) { Send-DebugMessage "Failed to retrieve SKUs: $($_.Exception.Message)" }
+        if ($ScriptDebug) { Send-DebugMessage "Failed to retrieve SKUs." }
     }
 
     # Assign licenses (ignore if exists)
@@ -412,7 +412,7 @@ if ($UserName -ne $null -or $UserName -ne '') {
             if ($_.Exception.Response.StatusCode -eq 400 -and $_.Exception.Message -match "already assigned") {
                 if ($ScriptDebug) { Send-DebugMessage "Licenses already assigned to $TapUser" }
             } else {
-                if ($ScriptDebug) { Send-DebugMessage "Failed to assign licenses to $TapUser : $($_.Exception.Message)" }
+                if ($ScriptDebug) { Send-DebugMessage "Failed to assign licenses to $TapUser." }
             }
         }
     }
