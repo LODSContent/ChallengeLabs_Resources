@@ -46,7 +46,7 @@ function Send-DebugMessage {
            Write-Warning "Failed to send debug message: $_"
        }
    }
-   Write-Output $Message
+   Write-Host $Message
 }
 
 if (!$SkipCleanup) {
