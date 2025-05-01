@@ -49,6 +49,11 @@ function Send-DebugMessage {
    #Write-Host $Message
 }
 
+# Temporary debugging
+$ScriptDebug = $True
+$SkipCleanup = $True
+if ($ScriptDebug) { Send-DebugMessage "Debugging is on for $TenantName" }
+
 # Run cleanup routine
 if (!$SkipCleanup) {
 	# Cleanup before staging
