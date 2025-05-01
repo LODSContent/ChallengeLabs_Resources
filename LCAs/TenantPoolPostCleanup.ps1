@@ -10,8 +10,6 @@ param (
     [switch]$ScriptDebug    
 )
 
-return $Password
-
 $DebugMessages = $Null
 
 function Send-DebugMessage {
