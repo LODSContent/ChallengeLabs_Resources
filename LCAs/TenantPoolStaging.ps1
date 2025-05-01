@@ -604,7 +604,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
          Set-LabVariable -Name Password -Value $TapPassword
          Set-LabVariable -Name TenantName -Value $TenantName
          Set-LabVariable -Name PoolUserName -Value $PoolUserName
-         Set-LabVariable -Name PoolPassword -Value $PoolPassword
+         #Set-LabVariable -Name PoolPassword -Value $PoolPassword
          Set-LabVariable -Name TAPLifetime -Value $Lifetime
          Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
          Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
