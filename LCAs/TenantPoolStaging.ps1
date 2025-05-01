@@ -49,9 +49,12 @@ function Send-DebugMessage {
    #Write-Host $Message
 }
 
+# Run cleanup routine
 if (!$SkipCleanup) {
 	# Cleanup before staging
-	# Define the parameters in a hash table
+	if ($ScriptDebug) { Send-DebugMessage "Starting cleanup for $TenantName" }
+ 	
+  	# Define the parameters in a hash table
 	$params = @{
 	    TenantName = $TenantName
 	    Password = $Password
