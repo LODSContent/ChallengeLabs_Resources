@@ -10,6 +10,10 @@ param (
     [switch]$ScriptDebug    
 )
 
+if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
+    Return $False
+}
+
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
 
