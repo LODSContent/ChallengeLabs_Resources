@@ -25,7 +25,7 @@ function Send-DebugMessage {
     
     if ($DebugUrl) {
        try {
-           Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
+           #Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
        } catch {
            # Silently fail to avoid disrupting the script; optionally log locally if desired
            Write-Warning "Failed to send debug message: $_"
@@ -49,11 +49,10 @@ Connect-MgGraph -AccessToken $SecureToken -NoWelcome
 if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
     $RandomHex = -join (Get-Random ((0..9) + (97..105 | %{[char]$_})) -Count 12)
     $newAdminPassword = "Pw1@$RandomHex"   # Can't use random until I figure out how to update the pool
-    if ($ScriptDebug) { Send-DebugMessage  "$TenantName - New Password for admin accounts: $newAdminPassword" }
 } else {
     $newAdminPassword = $Password
-    if ($ScriptDebug) { Send-DebugMessage  "$TenantName - Existing Password for admin accounts: $newAdminPassword" }
 }
+if ($ScriptDebug) { Send-DebugMessage  "$TenantName - New Password for admin accounts: $newAdminPassword" }
 
 try {
     # Get the current authenticated user's ID (works in delegated context)
@@ -83,9 +82,9 @@ try {
                foreach ($assignment in $roleAssignments.value) {
                    try {
                        Invoke-MgGraphRequest -Method DELETE -Uri "v1.0/roleManagement/directory/roleAssignments/$($assignment.id)" -ErrorAction Stop
-                       #if ($ScriptDebug) {Send-DebugMessage "Removed role assignment '$($assignment.roleDefinitionId)' for user '$userDisplayName'"}
+                       if ($ScriptDebug) {Send-DebugMessage "Removed role assignment '$($assignment.roleDefinitionId)' for user '$userDisplayName'"}
                    } catch {
-                       #if ($ScriptDebug) {Send-DebugMessage "Failed to remove role assignment '$($assignment.roleDefinitionId)' for user '$userDisplayName': $_"}
+                       if ($ScriptDebug) {Send-DebugMessage "Failed to remove role assignment '$($assignment.roleDefinitionId)' for user '$userDisplayName': $_"}
                        $failedUsers += $user
                        continue
                    }
@@ -96,9 +95,9 @@ try {
                foreach ($pimAssignment in $pimAssignments.value) {
                    try {
                        Invoke-MgGraphRequest -Method DELETE -Uri "v1.0/roleManagement/directory/roleEligibilitySchedules/$($pimAssignment.id)" -ErrorAction Stop
-                       #if ($ScriptDebug) {Send-DebugMessage "Removed PIM role eligibility '$($pimAssignment.roleDefinitionId)' for user '$userDisplayName'"}
+                       if ($ScriptDebug) {Send-DebugMessage "Removed PIM role eligibility '$($pimAssignment.roleDefinitionId)' for user '$userDisplayName'"}
                    } catch {
-                       #if ($ScriptDebug) {Send-DebugMessage "Failed to remove PIM role eligibility '$($pimAssignment.roleDefinitionId)' for user '$userDisplayName': $_"}
+                       if ($ScriptDebug) {Send-DebugMessage "Failed to remove PIM role eligibility '$($pimAssignment.roleDefinitionId)' for user '$userDisplayName': $_"}
                        $failedUsers += $user
                        continue
                    }
@@ -118,7 +117,7 @@ try {
        if ($failedUsers) {
            if ($ScriptDebug) {Send-DebugMessage "Users with role assignment issues (skipped deletion): $($failedUsers.DisplayName -join ', ')"}
        } else {
-           if ($ScriptDebug) {Send-DebugMessage "Removed all eligible users in: $($usersToDelete.DisplayName -join ', ')"}
+           if ($ScriptDebug) {Send-DebugMessage "Removed all eligible users"}
        }
    } catch {
        if ($ScriptDebug) {Send-DebugMessage "Critical failure in user removal: $_"}
