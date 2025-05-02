@@ -107,12 +107,12 @@ try {
                # Delete the user if no role removal failures
                if ($failedUsers -notcontains $user) {
                    Remove-MgUser -UserId $userId -Confirm:$false -ErrorAction Stop
-                   if ($ScriptDebug) {Send-DebugMessage "Deleted user '$userDisplayName'"}
+                   #if ($ScriptDebug) {Send-DebugMessage "Deleted user '$userDisplayName'"}
                } else {
-                   if ($ScriptDebug) {Send-DebugMessage "Skipped deletion of user '$userDisplayName' due to role assignment issues"}
+                   #if ($ScriptDebug) {Send-DebugMessage "Skipped deletion of user '$userDisplayName' due to role assignment issues"}
                }
            } catch {
-               if ($ScriptDebug) {Send-DebugMessage "Failed to process user '$userDisplayName': $_"}
+               #if ($ScriptDebug) {Send-DebugMessage "Failed to process user '$userDisplayName': $_"}
            }
        }
        if ($failedUsers) {
