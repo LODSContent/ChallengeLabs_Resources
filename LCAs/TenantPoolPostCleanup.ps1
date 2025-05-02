@@ -10,8 +10,6 @@ param (
     [switch]$ScriptDebug    
 )
 
-$DebugMessages = $Null
-
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -32,7 +30,6 @@ function Send-DebugMessage {
        }
    }
    #Write-Host $Message
-   $global:DebugMessages += "`n`n$Message"
 }
 
 if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Variable*") {
@@ -452,9 +449,6 @@ try {
     }
 
     if ($ScriptDebug) {Send-DebugMessage "Success: Tenant resources and settings cleared (preserved 'admin', first user '$preserveFirstUserUpn', 'cloud-slice-app', apps/SPs starting with 'Scripting', and ExternalAzureAD users)."}
-
-   if ($ScriptDebug) { try {Send-LabNotification -Message $DebugMessages} catch {} }
-   $DebugMessages = $Null
 
     Return $newAdminPassword
 
