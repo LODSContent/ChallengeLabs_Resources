@@ -42,7 +42,7 @@ function Send-DebugMessage {
     
     if ($DebugUrl) {
        try {
-           #Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
+           Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
        } catch {
            # Silently fail to avoid disrupting the script; optionally log locally if desired
            Write-Warning "Failed to send debug message: $_"
@@ -67,9 +67,9 @@ if (!$SkipCleanup) {
 	# Fetch the script content using Invoke-WebRequest
 	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
 	
-	$PoolPassword = & $scriptBlock @Params
+	$CleanupResponse = & $scriptBlock @Params
 	
-	if ($scriptDebug) {
+	if ($CleanupResponse) {
 		if ($ScriptDebug) { Send-DebugMessage "Cleanup completed successfully for $TenantName" }
 	} else {
 		if ($ScriptDebug) { Send-DebugMessage "Possible errors running cleanup for $TenantName" }
