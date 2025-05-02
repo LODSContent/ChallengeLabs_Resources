@@ -31,7 +31,7 @@ function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$Message,
-        [string]$DebugUrl = "https://ntfy.sh/PSO78HOMAXEXKSaQ"
+        [string]$DebugUrl = "http://zombie.cyberjunk.com:2025/6F39DDCE"
     )
 
     if ($global:DebugUrl) {
