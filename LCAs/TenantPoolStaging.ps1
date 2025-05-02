@@ -17,9 +17,15 @@ param (
     [switch]$ScriptDebug
 )
 
+<#
 if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
     $RandomHex = -join (Get-Random ((0..9) + (97..105 | %{[char]$_})) -Count 12)
     $Password = "Pw1@$RandomHex"
+}
+#>
+
+if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
+    Return $False
 }
 
 $UserName = $UserName.trim(" ")
