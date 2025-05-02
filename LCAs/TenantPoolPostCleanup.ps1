@@ -10,6 +10,9 @@ param (
     [switch]$ScriptDebug    
 )
 
+$Password = $Password.trim(" ")
+$TenantName = $TenantName.trim(" ")
+
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
