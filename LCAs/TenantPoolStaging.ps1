@@ -36,7 +36,7 @@ $PoolUserName = $UserName
 $PoolPassword = $Password
 $TapUser = "LabAdmin@$TenantName"
 $LegacyPassword = $Password
-$Lifetime = 120
+$Lifetime = 300
 
 function Send-DebugMessage {
     param (
