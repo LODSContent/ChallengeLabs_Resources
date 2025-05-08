@@ -74,6 +74,7 @@ try {
            $_.DisplayName -ne $preserveUser -and 
            $_.UserPrincipalName -ne $preserveFirstUserUpn -and 
            $_.UserPrincipalName -ne $preserveAdminUpn -and 
+           $_.UserPrincipalName -notLike "*LodSupport*" -and
            $_.UserType -ne "Guest" -and  # Preserve all Guest users (covers most ExternalAzureAD cases)
            $_.Id -ne $currentUserId
        }
