@@ -388,7 +388,7 @@ try {
     try {
         $adminUser = Get-MgUser -Filter "UserPrincipalName eq 'admin@$TenantName'"
         if ($adminUser) {
-            $globalAdmins = "LabAdmin","LODAdmin"
+            $globalAdmins = "LabAdmin"
             $passwordBody = @{
                 "passwordProfile" = @{
                     "password" = $newAdminPassword
@@ -404,7 +404,7 @@ try {
         
             if ($ScriptDebug) {Send-DebugMessage "Reset 'admin' user password."}     
         } else {
-            $globalAdmins = "admin","LabAdmin","LODAdmin"
+            $globalAdmins = "admin","LabAdmin"
             if ($ScriptDebug) {Send-DebugMessage "User 'admin' not found. Creating with new Global Administrators."}
         } 
     } catch {
