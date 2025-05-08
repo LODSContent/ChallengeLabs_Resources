@@ -97,7 +97,9 @@ try {
                }
    
                # Remove PIM role eligibility (if applicable)
-               $pimAssignments = Invoke-MgGraphRequest -Method GET -Uri "v1.0/roleManagement/directory/roleEligibilitySchedules?`$filter=principalId eq '$userId'" -ErrorAction SilentlyContinue
+               try {
+                  $pimAssignments = Invoke-MgGraphRequest -Method GET -Uri "v1.0/roleManagement/directory/roleEligibilitySchedules?`$filter=principalId eq '$userId'" -ErrorAction Stop
+               } catch {}
                foreach ($pimAssignment in $pimAssignments.value) {
                    try {
                        Invoke-MgGraphRequest -Method DELETE -Uri "v1.0/roleManagement/directory/roleEligibilitySchedules/$($pimAssignment.id)" -ErrorAction Stop
