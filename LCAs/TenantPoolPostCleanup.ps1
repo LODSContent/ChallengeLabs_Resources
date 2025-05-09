@@ -377,7 +377,7 @@ try {
 
     # Delete Conditional Access policies
     try{ 
-        Get-MgIdentityConditionalAccessPolicy -All | Remove-MgIdentityConditionalAccessPolicy -Confirm:$false -ErrorAction SilentlyContinue
+        Get-MgIdentityConditionalAccessPolicy -All | ForEach-Object {Remove-MgIdentityConditionalAccessPolicy -ConditionalAccessPolicyId $_.Id -Confirm:$false -ErrorAction SilentlyContinue}
         if ($ScriptDebug) {Send-DebugMessage "Removed Conditional Access policies"}
     } catch {
         if ($ScriptDebug) {Send-DebugMessage "Conditional Access policies could not be removed."}
