@@ -83,6 +83,7 @@ try {
            $userId = $user.Id
            $userDisplayName = $user.DisplayName
            try {
+
                # Remove directory role assignments
                $roleAssignments = Invoke-MgGraphRequest -Method GET -Uri "v1.0/roleManagement/directory/roleAssignments?`$filter=principalId eq '$userId'" -ErrorAction Stop
                foreach ($assignment in $roleAssignments.value) {
@@ -95,7 +96,7 @@ try {
                        continue
                    }
                }
-   
+               <#   
                # Remove PIM role eligibility (if applicable)
                try {
                   $pimAssignments = Invoke-MgGraphRequest -Method GET -Uri "v1.0/roleManagement/directory/roleEligibilitySchedules?`$filter=principalId eq '$userId'" -ErrorAction Stop
@@ -110,14 +111,9 @@ try {
                        continue
                    }
                }
-   
+               #>
                # Delete the user if no role removal failures
-               if ($failedUsers -notcontains $user) {
-                   Remove-MgUser -UserId $userId -Confirm:$false -ErrorAction Stop
-                   #if ($ScriptDebug) {Send-DebugMessage "Deleted user '$userDisplayName'"}
-               } else {
-                   #if ($ScriptDebug) {Send-DebugMessage "Skipped deletion of user '$userDisplayName' due to role assignment issues"}
-               }
+               Remove-MgUser -UserId $userId -Confirm:$false -ErrorAction Stop
            } catch {
                #if ($ScriptDebug) {Send-DebugMessage "Failed to process user '$userDisplayName': $_"}
            }
