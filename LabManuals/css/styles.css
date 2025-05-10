@@ -5,8 +5,9 @@
     --text-color: #1c2526; /* Dark gray for text */
     --background-color: #f5f7fa; /* Light gray background */
     --card-background: #ffffff; /* White for content cards */
-    --title-box-background: #c1c5c9; /* Light grey for title box */
-    --title-box-border: #343a40; /* Dark grey for title box border */
+    --title-box-background: #33996636; /* Semi-transparent green for title box */
+    --title-box-border: #339966; /* Solid green for title box border */
+    --hr-color: #8e8e8e; /* Medium grey for horizontal rule */
 }
 
 * {
@@ -47,7 +48,7 @@ body {
     max-width: 200px; /* Adjustable for logo size */
     height: auto;
     object-fit: contain; /* Ensures logo scales without distortion */
-    margin-right: 30px; /* Increased spacing after logo */
+    margin-right: 30px; /* Spacing after logo */
 }
 
 .title-box {
@@ -75,7 +76,7 @@ body {
 hr {
     border: 0;
     height: 2px;
-    background: var(--primary-color);
+    background: var(--hr-color);
     margin: 20px 0;
 }
 
