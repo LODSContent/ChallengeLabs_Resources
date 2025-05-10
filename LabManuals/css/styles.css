@@ -39,8 +39,9 @@ body {
 .logo {
     display: block;
     margin: 0 auto 20px;
-    max-width: 200px; /* Adjust based on logo size */
+    max-width: 200px; /* Adjustable for logo size */
     height: auto;
+    object-fit: contain; /* Ensures logo scales without distortion */
 }
 
 hr {
