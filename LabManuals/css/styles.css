@@ -5,7 +5,7 @@
     --text-color: #1c2526; /* Dark gray for text */
     --background-color: #f5f7fa; /* Light gray background */
     --card-background: #ffffff; /* White for content cards */
-    --gradient: linear-gradient(135deg, #1a73e8, #4285f4); /* Header gradient */
+    --title-background: #000000; /* Black for title background */
 }
 
 * {
@@ -23,7 +23,7 @@ body {
 }
 
 .container {
-    max-width: 1500px;
+    width: 90%; /* Flexible width, resizes with browser */
     margin: 0 auto;
     background: var(--card-background);
     padding: 40px;
@@ -36,16 +36,30 @@ body {
     transform: translateY(-4px); /* Subtle lift on hover */
 }
 
+.logo {
+    display: block;
+    margin: 0 auto 20px;
+    max-width: 200px; /* Adjust based on logo size */
+    height: auto;
+}
+
+hr {
+    border: 0;
+    height: 2px;
+    background: var(--primary-color);
+    margin: 20px 0;
+}
+
 h1 {
     font-size: 2.5rem;
     color: #fff;
     text-align: center;
     padding: 20px;
-    background: var(--gradient);
+    background: var(--title-background);
     border-radius: 8px;
     margin-bottom: 30px;
     font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 h2 {
@@ -140,6 +154,10 @@ code {
         padding: 20px;
     }
 
+    .logo {
+        max-width: 150px;
+    }
+
     h1 {
         font-size: 2rem;
         padding: 15px;
@@ -165,5 +183,9 @@ code {
 
     .container {
         padding: 15px;
+    }
+
+    .logo {
+        max-width: 120px;
     }
 }
