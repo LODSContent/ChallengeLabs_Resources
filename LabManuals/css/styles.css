@@ -5,7 +5,8 @@
     --text-color: #1c2526; /* Dark gray for text */
     --background-color: #f5f7fa; /* Light gray background */
     --card-background: #ffffff; /* White for content cards */
-    --title-box-background: #e8ecef; /* Light grey for title box */
+    --title-box-background: #c1c5c9; /* Light grey for title box */
+    --title-box-border: #343a40; /* Dark grey for title box border */
 }
 
 * {
@@ -39,14 +40,14 @@ body {
 .header {
     display: flex;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .logo {
     max-width: 200px; /* Adjustable for logo size */
     height: auto;
     object-fit: contain; /* Ensures logo scales without distortion */
-    margin-right: 20px;
+    margin-right: 30px; /* Increased spacing after logo */
 }
 
 .title-box {
@@ -54,6 +55,7 @@ body {
     background: var(--title-box-background);
     padding: 20px;
     border-radius: 8px;
+    border-left: 4px solid var(--title-box-border);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: box-shadow 0.3s ease;
 }
@@ -68,6 +70,13 @@ body {
     margin: 0;
     font-weight: 700;
     text-align: center;
+}
+
+hr {
+    border: 0;
+    height: 2px;
+    background: var(--primary-color);
+    margin: 20px 0;
 }
 
 h2 {
