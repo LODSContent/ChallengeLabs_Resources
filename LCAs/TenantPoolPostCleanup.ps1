@@ -97,7 +97,7 @@ try {
                    }
                }
                <#   
-               # Remove PIM role eligibility (if applicable)
+               # Remove PIM role eligibility (not currently working and it doesn't appear to prevent deletions. Remove this block if all seems to be going well.)
                try {
                   $pimAssignments = Invoke-MgGraphRequest -Method GET -Uri "v1.0/roleManagement/directory/roleEligibilitySchedules?`$filter=principalId eq '$userId'" -ErrorAction Stop
                } catch {}
@@ -112,14 +112,14 @@ try {
                    }
                }
                #>
-               # Delete the user if no role removal failures
+               # Attempt to delete the user
                Remove-MgUser -UserId $userId -Confirm:$false -ErrorAction Stop
            } catch {
                #if ($ScriptDebug) {Send-DebugMessage "Failed to process user '$userDisplayName': $_"}
            }
        }
        if ($failedUsers) {
-           if ($ScriptDebug) {Send-DebugMessage "Users with role assignment issues (skipped deletion): $($failedUsers.DisplayName -join ', ')"}
+           if ($ScriptDebug) {Send-DebugMessage "Users with role assignment issues (may have failed deletion): $($failedUsers.DisplayName -join ', ')"}
        } else {
            if ($ScriptDebug) {Send-DebugMessage "Removed all eligible users in: $($usersToDelete.DisplayName -join ', ')"}
        }
