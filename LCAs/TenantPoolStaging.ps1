@@ -116,6 +116,7 @@ DeviceManagementRBAC.ReadWrite.All
 DeviceManagementScripts.ReadWrite.All
 DeviceManagementServiceConfig.ReadWrite.All
 DeviceTemplate.ReadWrite.All
+Directory.AccessAsUser.All
 Directory.ReadWrite.All
 DirectoryRecommendations.ReadWrite.All
 Domain.ReadWrite.All
