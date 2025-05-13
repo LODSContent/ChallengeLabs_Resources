@@ -5,8 +5,7 @@
     --text-color: #1c2526; /* Dark gray for text */
     --background-color: #f5f7fa; /* Light gray background */
     --card-background: #ffffff; /* White for content cards */
-    --title-box-background: #33996636; /* Semi-transparent green for title box */
-    --title-box-border: #339966; /* Solid green for title box border */
+    --title-box-background: #fffedb; /* Semi-transparent green for title box */
     --hr-color: #8e8e8e; /* Medium grey for horizontal rule */
 }
 
@@ -56,7 +55,6 @@ body {
     background: var(--title-box-background);
     padding: 20px;
     border-radius: 8px;
-    border-left: 4px solid var(--title-box-border);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     transition: box-shadow 0.3s ease;
 }
