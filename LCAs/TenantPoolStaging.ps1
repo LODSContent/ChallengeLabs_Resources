@@ -344,6 +344,8 @@ if ($UserName -ne $null -or $UserName -ne '') {
         }
     }
 
+    Start-Sleep -Seconds 10 
+    
     $userId = $createUserResponse.id
 
     # Assign Global Administrator role (ignore if exists)
