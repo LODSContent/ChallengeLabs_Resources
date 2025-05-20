@@ -372,6 +372,55 @@ try {
       if ($ScriptDebug) {Send-DebugMessage "Device Registration Policy could not be reset."}
    }
 
+   # Remove all Intune App Protection Policies and their assignments
+   try {
+       # Remove Managed App Policies
+       $managedAppPolicies = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceAppManagement/managedAppPolicies" -ErrorAction Stop
+       if ($managedAppPolicies.value -and $managedAppPolicies.value.Count -gt 0) {
+           foreach ($policy in $managedAppPolicies.value) {
+               $policyId = $policy.id
+               try {
+                   # Remove assignments
+                   $assignments = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceAppManagement/managedAppPolicies/$policyId/assignments" -ErrorAction Stop
+                   foreach ($assignment in $assignments.value) {
+                       Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceAppManagement/managedAppPolicies/$policyId/assignments/$($assignment.id)" -ErrorAction Stop
+                   }
+                   # Delete the policy
+                   Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceAppManagement/managedAppPolicies/$policyId" -ErrorAction Stop
+               } catch {
+                   # Silent catch for individual policy failures
+               }
+           }
+           if ($ScriptDebug) {Send-DebugMessage "Removed $($managedAppPolicies.value.Count) Managed App Protection Policies"}
+       } else {
+           if ($ScriptDebug) {Send-DebugMessage "No Managed App Protection Policies found in tenant"}
+       }
+   
+       # Remove Mobile App Configurations
+       $appConfigurations = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceAppManagement/mobileAppConfigurations" -ErrorAction Stop
+       if ($appConfigurations.value -and $appConfigurations.value.Count -gt 0) {
+           foreach ($config in $appConfigurations.value) {
+               $configId = $config.id
+               try {
+                   # Remove assignments
+                   $assignments = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceAppManagement/mobileAppConfigurations/$configId/assignments" -ErrorAction Stop
+                   foreach ($assignment in $assignments.value) {
+                       Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceAppManagement/mobileAppConfigurations/$configId/assignments/$($assignment.id)" -ErrorAction Stop
+                   }
+                   # Delete the configuration
+                   Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceAppManagement/mobileAppConfigurations/$configId" -ErrorAction Stop
+               } catch {
+                   # Silent catch for individual config failures
+               }
+           }
+           if ($ScriptDebug) {Send-DebugMessage "Removed $($appConfigurations.value.Count) Mobile App Configurations"}
+       } else {
+           if ($ScriptDebug) {Send-DebugMessage "No Mobile App Configurations found in tenant"}
+       }
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Critical failure in Intune App Protection Policy removal: $_"}
+   }   
+
    # Disable MFA registration enforcement and set SSPR to None
    try {
        $body = @{
