@@ -246,6 +246,14 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Devices could not be removed."}
     }
 
+   # Remove all Autopilot Device Identities
+   try {
+       Get-MgDeviceManagementWindowsAutopilotDeviceIdentity | ForEach-Object {Remove-MgDeviceManagementWindowsAutopilotDeviceIdentity -WindowsAutopilotDeviceIdentityId $_.Id}
+       if ($ScriptDebug) {Send-DebugMessage "Removed all Autopilot Device Identities"}
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Failed to remove Autopilot Device Identities"}
+   } 
+
    # Remove all Autopilot Deployment Profiles
    try {
        $profiles = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
