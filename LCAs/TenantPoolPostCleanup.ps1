@@ -257,13 +257,51 @@ try {
    # Remove all Autopilot Deployment Profiles
    try {
        $profiles = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles" -ErrorAction Stop
-       foreach ($profile in $profiles.value) {
-           Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles/$($profile.id)" -ErrorAction Stop
+       if ($profiles.value -and $profiles.value.Count -gt 0) {
+           foreach ($profile in $profiles.value) {
+               $profileId = $profile.id
+               $profileDisplayName = $profile.displayName
+               try {
+                   # Remove assignments for the Autopilot Deployment Profile
+                   try {
+                       $assignments = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles/$profileId/assignments" -ErrorAction Stop
+                       foreach ($assignment in $assignments.value) {
+                           $assignmentId = $assignment.id
+                           try {
+                               Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles/$profileId/assignments/$assignmentId" -ErrorAction Stop
+                               if ($ScriptDebug) {Send-DebugMessage "Removed assignment '$assignmentId' from Autopilot Deployment Profile '$profileDisplayName'"}
+                           } catch {
+                               if ($ScriptDebug) {Send-DebugMessage "Failed to remove assignment '$assignmentId' from Autopilot Deployment Profile '$profileDisplayName': $_"}
+                           }
+                       }
+                   } catch {
+                       if ($ScriptDebug) {Send-DebugMessage "Failed to retrieve or remove assignments for Autopilot Deployment Profile '$profileDisplayName': $_"}
+                   }
+   
+                   # Check for associated devices (optional, for diagnostics)
+                   try {
+                       $devices = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles/$profileId/assignedDevices" -ErrorAction SilentlyContinue
+                       if ($devices.value -and $devices.value.Count -gt 0) {
+                           if ($ScriptDebug) {Send-DebugMessage "Warning: Autopilot Deployment Profile '$profileDisplayName' has $($devices.value.Count) associated devices, which may need manual removal"}
+                       }
+                   } catch {
+                       if ($ScriptDebug) {Send-DebugMessage "Failed to check associated devices for Autopilot Deployment Profile '$profileDisplayName': $_"}
+                   }
+   
+                   # Delete the Autopilot Deployment Profile
+                   Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles/$profileId" -ErrorAction Stop
+                   if ($ScriptDebug) {Send-DebugMessage "Removed Autopilot Deployment Profile '$profileDisplayName'"}
+               } catch {
+                   if ($ScriptDebug) {Send-DebugMessage "Failed to remove Autopilot Deployment Profile '$profileDisplayName': $_"}
+               }
+           }
+           if ($ScriptDebug) {Send-DebugMessage "Completed removal of $($profiles.value.Count) Autopilot Deployment Profiles"}
+       } else {
+           if ($ScriptDebug) {Send-DebugMessage "No Autopilot Deployment Profiles found in tenant; skipping deletion"}
        }
-       if ($ScriptDebug) {Send-DebugMessage "Removed all Autopilot Deployment Profiles"}
    } catch {
-       if ($ScriptDebug) {Send-DebugMessage "Failed to remove Autopilot Deployment Profiles"}
-   }  
+       if ($ScriptDebug) {Send-DebugMessage "Critical failure in Autopilot Deployment Profile removal: $_"}
+   } 
    
    # Remove all Enrollment Status Pages
    try {
