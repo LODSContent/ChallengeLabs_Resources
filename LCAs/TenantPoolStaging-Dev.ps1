@@ -301,28 +301,7 @@ if ($graphSp -and $sp) {
 }
 
 # Check for credential pool and set variables
-if ($UserName -ne $null -or $UserName -ne '') {
-
-    <#
-    # Authenticate to get access token
-    $azureUri = "https://login.microsoftonline.com/$TenantName/oauth2/token"
-    $body = @{
-        "grant_type"    = "client_credentials"
-        "client_id"     = "$AppID"
-        "client_secret" = "$AppSecret"
-        "resource"      = "https://graph.microsoft.com/"
-    }
-
-    try {
-        $AuthRequest = Invoke-RestMethod -Uri $azureUri -Method Post -Body $body -ErrorAction Stop
-        $token = $AuthRequest.access_token
-        if ($ScriptDebug) { Send-DebugMessage "Successfully acquired access token" }
-    } catch {
-        if ($ScriptDebug) { Send-DebugMessage "Failed to acquire access token: $($_.Exception.Message)" }
-        return $false
-    }
-    #>
-    
+if ($UserName -ne $null -or $UserName -ne '') {  
     # Define headers for all Graph API calls
     $headers = @{
         "Authorization" = "Bearer $AccessToken"
@@ -356,7 +335,8 @@ if ($UserName -ne $null -or $UserName -ne '') {
                     -Headers $headers `
                     -Body ($userDetails | ConvertTo-Json) `
                     -ErrorAction Stop
-                if ($ScriptDebug) { Send-DebugMessage "User $TapUser created successfully" }
+                if ($ScriptDebug) { Send-DebugMessage "User $TapUser created successfully. Pausing for 5 seconds." }
+		Start-Sleep -Seconds 5 
             } catch {
                 if ($ScriptDebug) { Send-DebugMessage "Failed to create user $TapUser : $($_.Exception.Message)" }
             }
@@ -364,7 +344,7 @@ if ($UserName -ne $null -or $UserName -ne '') {
             if ($ScriptDebug) { Send-DebugMessage "Error checking user $TapUser : $($_.Exception.Message)" }
         }
     }
-
+    
     $userId = $createUserResponse.id
 
     # Assign Global Administrator role (ignore if exists)
@@ -467,18 +447,44 @@ if ($UserName -ne $null -or $UserName -ne '') {
         "isUsableOnce"      = $false  # Multi-use TAP
     }
 
-    # Create TAP for the user
-    try {
-        $TAP = Invoke-RestMethod -Method POST `
-            -Uri "https://graph.microsoft.com/beta/users/$userId/authentication/temporaryAccessPassMethods" `
-            -Headers $headers `
-            -Body ($tapDetails | ConvertTo-Json) `
-            -ErrorAction Stop
-        $TapPassword = $TAP.temporaryAccessPass
-        if ($ScriptDebug) { Send-DebugMessage "TAP Password: $TapPassword created for: $TapUser" }
-    } catch {
-        if ($ScriptDebug) { Send-DebugMessage "Failed to create TAP for $TapUser : $($_.Exception.Message)" }
-    }
+	# Create TAP for the user with up to 10 retries
+	$maxRetries = 10
+	$retryDelaySeconds = 5
+	$retryCount = 0
+	$tapCreated = $false
+	
+	while (-not $tapCreated -and $retryCount -lt $maxRetries) {
+	    try {
+		$retryCount++
+		if ($ScriptDebug) {Send-DebugMessage "Attempting to create TAP for user '$TapUser' (Attempt $retryCount of $maxRetries)"}
+		
+		$TAP = Invoke-RestMethod -Method POST `
+		    -Uri "https://graph.microsoft.com/beta/users/$userId/authentication/temporaryAccessPassMethods" `
+		    -Headers $headers `
+		    -Body ($tapDetails | ConvertTo-Json) `
+		    -ErrorAction Stop
+		
+		$TapPassword = $TAP.temporaryAccessPass
+		if ($TapPassword) {
+		    $tapCreated = $true
+		    if ($ScriptDebug) {Send-DebugMessage "TAP Password: $TapPassword created for user '$TapUser' on attempt $retryCount"}
+		} else {
+		    if ($ScriptDebug) {Send-DebugMessage "Failed to create TAP for user '$TapUser' on attempt $retryCount: No password returned"}
+		    if ($retryCount -lt $maxRetries) {
+			Start-Sleep -Seconds $retryDelaySeconds
+		    }
+		}
+	    } catch {
+		if ($ScriptDebug) {Send-DebugMessage "Failed to create TAP for user '$TapUser' on attempt $retryCount: $($_.Exception.Message)"}
+		if ($retryCount -lt $maxRetries) {
+		    Start-Sleep -Seconds $retryDelaySeconds
+		}
+	    }
+	}
+	
+	if (-not $tapCreated) {
+	    if ($ScriptDebug) {Send-DebugMessage "Failed to create TAP for user '$TapUser' after $maxRetries attempts"}
+	}
 
    if ($CreateLabUsers) {
       # ReCreate standard lab users and groups
