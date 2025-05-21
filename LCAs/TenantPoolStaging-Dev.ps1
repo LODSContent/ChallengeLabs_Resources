@@ -469,13 +469,13 @@ if ($UserName -ne $null -or $UserName -ne '') {
 		    $tapCreated = $true
 		    if ($ScriptDebug) {Send-DebugMessage "TAP Password: $TapPassword created for user '$TapUser' on attempt $retryCount"}
 		} else {
-		    if ($ScriptDebug) {Send-DebugMessage "Failed to create TAP for user '$TapUser' on attempt $retryCount: No password returned"}
+		    if ($ScriptDebug) {Send-DebugMessage "Failed to create TAP for user '$TapUser' on attempt $retryCount - No password returned"}
 		    if ($retryCount -lt $maxRetries) {
 			Start-Sleep -Seconds $retryDelaySeconds
 		    }
 		}
 	    } catch {
-		if ($ScriptDebug) {Send-DebugMessage "Failed to create TAP for user '$TapUser' on attempt $retryCount: $($_.Exception.Message)"}
+		if ($ScriptDebug) {Send-DebugMessage "Failed to create TAP for user '$TapUser' on attempt $retryCount - $($_.Exception.Message)"}
 		if ($retryCount -lt $maxRetries) {
 		    Start-Sleep -Seconds $retryDelaySeconds
 		}
