@@ -380,6 +380,28 @@ try {
       if ($ScriptDebug) {Send-DebugMessage "Device Registration Policy could not be reset."}
    }
 
+   # Remove all Intune Device Configuration Policies and their assignments
+   try {
+       $policies = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/deviceConfigurations" -ErrorAction Stop
+       if ($policies.value -and $policies.value.Count -gt 0) {
+           foreach ($policy in $policies.value) {
+               $policyId = $policy.id
+               # Remove assignments
+               $assignments = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/deviceConfigurations/$policyId/assignments" -ErrorAction SilentlyContinue
+               foreach ($assignment in $assignments.value) {
+                   Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/deviceConfigurations/$policyId/assignments/$($assignment.id)" -ErrorAction SilentlyContinue
+               }
+               # Delete the policy
+               Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/deviceConfigurations/$policyId" -ErrorAction SilentlyContinue
+           }
+           if ($ScriptDebug) {Send-DebugMessage "Processed $($policies.value.Count) Device Configuration Policies"}
+       } else {
+           if ($ScriptDebug) {Send-DebugMessage "No Device Configuration Policies found"}
+       }
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Critical failure in Device Configuration Policy removal: $_"}
+   }
+
    # Remove all Intune App Protection Policies and their assignments
    try {
        # Remove Managed App Policies
