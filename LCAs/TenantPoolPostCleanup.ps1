@@ -246,6 +246,14 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Devices could not be removed."}
     }
 
+   # Get and remove all Intune-managed devices
+   try {
+       Get-MgDeviceManagementManagedDevice -All -ErrorAction Stop | ForEach-Object {Remove-MgDeviceManagementManagedDevice -ManagedDeviceId $_.Id -ErrorAction SilentlyContinue}
+       if ($ScriptDebug) {Send-DebugMessage "Removed Intune-managed devices"}
+   } catch {
+       if ($ScriptDebug) {Send-DebugMessage "Failed to remove Intune-managed devices"}
+   }
+
    # Remove all Autopilot Device Identities
    try {
        Get-MgDeviceManagementWindowsAutopilotDeviceIdentity | ForEach-Object {Remove-MgDeviceManagementWindowsAutopilotDeviceIdentity -WindowsAutopilotDeviceIdentityId $_.Id}
