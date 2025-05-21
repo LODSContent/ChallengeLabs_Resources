@@ -301,29 +301,10 @@ if ($graphSp -and $sp) {
 }
 
 # Check for credential pool and set variables
-if ($UserName -ne $null -or $UserName -ne '') {
-
-    # Authenticate to get access token
-    $azureUri = "https://login.microsoftonline.com/$TenantName/oauth2/token"
-    $body = @{
-        "grant_type"    = "client_credentials"
-        "client_id"     = "$AppID"
-        "client_secret" = "$AppSecret"
-        "resource"      = "https://graph.microsoft.com/"
-    }
-
-    try {
-        $AuthRequest = Invoke-RestMethod -Uri $azureUri -Method Post -Body $body -ErrorAction Stop
-        $token = $AuthRequest.access_token
-        if ($ScriptDebug) { Send-DebugMessage "Successfully acquired access token" }
-    } catch {
-        if ($ScriptDebug) { Send-DebugMessage "Failed to acquire access token: $($_.Exception.Message)" }
-        return $false
-    }
-
+if ($UserName -ne $null -or $UserName -ne '') {  
     # Define headers for all Graph API calls
     $headers = @{
-        "Authorization" = "Bearer $token"
+        "Authorization" = "Bearer $AccessToken"
         "Content-Type"  = "application/json"
     }
 
@@ -363,6 +344,8 @@ if ($UserName -ne $null -or $UserName -ne '') {
         }
     }
 
+    Start-Sleep -Seconds 10 
+    
     $userId = $createUserResponse.id
 
     # Assign Global Administrator role (ignore if exists)
