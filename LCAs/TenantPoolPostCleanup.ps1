@@ -425,6 +425,23 @@ try {
        } else {
            if ($ScriptDebug) {Send-DebugMessage "No Managed App Protection Policies found in tenant"}
        }
+
+      # Remove all Intune Device Compliance Policies and their assignments
+      try {
+          $policies = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
+          if ($policies.value -and $policies.value.Count -gt 0) {
+              foreach ($policy in $policies.value) {
+                  $policyId = $policy.id
+                  # Delete the policy
+                  Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/deviceCompliancePolicies/$policyId" -ErrorAction SilentlyContinue
+              }
+              if ($ScriptDebug) {Send-DebugMessage "Processed $($policies.value.Count) Device Compliance Policies"}
+          } else {
+              if ($ScriptDebug) {Send-DebugMessage "No Device Compliance Policies found"}
+          }
+      } catch {
+          if ($ScriptDebug) {Send-DebugMessage "Critical failure in Device Compliance Policy removal: $_"}
+      }
    
        # Remove Mobile App Configurations
        $appConfigurations = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceAppManagement/mobileAppConfigurations" -ErrorAction Stop
