@@ -380,26 +380,33 @@ try {
       if ($ScriptDebug) {Send-DebugMessage "Device Registration Policy could not be reset."}
    }
 
-   # Remove all Intune Device Configuration Policies and their assignments
+   # Remove all Intune Device Compliance and Configuration Policies
    try {
-       $policies = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/deviceConfigurations" -ErrorAction Stop
-       if ($policies.value -and $policies.value.Count -gt 0) {
-           foreach ($policy in $policies.value) {
-               $policyId = $policy.id
-               # Remove assignments
-               $assignments = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/deviceConfigurations/$policyId/assignments" -ErrorAction SilentlyContinue
-               foreach ($assignment in $assignments.value) {
-                   Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/deviceConfigurations/$policyId/assignments/$($assignment.id)" -ErrorAction SilentlyContinue
+       $totalPolicies = 0
+       foreach ($endpoint in @("deviceCompliancePolicies", "deviceConfigurations", "intents", "configurationPolicies")) {
+           try {
+               $policies = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/$endpoint"
+               if ($policies.value -and $policies.value.Count -gt 0) {
+                   foreach ($policy in $policies.value) {
+                       $policyId = $policy.id
+                       try {
+                           $assignments = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/$endpoint/$policyId/assignments"
+                           foreach ($assignment in $assignments.value) {
+                               try { Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/$endpoint/$policyId/assignments/$($assignment.id)" } catch {}
+                           }
+                       } catch {}
+                       try { Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/$endpoint/$policyId" } catch {}
+                   }
+                   $totalPolicies += $policies.value.Count
                }
-               # Delete the policy
-               Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/deviceConfigurations/$policyId" -ErrorAction SilentlyContinue
-           }
-           if ($ScriptDebug) {Send-DebugMessage "Processed $($policies.value.Count) Device Configuration Policies"}
-       } else {
-           if ($ScriptDebug) {Send-DebugMessage "No Device Configuration Policies found"}
+           } catch {}
+       }
+       if ($ScriptDebug) {
+           if ($totalPolicies -gt 0) { Send-DebugMessage "Processed $totalPolicies Device Policies" }
+           else { Send-DebugMessage "No Device Policies found" }
        }
    } catch {
-       if ($ScriptDebug) {Send-DebugMessage "Critical failure in Device Configuration Policy removal: $_"}
+       if ($ScriptDebug) { Send-DebugMessage "Critical failure in Device Policy removal: $_" }
    }
 
    # Remove all Intune App Protection Policies and their assignments
@@ -425,23 +432,6 @@ try {
        } else {
            if ($ScriptDebug) {Send-DebugMessage "No Managed App Protection Policies found in tenant"}
        }
-
-      # Remove all Intune Device Compliance Policies and their assignments
-      try {
-          $policies = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/deviceCompliancePolicies" -ErrorAction Stop
-          if ($policies.value -and $policies.value.Count -gt 0) {
-              foreach ($policy in $policies.value) {
-                  $policyId = $policy.id
-                  # Delete the policy
-                  Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/deviceCompliancePolicies/$policyId" -ErrorAction SilentlyContinue
-              }
-              if ($ScriptDebug) {Send-DebugMessage "Processed $($policies.value.Count) Device Compliance Policies"}
-          } else {
-              if ($ScriptDebug) {Send-DebugMessage "No Device Compliance Policies found"}
-          }
-      } catch {
-          if ($ScriptDebug) {Send-DebugMessage "Critical failure in Device Compliance Policy removal: $_"}
-      }
    
        # Remove Mobile App Configurations
        $appConfigurations = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceAppManagement/mobileAppConfigurations" -ErrorAction Stop
