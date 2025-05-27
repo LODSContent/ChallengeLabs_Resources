@@ -471,7 +471,7 @@ try {
            if ($ScriptDebug) {Send-DebugMessage "No Mobile App Configurations found in tenant"}
        }
    } catch {
-       if ($ScriptDebug) {Send-DebugMessage "Critical failure in Intune App Protection Policy removal: $_"}
+       if ($ScriptDebug) {Send-DebugMessage "Failure in Intune App Protection Policy removal"}
    }   
 
    # Disable MFA registration enforcement and set SSPR to None
