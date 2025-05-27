@@ -300,7 +300,7 @@ try {
                    Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/windowsAutopilotDeploymentProfiles/$profileId" -ErrorAction Stop
                    if ($ScriptDebug) {Send-DebugMessage "Removed Autopilot Deployment Profile '$profileDisplayName'"}
                } catch {
-                   if ($ScriptDebug) {Send-DebugMessage "Failed to remove Autopilot Deployment Profile '$profileDisplayName': $_"}
+                   if ($ScriptDebug) {Send-DebugMessage "Failed to remove Autopilot Deployment Profile '$profileDisplayName'"}
                }
            }
            if ($ScriptDebug) {Send-DebugMessage "Completed removal of $($profiles.value.Count) Autopilot Deployment Profiles"}
@@ -308,7 +308,7 @@ try {
            if ($ScriptDebug) {Send-DebugMessage "No Autopilot Deployment Profiles found in tenant; skipping deletion"}
        }
    } catch {
-       if ($ScriptDebug) {Send-DebugMessage "Critical failure in Autopilot Deployment Profile removal: $_"}
+       if ($ScriptDebug) {Send-DebugMessage "Failed removing Autopilot Deployment Profiles."}
    } 
    
    # Remove all Enrollment Status Pages
