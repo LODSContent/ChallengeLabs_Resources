@@ -432,6 +432,22 @@ try {
        } else {
            if ($ScriptDebug) {Send-DebugMessage "No Managed App Protection Policies found in tenant"}
        }
+
+      # Remove all Intune Notification Message Templates
+      try {
+          $notifications = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceManagement/notificationMessageTemplates"
+          if ($notifications.value -and $notifications.value.Count -gt 0) {
+              foreach ($notification in $notifications.value) {
+                  $notificationId = $notification.id
+                  try { Invoke-MgGraphRequest -Method DELETE -Uri "beta/deviceManagement/notificationMessageTemplates/$notificationId" } catch {}
+              }
+              if ($ScriptDebug) { Send-DebugMessage "Processed $($notifications.value.Count) Notification Message Templates" }
+          } else {
+              if ($ScriptDebug) { Send-DebugMessage "No Notification Message Templates found" }
+          }
+      } catch {
+          if ($ScriptDebug) { Send-DebugMessage "Failure in Notification Message Template removal" }
+      }       
    
        # Remove Mobile App Configurations
        $appConfigurations = Invoke-MgGraphRequest -Method GET -Uri "beta/deviceAppManagement/mobileAppConfigurations" -ErrorAction Stop
