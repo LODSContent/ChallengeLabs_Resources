@@ -602,7 +602,7 @@ try {
          }
     }
 
-    if ($ScriptDebug) {Send-DebugMessage "Success: Tenant resources and settings cleared (preserved 'admin', first user '$preserveFirstUserUpn', 'cloud-slice-app', apps/SPs starting with 'Scripting', and ExternalAzureAD users)."}
+    if ($ScriptDebug) {Send-DebugMessage "Finished cleaning Tenant resources and settings."}
 
     Return $newAdminPassword
 
