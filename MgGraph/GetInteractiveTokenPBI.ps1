@@ -57,8 +57,7 @@ function main {
     try {
         $null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
         @{ AccessToken = $accessToken } | ConvertTo-Json | Out-File -FilePath C:\Temp\AccessToken.json -Force
-        Set-LabVariable -Name AccessToken -Value $accessToken
-        if ($scriptDebug) { Write-Output "Saved token to C:\Temp\AccessToken.json and set lab variable." }
+        if ($scriptDebug) { Write-Output "Saved token to C:\Temp\AccessToken.json" }
     }
     catch {
         if ($scriptDebug) { Write-Output "Failed to save token: $($_.Exception.Message)" }
