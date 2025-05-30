@@ -9,7 +9,7 @@
 param (
     [Parameter(Mandatory = $true)]
     $tenant,
-    [switch]$ScriptDebug = $False
+    [switch]$ScriptDebug = $True
 )
 
 # Set default return value
