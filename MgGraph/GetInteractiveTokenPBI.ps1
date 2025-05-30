@@ -1,6 +1,6 @@
 <#
-   Title: Validate Power BI Workspace Using Access Token
-   Description: Validates the existence of a Power BI workspace named 'My workspace' using an imported access token via REST API.
+   Title: Generate Interactive Power BI Token
+   Description: Authenticates interactively to Power BI and saves the access token to a JSON file and lab variable.
    Target: Power BI Service, Skillable Lab Environment
    Version: 2025.05.30 - Template.v4.0
    Converted by: Grok using New Script Format
@@ -12,64 +12,57 @@ $result = $false
 # Debug toggle
 if ($scriptDebug) { $ErrorActionPreference = "Continue"; Write-Output "Debug mode is enabled." }
 
-# Main function for all validation code
+# Main function for token generation
 function main {
+    param (
+        [Parameter(Mandatory)]
+        [string]$TenantName
+    )
+
     if ($scriptDebug) { Write-Output "Begin main routine." }
 
-    # Import and validate access token
+    # Authenticate interactively
     $accessToken = $null
     try {
-        $secureToken = ConvertTo-SecureString '@lab.Variable(AccessToken)' -AsPlainText -Force
-        $accessToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken))
+        $scopes = "https://analysis.windows.net/powerbi/api/.default"
+        $clientId = "1950a258-227b-4e31-a9cf-717495945fc2"  # Azure PowerShell client ID
+        Connect-MgGraph -ClientId $clientId -Scopes $scopes -TenantId $TenantName
+        if ($scriptDebug) { Write-Output "Authenticated to Power BI" }
+        
+        $accessToken = (Get-AzAccessToken -ResourceUrl "https://analysis.windows.net/powerbi/api" -TenantId $TenantName).Token
         if (-not $accessToken) {
-            throw "Access token is empty"
+            throw "Failed to retrieve access token"
         }
-        if ($scriptDebug) { Write-Output "Imported access token: $($accessToken.Substring(0,10))..." }
+        if ($scriptDebug) { Write-Output "Retrieved Power BI token: $($accessToken.Substring(0,10))..." }
     }
     catch {
-        if ($scriptDebug) { Write-Output "Failed to import access token: $($_.Exception.Message)" }
+        if ($scriptDebug) { Write-Output "Authentication failed: $($_.Exception.Message)" }
         return $false
     }
 
-    # Validate Power BI workspace using REST API
+    # Save token to file and lab variable
     try {
-        $headers = @{
-            "Authorization" = "Bearer $accessToken"
-        }
-        $workspaceName = "My workspace"
-        $uri = "https://api.powerbi.com/v1.0/myorg/admin/groups?`$filter=name eq '$workspaceName'"
-        $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get -ErrorAction Stop
-        
-        if ($response.value -and $response.value.Count -gt 0) {
-            if ($scriptDebug) { Write-Output "Found workspace: $workspaceName" }
-            $result = $true
-        }
-        else {
-            if ($scriptDebug) { Write-Output "Workspace '$workspaceName' not found" }
-            $result = $false
-        }
+        $null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
+        @{ AccessToken = $accessToken } | ConvertTo-Json | Out-File -FilePath C:\Temp\AccessToken.json -Force
+        Set-LabVariable -Name AccessToken -Value $accessToken
+        if ($scriptDebug) { Write-Output "Saved token to C:\Temp\AccessToken.json and set lab variable" }
     }
     catch {
-        if ($scriptDebug) { 
-            Write-Output "Power BI REST API call failed: $($_.Exception.Message)"
-            Write-Output "Response: $($_.Exception.Response | ConvertTo-Json -Depth 5 -ErrorAction SilentlyContinue)"
-        }
+        if ($scriptDebug) { Write-Output "Failed to save token: $($_.Exception.Message)" }
         return $false
     }
 
     if ($scriptDebug) { Write-Output "End main routine." }
-    
-    # Return the result
-    return $result
+    return $true
 }
 
 # Run the main routine
 if ($scriptDebug) {
-    $result = main
+    $result = main -TenantName "hexelo48429792x1.onmicrosoft.com"
 }
 else {
     try {
-        $result = main
+        $result = main -TenantName "hexelo48429792x1.onmicrosoft.com"
     }
     catch {
         $result = $false
