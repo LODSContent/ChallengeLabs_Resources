@@ -23,7 +23,7 @@ function main {
     $accessToken = $null
     try {
         $scopes = "https://analysis.windows.net/powerbi/api/.default"
-        Connect-MgGraph -Scopes $scopes -TenantId $TenantName -UseDeviceAuthentication -NoWelcome -ErrorAction Stop
+        Connect-MgGraph -Scopes $scopes -TenantId $TenantName -ContextScope CurrentUser -ErrorAction Stop
         if ($scriptDebug) { Write-Output "Authenticated to Power BI" }
         
         $accessToken = (Get-AzAccessToken -ResourceUrl "https://analysis.windows.net/powerbi/api" -TenantId $TenantName).Token
