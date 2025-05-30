@@ -28,7 +28,7 @@ function main {
     try {
         $scopes = "https://analysis.windows.net/powerbi/api/.default"
         $clientId = "1950a258-227b-4e31-a9cf-717495945fc2"  # Azure PowerShell client ID
-        Connect-MgGraph -ClientId $clientId -Scopes $scopes -TenantId $tenant -UseDeviceAuthentication -NoWelcome -ErrorAction Stop
+        Connect-MgGraph -ClientId $clientId -Scopes $scopes -TenantId $tenant -ErrorAction Stop
         if ($scriptDebug) { Write-Output "Authenticated to Power BI" }
         
         $accessToken = (Get-AzAccessToken -ResourceUrl "https://analysis.windows.net/powerbi/api" -TenantId $tenant).Token
