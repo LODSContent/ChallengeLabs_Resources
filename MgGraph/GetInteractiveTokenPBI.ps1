@@ -1,59 +1,66 @@
 <#
-   Title: Generate Interactive Power BI Token
-   Description: Authenticates interactively to Power BI and saves the access token to a JSON file for lab variable use.
+   Title: Validate Power BI Workspace Using Access Token
+   Description: Validates the existence of a Power BI workspace named 'My workspace' using an imported access token via REST API.
    Target: Power BI Service, Skillable Lab Environment
    Version: 2025.05.30 - Template.v4.0
    Converted by: Grok using New Script Format
 #>
 
-param (
-    [Parameter(Mandatory = $true)]
-    [string]$TenantName,
-    [switch]$ScriptDebug = $true
-)
+# Set default return value
+$result = $false
 
 # Debug toggle
 if ($scriptDebug) { $ErrorActionPreference = "Continue"; Write-Output "Debug mode is enabled." }
 
-# Main function for token generation
+# Main function for all validation code
 function main {
     if ($scriptDebug) { Write-Output "Begin main routine." }
 
-    # Authenticate interactively
+    # Import and validate access token
     $accessToken = $null
     try {
-        $scopes = "https://analysis.windows.net/powerbi/api/.default"
-        Connect-MgGraph -Scopes $scopes -TenantId $TenantName -ErrorAction Stop
-        if ($scriptDebug) { Write-Output "Authenticated to Power BI" }
-        
-        $accessToken = (Get-AzAccessToken -ResourceUrl "https://analysis.windows.net/powerbi/api" -TenantId $TenantName).Token
+        $secureToken = ConvertTo-SecureString '@lab.Variable(AccessToken)' -AsPlainText -Force
+        $accessToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureToken))
         if (-not $accessToken) {
-            throw "Failed to retrieve access token"
+            throw "Access token is empty"
         }
-        if ($scriptDebug) { Write-Output "Retrieved Power BI token: $($accessToken.Substring(0,10))..." }
+        if ($scriptDebug) { Write-Output "Imported access token: $($accessToken.Substring(0,10))..." }
     }
     catch {
-        if ($scriptDebug) { Write-Output "Authentication failed: $($_.Exception.Message)" }
+        if ($scriptDebug) { Write-Output "Failed to import access token: $($_.Exception.Message)" }
         return $false
     }
 
-    # Save token to file
+    # Validate Power BI workspace using REST API
     try {
-        $null = New-Item -Path C:\Temp -ItemType Directory -Force -ErrorAction SilentlyContinue
-        @{ AccessToken = $accessToken } | ConvertTo-Json | Out-File -FilePath C:\Temp\AccessToken.json -Force
-        if ($scriptDebug) { Write-Output "Saved token to C:\Temp\AccessToken.json" }
+        $headers = @{
+            "Authorization" = "Bearer $accessToken"
+        }
+        $workspaceName = "My workspace"
+        $uri = "https://api.powerbi.com/v1.0/myorg/admin/groups?`$filter=name eq '$workspaceName'"
+        $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get -ErrorAction Stop
         
-        # Set lab variable (assuming lab environment supports this)
-        Set-LabVariable -Name AccessToken -Value $accessToken
-        if ($scriptDebug) { Write-Output "Set lab variable AccessToken" }
+        if ($response.value -and $response.value.Count -gt 0) {
+            if ($scriptDebug) { Write-Output "Found workspace: $workspaceName" }
+            $result = $true
+        }
+        else {
+            if ($scriptDebug) { Write-Output "Workspace '$workspaceName' not found" }
+            $result = $false
+        }
     }
     catch {
-        if ($scriptDebug) { Write-Output "Failed to save token: $($_.Exception.Message)" }
+        if ($scriptDebug) { 
+            Write-Output "Power BI REST API call failed: $($_.Exception.Message)"
+            Write-Output "Response: $($_.Exception.Response | ConvertTo-Json -Depth 5 -ErrorAction SilentlyContinue)"
+        }
         return $false
     }
 
     if ($scriptDebug) { Write-Output "End main routine." }
-    return $true
+    
+    # Return the result
+    return $result
 }
 
 # Run the main routine
