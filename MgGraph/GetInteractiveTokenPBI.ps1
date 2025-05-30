@@ -9,11 +9,10 @@
 param (
     [Parameter(Mandatory = $true)]
     [string]$TenantName,
-    [switch]$ScriptDebug = $false
+    [switch]$ScriptDebug = $true
 )
 
 # Debug toggle
-$scriptDebug = '@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True'
 if ($scriptDebug) { $ErrorActionPreference = "Continue"; Write-Output "Debug mode is enabled." }
 
 # Main function for token generation
