@@ -256,7 +256,6 @@ if ($graphSp -and $sp) {
 			}
 			$null = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" `
 				-Body ($grantBody | ConvertTo-Json) -ContentType "application/json" -SkipHttpErrorCheck
-    			if ($ScriptDebug) { Send-DebugMessage "Scope chunk granted: $chunk" }
 		}
 	} else {
 		$grantBody = @{
@@ -269,7 +268,6 @@ if ($graphSp -and $sp) {
 		$null = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/oauth2PermissionGrants" `
 			-Body ($grantBody | ConvertTo-Json) -ContentType "application/json" -SkipHttpErrorCheck
 		if ($ScriptDebug) { Send-DebugMessage "Granted delegated permissions" }
-  		if ($ScriptDebug) { Send-DebugMessage "Scopes granted: $desiredScopes" }
 	}
 
 	# Grant application permissions
