@@ -6,6 +6,7 @@
 
 param (
     $TenantName,
+    $AppName="cloud-slice-app",
     $AppID,
     $AppSecret,
     $UserName,
@@ -88,6 +89,8 @@ if (!$SkipCleanup) {
 $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
 $SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
 Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+$Context = Get-MgContext
+if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $($Context.AppName)" }
 
 <#
 # Update Service Principal Permissions
@@ -208,10 +211,10 @@ WorkforceIntegration.ReadWrite.All
 
 # Get existing Service Principal
 try {
-    $sp = Get-MgServicePrincipal -Filter "appId eq '$AppId'" -ErrorAction SilentlyContinue
-    if ($scriptDebug) { Send-DebugMessage "Found Service Principal for $AppId" }
+    $sp = Get-MgServicePrincipal -Filter "DisplayName eq '$AppName'" -ErrorAction SilentlyContinue
+    if ($scriptDebug) { Send-DebugMessage "Found Service Principal for $($sp.AppId)" }
 } catch {
-    if ($scriptDebug) { Send-DebugMessage "Could not find Service Principal for $AppId" }
+    if ($scriptDebug) { Send-DebugMessage "Could not find Service Principal for $($sp.AppId)" }
 }
 # Assign Global Administrator role
 try {
