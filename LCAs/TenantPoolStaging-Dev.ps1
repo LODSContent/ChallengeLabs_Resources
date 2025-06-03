@@ -93,9 +93,9 @@ $Context = Get-MgContext
 $AppName = $Context.AppName
 if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
 
-<#
 # Update Service Principal Permissions
 $Permissions = @'
+AccessReview.ReadWrite.All
 AdministrativeUnit.ReadWrite.All
 Agreement.ReadWrite.All
 AppCatalog.ReadWrite.All
@@ -208,7 +208,6 @@ UserShiftPreferences.ReadWrite.All
 WindowsUpdates.ReadWrite.All
 WorkforceIntegration.ReadWrite.All
 '@ -split '\r?\n'
-#>
 
 # Get existing Service Principal
 try {
@@ -236,7 +235,6 @@ try {
     }
 }
 
-<#
 # Get Microsoft Graph Service Principal
 $graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
 
@@ -328,7 +326,6 @@ if ($graphSp -and $sp) {
 } else {
 	if ($ScriptDebug) {Send-DebugMessage "Failed to update service principal permissions."}
 }
-#>
 
 # Check for credential pool and set variables
 if ($UserName -ne $null -or $UserName -ne '') {  
