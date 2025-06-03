@@ -89,8 +89,10 @@ $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -Te
 $SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
 Connect-MgGraph -AccessToken $SecureToken -NoWelcome
 
+<#
 # Update Service Principal Permissions
 $Permissions = @'
+AccessReview.Read.All
 AccessReview.ReadWrite.All
 AdministrativeUnit.ReadWrite.All
 Agreement.ReadWrite.All
@@ -204,6 +206,7 @@ UserShiftPreferences.ReadWrite.All
 WindowsUpdates.ReadWrite.All
 WorkforceIntegration.ReadWrite.All
 '@ -split '\r?\n'
+#>
 
 # Get Microsoft Graph Service Principal
 $graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
@@ -211,6 +214,27 @@ $graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000
 # Get existing Service Principal
 $sp = Get-MgServicePrincipal -Filter "appId eq '$AppId'" -ErrorAction SilentlyContinue
 
+# Assign Global Administrator role
+try {
+	$roleDefinition = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'Global Administrator'" -ErrorAction Stop
+	if ($existingAssignment) {
+	    if ($scriptDebug) { Send-DebugMessage "Global Administrator role already assigned" }
+	} else {
+	    $roleAssignmentBody = @{
+		principalId      = $sp.Id
+		roleDefinitionId = $roleDefinition.Id
+		directoryScopeId = "/"
+	    }
+	    $response = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" `
+		-Body ($roleAssignmentBody | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
+	    if ($scriptDebug) { Send-DebugMessage "Assigned Global Administrator role" }
+	}
+} catch {
+	if ($scriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role: $($_.Exception.Message)" }
+	$localResult = $false
+}
+
+<#
 # Get the current permissions of the service principal
 $appPerms = (get-mgcontext).Scopes | Sort-Object
 
@@ -299,6 +323,7 @@ if ($graphSp -and $sp) {
 } else {
 	if ($ScriptDebug) {Send-DebugMessage "Failed to update service principal permissions."}
 }
+#>
 
 # Check for credential pool and set variables
 if ($UserName -ne $null -or $UserName -ne '') {  
@@ -620,7 +645,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
          Set-LabVariable -Name Password -Value $TapPassword
          Set-LabVariable -Name TenantName -Value $TenantName
          Set-LabVariable -Name PoolUserName -Value $PoolUserName
-         #Set-LabVariable -Name PoolPassword -Value $PoolPassword
+         Set-LabVariable -Name PoolPassword -Value $PoolPassword
          Set-LabVariable -Name TAPLifetime -Value $Lifetime
          Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
          Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
