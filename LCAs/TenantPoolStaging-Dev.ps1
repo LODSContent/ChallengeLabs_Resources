@@ -206,33 +206,36 @@ WorkforceIntegration.ReadWrite.All
 '@ -split '\r?\n'
 #>
 
-# Get Microsoft Graph Service Principal
-$graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
-
 # Get existing Service Principal
-$sp = Get-MgServicePrincipal -Filter "appId eq '$AppId'" -ErrorAction SilentlyContinue
-
+try {
+    $sp = Get-MgServicePrincipal -Filter "appId eq '$AppId'" -ErrorAction SilentlyContinue
+    if ($scriptDebug) { Send-DebugMessage "Found Service Principal for $AppId" }
+} catch {
+    if ($scriptDebug) { Send-DebugMessage "Could not find Service Principal for $AppId" }
+}
 # Assign Global Administrator role
 try {
 	$roleDefinition = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'Global Administrator'" -ErrorAction Stop
-	if ($existingAssignment) {
-	    if ($scriptDebug) { Send-DebugMessage "Global Administrator role already assigned" }
-	} else {
-	    $roleAssignmentBody = @{
-		principalId      = $sp.Id
-		roleDefinitionId = $roleDefinition.Id
-		directoryScopeId = "/"
-	    }
-	    $response = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" `
-		-Body ($roleAssignmentBody | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
-	    if ($scriptDebug) { Send-DebugMessage "Assigned Global Administrator role" }
+	$roleAssignmentBody = @{
+	    principalId      = $sp.Id
+	    roleDefinitionId = $roleDefinition.Id
+	    directoryScopeId = "/"
 	}
+	$response = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" `
+	-Body ($roleAssignmentBody | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
+	if ($scriptDebug) { Send-DebugMessage "Assigned Global Administrator role to $($sp.DisplayName)" }
 } catch {
-	if ($scriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role: $($_.Exception.Message)" }
-	$localResult = $false
+    if ($_ -like "*conflicting object*") {
+        if ($scriptDebug) { Send-DebugMessage "Global Administrator role already assigned to $($sp.DisplayName)" }
+    } else {
+	    if ($scriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $($sp.DisplayName): $($_.Exception.Message)" }
+    }
 }
 
 <#
+# Get Microsoft Graph Service Principal
+$graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
+
 # Get the current permissions of the service principal
 $appPerms = (get-mgcontext).Scopes | Sort-Object
 
