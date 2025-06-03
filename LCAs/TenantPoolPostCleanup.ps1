@@ -48,6 +48,8 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
 $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
 $SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
 Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+$Context = Get-MgContext
+if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $($Context.AppName)" }
 
 # Create a random password for new admins and password resets
 if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
