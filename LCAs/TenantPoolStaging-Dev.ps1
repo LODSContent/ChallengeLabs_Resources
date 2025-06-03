@@ -90,7 +90,8 @@ $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -Te
 $SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
 Connect-MgGraph -AccessToken $SecureToken -NoWelcome
 $Context = Get-MgContext
-if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $($Context.AppName)" }
+$AppName = $Context.AppName
+if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
 
 <#
 # Update Service Principal Permissions
