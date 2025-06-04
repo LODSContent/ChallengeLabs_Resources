@@ -88,10 +88,12 @@ if (!$SkipCleanup) {
 $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
 $SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
 Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+$Context = Get-MgContext
+$AppName = $Context.AppName
+if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
 
 # Update Service Principal Permissions
 $Permissions = @'
-AccessReview.Read.All
 AccessReview.ReadWrite.All
 AdministrativeUnit.ReadWrite.All
 Agreement.ReadWrite.All
@@ -206,11 +208,34 @@ WindowsUpdates.ReadWrite.All
 WorkforceIntegration.ReadWrite.All
 '@ -split '\r?\n'
 
+# Get existing Service Principal
+try {
+    $sp = Get-MgServicePrincipal -Filter "DisplayName eq '$AppName'" -ErrorAction SilentlyContinue
+    if ($scriptDebug) { Send-DebugMessage "Found Service Principal for $($sp.AppId)" }
+} catch {
+    if ($scriptDebug) { Send-DebugMessage "Could not find Service Principal for $($sp.AppId)" }
+}
+# Assign Global Administrator role
+try {
+	$roleDefinition = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'Global Administrator'" -ErrorAction Stop
+	$roleAssignmentBody = @{
+	    principalId      = $sp.Id
+	    roleDefinitionId = $roleDefinition.Id
+	    directoryScopeId = "/"
+	}
+	$response = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" `
+	-Body ($roleAssignmentBody | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
+	if ($scriptDebug) { Send-DebugMessage "Assigned Global Administrator role to $($sp.DisplayName)" }
+} catch {
+    if ($_ -like "*conflicting object*") {
+        if ($scriptDebug) { Send-DebugMessage "Global Administrator role already assigned to $($sp.DisplayName)" }
+    } else {
+	    if ($scriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $($sp.DisplayName): $($_.Exception.Message)" }
+    }
+}
+
 # Get Microsoft Graph Service Principal
 $graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
-
-# Get existing Service Principal
-$sp = Get-MgServicePrincipal -Filter "appId eq '$AppId'" -ErrorAction SilentlyContinue
 
 # Get the current permissions of the service principal
 $appPerms = (get-mgcontext).Scopes | Sort-Object
