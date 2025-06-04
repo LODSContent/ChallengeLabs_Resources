@@ -6,7 +6,6 @@
 
 param (
     $TenantName,
-    $AppName="cloud-slice-app",
     $AppID,
     $AppSecret,
     $UserName,
