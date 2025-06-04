@@ -2,6 +2,7 @@
    Title: Create TAP enabled user, establish credential variables and configure the Tenant for lab use
    Description: Creates a new user with a Temporary Access Password and establishes credential variables for the lab. Also configures the Tenant for lab use.
    Target: Cloud Subscription - PowerShell - 7.4.0 | Az 11.1.0 (RC)
+   Version: 2025.06.03.2316
 #>
 
 param (
