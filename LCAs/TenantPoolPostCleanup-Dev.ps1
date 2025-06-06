@@ -49,7 +49,8 @@ $AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -Te
 $SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
 Connect-MgGraph -AccessToken $SecureToken -NoWelcome
 $Context = Get-MgContext
-if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $($Context.AppName)" }
+$AppName = $Context.AppName
+if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
 
 # Create a random password for new admins and password resets
 if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
@@ -535,6 +536,57 @@ try {
    } else {
        try {
            $totalItems = 0
+   
+           # Configure Exchange.ManageAsApp permission and Exchange Administrator role for $AppName
+           try {
+               # Get the app's service principal by display name
+               $app = Get-MgServicePrincipal -Filter "displayName eq '$AppName'"
+               if (-not $app) { throw "App '$AppName' not found" }
+   
+               # Add Exchange.ManageAsApp permission
+               $graphApp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'" # Microsoft Graph
+               $exchangePermissionId = $graphApp.AppRoles | Where-Object { $_.Value -eq "Exchange.ManageAsApp" } | Select-Object -ExpandProperty Id
+               if ($exchangePermissionId) {
+                   $currentPermissions = Get-MgApplication -Filter "appId eq '$($app.AppId)'" | Select-Object -ExpandProperty RequiredResourceAccess
+                   $graphAccess = $currentPermissions | Where-Object { $_.ResourceAppId -eq $graphApp.AppId }
+                   if (-not ($graphAccess.ResourceAccess | Where-Object { $_.Id -eq $exchangePermissionId })) {
+                       $newPermissions = $currentPermissions
+                       if (-not $graphAccess) {
+                           $newPermissions += @{
+                               ResourceAppId = $graphApp.AppId
+                               ResourceAccess = @()
+                           }
+                           $graphAccess = $newPermissions[-1]
+                       }
+                       $graphAccess.ResourceAccess += @{
+                           Id = $exchangePermissionId
+                           Type = "Role"
+                       }
+                       Update-MgApplication -ApplicationId $app.AppObjectId -RequiredResourceAccess $newPermissions
+                       if ($ScriptDebug) { Send-DebugMessage "Added Exchange.ManageAsApp permission to app '$AppName'" }
+                   }
+   
+                   # Grant admin consent
+                   $consent = Get-MgOauth2PermissionGrant -Filter "clientId eq '$($app.Id)' and resourceId eq '$($graphApp.Id)' and scope eq 'Exchange.ManageAsApp'"
+                   if (-not $consent) {
+                       New-MgOauth2PermissionGrant -ClientId $app.Id -ConsentType "AllPrincipals" -ResourceId $graphApp.Id -Scope "Exchange.ManageAsApp"
+                       if ($ScriptDebug) { Send-DebugMessage "Granted admin consent for Exchange.ManageAsApp to app '$AppName'" }
+                   }
+               }
+   
+               # Assign Exchange Administrator role
+               $exchangeAdminRole = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'Exchange Administrator'"
+               if ($exchangeAdminRole) {
+                   $existingAssignment = Get-MgRoleManagementDirectoryRoleAssignment -Filter "principalId eq '$($app.Id)' and roleDefinitionId eq '$($exchangeAdminRole.Id)'"
+                   if (-not $existingAssignment) {
+                       New-MgRoleManagementDirectoryRoleAssignment -PrincipalId $app.Id -RoleDefinitionId $exchangeAdminRole.Id -DirectoryScopeId "/"
+                       if ($ScriptDebug) { Send-DebugMessage "Assigned Exchange Administrator role to app '$AppName'" }
+                   }
+               }
+           } catch {
+               if ($ScriptDebug) { Send-DebugMessage "Failed to configure Exchange permissions/role for app '$AppName': $_" }
+           }
+   
            # Authenticate using Azure access token for Exchange Online
            $exAccessToken = (Get-AzAccessToken -ResourceUrl "https://ps.outlook.com" -TenantId $TenantName).Token
            Connect-ExchangeOnline -AccessToken $exAccessToken -ShowProgress $false
