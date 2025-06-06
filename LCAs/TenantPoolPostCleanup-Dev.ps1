@@ -529,6 +529,103 @@ try {
         if ($ScriptDebug) {Send-DebugMessage "Conditional Access policies could not be removed."}
     } 
 
+   # Remove all Exchange Online Protection policies, rules, and protection alerts
+   if (-not (Get-Module -Name ExchangeOnlineManagement -ListAvailable)) {
+       if ($ScriptDebug) { Send-DebugMessage "ExchangeOnlineManagement module not found; skipping EOP cleanup" }
+   } else {
+       try {
+           $totalItems = 0
+           # Authenticate using Azure access token for Exchange Online
+           $exAccessToken = (Get-AzAccessToken -ResourceUrl "https://ps.outlook.com" -TenantId $TenantName).Token
+           Connect-ExchangeOnline -AccessToken $exAccessToken -ShowProgress $false
+   
+           # Remove Hosted Content Filter (Anti-Spam) Policies and Rules
+           try {
+               $spamRules = Get-HostedContentFilterRule
+               foreach ($rule in $spamRules) {
+                   try { Remove-HostedContentFilterRule -Identity $rule.Name -Confirm:$false } catch {}
+               }
+               $spamPolicies = Get-HostedContentFilterPolicy | Where-Object { $_.IsDefault -eq $false }
+               foreach ($policy in $spamPolicies) {
+                   try { Remove-HostedContentFilterPolicy -Identity $policy.Name -Confirm:$false } catch {}
+               }
+               $totalItems += ($spamRules.Count + $spamPolicies.Count)
+           } catch {}
+   
+           # Remove Anti-Phishing Policies and Rules
+           try {
+               $phishRules = Get-AntiPhishRule
+               foreach ($rule in $phishRules) {
+                   try { Remove-AntiPhishRule -Identity $rule.Name -Confirm:$false } catch {}
+               }
+               $phishPolicies = Get-AntiPhishPolicy | Where-Object { $_.IsDefault -eq $false }
+               foreach ($policy in $phishPolicies) {
+                   try { Remove-AntiPhishPolicy -Identity $policy.Name -Confirm:$false } catch {}
+               }
+               try { Set-AntiPhishPolicy -Identity "Default" -Enabled $false } catch {}
+               $totalItems += ($phishRules.Count + $phishPolicies.Count + 1)
+           } catch {}
+   
+           # Remove Safe Attachment Policies and Rules
+           try {
+               $attachmentRules = Get-SafeAttachmentRule
+               foreach ($rule in $attachmentRules) {
+                   try { Remove-SafeAttachmentRule -Identity $rule.Name -Confirm:$false } catch {}
+               }
+               $attachmentPolicies = Get-SafeAttachmentPolicy | Where-Object { $_.IsDefault -eq $false }
+               foreach ($policy in $attachmentPolicies) {
+                   try { Remove-SafeAttachmentPolicy -Identity $policy.Name -Confirm:$false } catch {}
+               }
+               $totalItems += ($attachmentRules.Count + $attachmentPolicies.Count)
+           } catch {}
+   
+           # Remove Safe Links Policies and Rules
+           try {
+               $linksRules = Get-SafeLinksRule
+               foreach ($rule in $linksRules) {
+                   try { Remove-SafeLinksRule -Identity $rule.Name -Confirm:$false } catch {}
+               }
+               $linksPolicies = Get-SafeLinksPolicy | Where-Object { $_.IsDefault -eq $false }
+               foreach ($policy in $linksPolicies) {
+                   try { Remove-SafeLinksPolicy -Identity $policy.Name -Confirm:$false } catch {}
+               }
+               $totalItems += ($linksRules.Count + $linksPolicies.Count)
+           } catch {}
+   
+           # Remove Malware Filter Policies and Rules
+           try {
+               $malwareRules = Get-MalwareFilterRule
+               foreach ($rule in $malwareRules) {
+                   try { Remove-MalwareFilterRule -Identity $rule.Name -Confirm:$false } catch {}
+               }
+               $malwarePolicies = Get-MalwareFilterPolicy | Where-Object { $_.IsDefault -eq $false }
+               foreach ($policy in $malwarePolicies) {
+                   try { Remove-MalwareFilterPolicy -Identity $policy.Name -Confirm:$false } catch {}
+               }
+               $totalItems += ($malwareRules.Count + $malwarePolicies.Count)
+           } catch {}
+   
+           # Remove Protection Alerts
+           try {
+               $alerts = Get-ProtectionAlert
+               foreach ($alert in $alerts) {
+                   try { Remove-ProtectionAlert -Identity $alert.Name -Confirm:$false } catch {}
+               }
+               $totalItems += $alerts.Count
+           } catch {}
+   
+           if ($ScriptDebug) {
+               if ($totalItems -gt 0) { Send-DebugMessage "Processed $totalItems EOP policies, rules, and alerts" }
+               else { Send-DebugMessage "No EOP policies, rules, or alerts found" }
+               Send-DebugMessage "Completed EOP policy, rule, and alert cleanup"
+           }
+       } catch {
+           if ($ScriptDebug) { Send-DebugMessage "Critical failure in EOP policy, rule, and alert cleanup: $_" }
+       } finally {
+           try { Disconnect-ExchangeOnline -Confirm:$false } catch {}
+       }
+   }
+
     # Reset security defaults (commented out)
     # Update-MgPolicyAuthorizationPolicy -DefaultUserRolePermissions @{"securityDefaultEnforced" = $true} -ErrorAction SilentlyContinue
 
