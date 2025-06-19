@@ -1,10 +1,12 @@
 /*
- * Script Name: Leaderboard.js
- * Authors: Mark Morgan
- * Version: 1.00
- * Date: April 6, 2025
- * Description: Posts scores to an online leaderboard application. 
- */
+* Script Name: Leaderboard.js
+* Authors: Mark Morgan
+* Version: 1.00
+* Date: April 6, 2025
+* Description: Posts scores to an online leaderboard application. 
+*/
+
+if (debug) { console.log("Leaderboard script is loading."); }
 
 // begin shared functions
 
