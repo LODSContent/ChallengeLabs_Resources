@@ -153,7 +153,7 @@ if (leaderboard == "True") {
                     if (debug) { console.log(`Leaderboard: Leaderboard service player initialization failed - Status: ${this.status}`); }
                 }
             };      
-        } else if (lab.Variable.leaderboard.toLowerCase() === "marcoscore" && lab.Variable.gameID.length > 1) {
+        } else if (lab.Variable.gameID.length > 1) {
             if (debug) { console.log("Leaderboard: Initializing player for marcoscore"); }
             let leaderboardURL = 'https://' + lab.Variable.serverAddress + '/submit';
             let xhttp = new XMLHttpRequest();
