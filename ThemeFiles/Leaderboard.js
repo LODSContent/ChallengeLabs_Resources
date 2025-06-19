@@ -90,7 +90,7 @@ function setLabVariable(name, value) {
 
 // begin leaderboard lab code
 let leaderboard = getLabVariable('Leaderboard');
-if (leaderboard == "True") {  
+if (leaderboard) {  
     if (debug) { console.log("Leaderboard: Leaderboard enabled, proceeding with initialization"); }
     
     // Initialize the player on the leaderboard
@@ -153,7 +153,7 @@ if (leaderboard == "True") {
                     if (debug) { console.log(`Leaderboard: Leaderboard service player initialization failed - Status: ${this.status}`); }
                 }
             };      
-        } else if (lab.Variable.gameID.length > 1) {
+        } else if (lab.Variable.leaderboard.toLowerCase() == "marcoscore" && lab.Variable.gameID.length > 1) {
             if (debug) { console.log("Leaderboard: Initializing player for marcoscore"); }
             let leaderboardURL = 'https://' + lab.Variable.serverAddress + '/submit';
             let xhttp = new XMLHttpRequest();
@@ -218,7 +218,7 @@ if (leaderboard == "True") {
             xhttp.open("PUT", leaderboardURL);
             xhttp.setRequestHeader('Content-type', 'application/json; charset=utf-8');
             xhttp.send(json);
-        } else if (lab.Variable.gameID.length > 1) {
+        } else if (lab.Variable.leaderboard.toLowerCase() == "marcoscore" && lab.Variable.gameID.length > 1) {
             if (debug) { console.log("Leaderboard: Posting score to marcoscore"); }
             let leaderboardURL = 'https://' + lab.Variable.serverAddress + '/submit';
             let xhttp = new XMLHttpRequest();
