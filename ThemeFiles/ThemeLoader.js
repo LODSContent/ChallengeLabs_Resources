@@ -1,7 +1,6 @@
 // This script should be placed in the "Instructions Script" portion of a Skillable Theme. It will load each of the listed modular javascript files.
 
-const debug = ['true', 'yes'].includes($('.variable[data-name="debug"]').text()?.toLowerCase());
-//const debug = true;
+const debug = true;
 if (debug) { console.log("Debug is on."); }
 
 const labClientScripts = [
