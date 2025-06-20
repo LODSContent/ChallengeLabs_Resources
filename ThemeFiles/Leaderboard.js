@@ -431,7 +431,6 @@ if (leaderboard) {
             // Show the leaderboard popup if variable is set
             if (lab.Variable.leaderboard != 'False') {
                 if (debug) { console.log("Leaderboard: Preparing to show leaderboard popup"); }
-                console.log("Showing popup.");
                 html = `
                     <div tabindex="0" aria-describedby="notificationContent0">
                     <span class="screen-reader-only">Alert</span>
