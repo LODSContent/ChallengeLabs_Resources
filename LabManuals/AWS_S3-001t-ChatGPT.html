@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creating Buckets, Versioning, and Permissions with Amazon S3</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="header">
+    <div class="title-box">
+      <h1>Creating Buckets, Versioning, and Permissions with Amazon S3</h1>
+    </div>
+  </div>
+  <hr>
+
+  <div class="container">
+    <h2>Introduction</h2>
+    <p>Amazon Simple Storage Service (S3) is a scalable, high-performance object storage service provided by AWS. It enables users to store and retrieve any amount of data, at any time, from anywhere on the web. In this training manual, we explore the core concepts related to using Amazon S3, including bucket creation, versioning, access control, and object management.</p>
+    <p>This guide is designed for students who are preparing to perform practical lab tasks using Amazon S3, and it aims to ensure they have a comprehensive understanding of the concepts before engaging in hands-on procedures.</p>
+    
+    <h3>Objectives</h3>
+    <ul>
+      <li>Understand how to create and configure Amazon S3 buckets</li>
+      <li>Learn the principles of versioning and how it protects objects</li>
+      <li>Understand object permissions using Access Control Lists (ACLs)</li>
+      <li>Explore how to verify file accessibility and version control</li>
+    </ul>
+
+    <h3>Table of Contents</h3>
+    <ul>
+      <li><a href="#section1">1. Creating an S3 Bucket</a></li>
+      <li><a href="#section2">2. Enabling Bucket Versioning</a></li>
+      <li><a href="#section3">3. Uploading a File to S3</a></li>
+      <li><a href="#section4">4. Modifying File Permissions</a></li>
+      <li><a href="#section5">5. Verifying Version Control</a></li>
+      <li><a href="#conclusion">Conclusion</a></li>
+    </ul>
+
+    <h2 id="section1">1. Creating an S3 Bucket</h2>
+
+    <h3>Overview</h3>
+    <p>An Amazon S3 bucket is a container for storing objects (files). Buckets are the top-level containers in S3 and must have a globally unique name. Each object in S3 is stored in a bucket and retrieved using a unique key (filename) within that bucket. When creating a bucket, you define properties like region, access permissions, and ownership settings.</p>
+    
+    <h3>Key Concepts</h3>
+    <ul>
+      <li><strong>Bucket Name Requirements:</strong> Must be unique across all of AWS, contain only lowercase letters, numbers, and hyphens, and be between 3 and 63 characters.</li>
+      <li><strong>Object Ownership:</strong> Determines who owns the objects uploaded to the bucket. "ACLs enabled" allows for finer-grained permission control.</li>
+      <li><strong>Public Access Settings:</strong> By default, public access is blocked. To make objects accessible publicly, you must modify these settings.</li>
+    </ul>
+
+    <h3>Examples</h3>
+    <div class="example">
+      <strong>Globally Unique Name:</strong> Creating a bucket named <code>my-company-docs-2025</code> ensures uniqueness and conforms to naming rules.<br>
+      <strong>ACLs Enabled:</strong> Selecting "ACLs enabled" lets you assign specific permissions per file using Access Control Lists.<br>
+      <strong>Public Access:</strong> Disabling "Block all public access" allows you to share certain files publicly, such as a PDF brochure.<br>
+    </div>
+
+    <h3>Scenario</h3>
+    <div class="scenario"><strong>Creating a Public File Exchange Bucket</strong><br>
+      As a cloud administrator at a multinational organization, you need to create a new S3 bucket for sharing legal documents with clients. You log into the AWS Console, navigate to S3 via the "Storage" section, and choose to create a new bucket. You name the bucket using your company's naming convention and select the Ohio region for low latency. You ensure Object Ownership is set to "ACLs enabled" to allow specific object-level permissions and clear the checkbox that blocks public access.
+    </div>
+
+    <h3>Best Practices</h3>
+    <div class="best-practices">
+      <strong>Use Naming Conventions:</strong> Adopt a naming strategy that reflects project or environment context.<br>
+      <strong>Enable Object Ownership ACLs Judiciously:</strong> Only enable ACLs if necessary for your use case.<br>
+      <strong>Review Access Settings Carefully:</strong> Always double-check public access settings to avoid accidental exposure.<br>
+    </div>
+
+    <h3>Documentation</h3>
+    <div class="documentation">
+      <a href="https://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-bucket.html" target="_blank">Creating a Bucket - AWS Docs</a>
+    </div>
+
+    <h2 id="section2">2. Enabling Bucket Versioning</h2>
+
+    <h3>Overview</h3>
+    <p>Versioning in S3 allows multiple versions of an object to exist in the same bucket. It safeguards against accidental deletions or overwrites. Once enabled, every modification to an object results in the creation of a new version, with older versions preserved unless explicitly deleted.</p>
+    
+    <h3>Key Concepts</h3>
+    <ul>
+      <li><strong>Object Versioning:</strong> Each object modification creates a new version. Objects with the same key can have multiple versions.</li>
+      <li><strong>Data Protection:</strong> Versioning helps recover previous states of files, useful in audits and accidental deletion cases.</li>
+    </ul>
+
+    <h3>Examples</h3>
+    <div class="example">
+      <strong>Preventing Data Loss:</strong> If a file is overwritten by mistake, the previous version can still be retrieved.<br>
+      <strong>Audit Compliance:</strong> Keeping all versions of legal contracts helps with compliance and traceability.<br>
+      <strong>Change Tracking:</strong> Updating a software release file creates multiple version IDs, helping rollback if issues occur.<br>
+    </div>
+
+    <h3>Scenario</h3>
+    <div class="scenario"><strong>Enabling Versioning for Regulatory Compliance</strong><br>
+      A financial company requires that all document versions be retained for seven years. As the AWS admin, you navigate to the S3 Console, locate the newly created bucket, open the "Properties" tab, and find the "Bucket Versioning" section. You select “Enable” to ensure any future uploads or modifications are version-controlled.
+    </div>
+
+    <h3>Best Practices</h3>
+    <div class="best-practices">
+      <strong>Enable Versioning Early:</strong> Configure versioning when the bucket is first created to ensure continuity.<br>
+      <strong>Use Lifecycle Policies:</strong> Automatically archive or delete older versions if not needed long-term.<br>
+      <strong>Avoid Unnecessary Overwrites:</strong> Use meaningful updates to reduce storage of redundant versions.<br>
+    </div>
+
+    <h3>Documentation</h3>
+    <div class="documentation">
+      <a href="https://docs.aws.amazon.com/AmazonS3/latest/user-guide/enable-versioning.html" target="_blank">Enabling Bucket Versioning - AWS Docs</a>
+    </div>
+
+    <h2 id="section3">3. Uploading a File to S3</h2>
+
+    <h3>Overview</h3>
+    <p>Amazon S3 allows users to upload files (objects) to buckets, making them accessible programmatically or through a browser. Each file is assigned a unique key within its bucket. Without additional configuration, S3 objects are private by default.</p>
+
+    <h3>Key Concepts</h3>
+    <ul>
+      <li><strong>Objects:</strong> The data or file stored in S3, consisting of the data itself, metadata, and a unique key.</li>
+      <li><strong>Object URL:</strong> The unique path used to access an object via a browser or HTTP client.</li>
+      <li><strong>Access Denied:</strong> By default, objects cannot be publicly accessed without modifying permissions.</li>
+    </ul>
+
+    <h3>Examples</h3>
+    <div class="example">
+      <strong>Private File:</strong> A file uploaded to S3 remains inaccessible to users unless permissions are granted.<br>
+      <strong>Using the Object URL:</strong> Opening the file’s Object URL in a browser shows “Access Denied” if it’s not public.<br>
+      <strong>Application Data:</strong> Uploading JSON configurations or logs to S3 for centralized access.<br>
+    </div>
+
+    <h3>Scenario</h3>
+    <div class="scenario"><strong>Uploading and Testing File Access</strong><br>
+      As part of a QA process, you create a simple file on your desktop named "Test.txt" and upload it to the company’s S3 bucket using the AWS Console. After upload, you locate the Object URL in the file’s overview tab and attempt to open it in a browser. You’re greeted with an XML-based Access Denied message, indicating the default privacy of S3 objects.
+    </div>
+
+    <h3>Best Practices</h3>
+    <div class="best-practices">
+      <strong>Use Descriptive File Names:</strong> This helps with tracking and retrieval in buckets with many files.<br>
+      <strong>Validate Upload Success:</strong> Always confirm that the file appears in the object listing after upload.<br>
+      <strong>Understand Access Behavior:</strong> Know that files are private unless access is explicitly granted.<br>
+    </div>
+
+    <h3>Documentation</h3>
+    <div class="documentation">
+      <a href="https://docs.aws.amazon.com/AmazonS3/latest/user-guide/upload-download-objects.html" target="_blank">Working with Objects - AWS Docs</a>
+    </div>
+
+    <h2 id="section4">4. Modifying File Permissions</h2>
+
+    <h3>Overview</h3>
+    <p>Amazon S3 supports multiple mechanisms for managing permissions. One of the most direct is using Access Control Lists (ACLs). When enabled, ACLs allow users to make individual files publicly readable. This is useful for web-hosted assets such as PDFs, images, or downloadable software.</p>
+
+    <h3>Key Concepts</h3>
+    <ul>
+      <li><strong>ACL:</strong> A list defining which AWS accounts or groups are granted access and the type of access.</li>
+      <li><strong>Make Public using ACL:</strong> Grants read permissions to anyone on the internet for that specific object.</li>
+    </ul>
+
+    <h3>Examples</h3>
+    <div class="example">
+      <strong>Public Document:</strong> Making "Test.txt" public so users can download it without authentication.<br>
+      <strong>Public Image Hosting:</strong> Uploading and sharing a product image by setting public ACLs.<br>
+      <strong>Content Distribution:</strong> Hosting static assets (HTML/CSS/JS) in S3 with public access.<br>
+    </div>
+
+    <h3>Scenario</h3>
+    <div class="scenario"><strong>Granting Public Read Access to a File</strong><br>
+      You’ve uploaded "Test.txt" and need your marketing team to access it without logging in. From the S3 Console, you open the file's detail page and use the "Object Actions" dropdown to choose “Make Public using ACL.” You confirm the action and verify by opening the Object URL in your browser. The file content is displayed correctly, confirming public access.
+    </div>
+
+    <h3>Best Practices</h3>
+    <div class="best-practices">
+      <strong>Limit Public Files:</strong> Only expose files that are meant for public consumption.<br>
+      <strong>Review Permissions Periodically:</strong> Regular audits ensure sensitive files aren’t accidentally exposed.<br>
+      <strong>Use Bucket Policies for Scalability:</strong> Use broader policies for managing access at scale instead of per-file ACLs.<br>
+    </div>
+
+    <h3>Documentation</h3>
+    <div class="documentation">
+      <a href="https://docs.aws.amazon.com/AmazonS3/latest/user-guide/upload-download-objects.html" target="_blank">Working with Objects - AWS Docs</a>
+    </div>
+
+    <h2 id="section5">5. Verifying Version Control</h2>
+
+    <h3>Overview</h3>
+    <p>Once versioning is enabled, every upload of an object with the same key results in a new version. Users can view, restore, or delete specific versions, providing resilience against overwrites and accidental deletions.</p>
+
+    <h3>Key Concepts</h3>
+    <ul>
+      <li><strong>Version ID:</strong> A unique identifier assigned to each version of an object.</li>
+      <li><strong>Object Lifecycle:</strong> The historical progression of changes to an object over time.</li>
+    </ul>
+
+    <h3>Examples</h3>
+    <div class="example">
+      <strong>Overwriting with Updates:</strong> Updating "Test.txt" adds a new version while preserving the original.<br>
+      <strong>Version Visibility:</strong> Using the S3 Console to view version history under the "Versions" tab.<br>
+      <strong>Rollback Capability:</strong> Restoring a previous version of a configuration file after an error.<br>
+    </div>
+
+    <h3>Scenario</h3>
+    <div class="scenario"><strong>Verifying Multiple File Versions</strong><br>
+      After uploading a new version of "Test.txt" with the text "Second version.", you return to the S3 Console. Navigating to the object’s detail page, you open the "Versions" tab and see both the current and previous version. This confirms that S3 is preserving object history for recovery and auditing.
+    </div>
+
+    <h3>Best Practices</h3>
+    <div class="best-practices">
+      <strong>Tag Important Versions:</strong> Use metadata or naming schemes to mark significant versions.<br>
+      <strong>Use Lifecycle Rules:</strong> Automatically clean up obsolete versions after a retention period.<br>
+      <strong>Communicate Changes:</strong> Ensure team members understand how versioning affects updates and deletions.<br>
+    </div>
+
+    <h3>Documentation</h3>
+    <div class="documentation">
+      <a href="https://docs.aws.amazon.com/AmazonS3/latest/user-guide/upload-download-objects.html" target="_blank">Working with Objects - AWS Docs</a>
+    </div>
+
+    <h2 id="conclusion">Conclusion</h2>
+    <p>By studying this guide, you now have a solid understanding of key Amazon S3 concepts including bucket creation, versioning, ACL-based permissions, and object management. These capabilities form the foundation for building robust, secure, and scalable storage solutions in AWS.</p>
+    <p>When you proceed to the lab, you will apply this knowledge in a real-world scenario by creating an S3 bucket, enabling versioning, uploading objects, modifying permissions, and verifying results through the S3 interface.</p>
+    <p>Good luck, and enjoy learning!</p>
+  </div>
+</body>
+</html>
