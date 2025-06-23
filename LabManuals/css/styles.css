@@ -1,0 +1,677 @@
+/*
+ * Modern, vibrant CSS for AWS Technology Guide
+ * Defines consistent styling for a scalable, engaging training document
+ */
+
+/*
+ * Import Google Fonts for typography
+ * Inter for body text, JetBrains Mono for code blocks
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
+
+/*
+ * Define CSS custom properties for reusable colors
+ * Primary and secondary colors for accents, text and background for layout
+ * Accent colors for section differentiation, ensuring distinct visual cues
+ */
+:root {
+    --primary-color: #6b48ff;
+    --secondary-color: #00ddeb;
+    --text-color: #0a0e2a;
+    --background-color: linear-gradient(135deg, #f0f4ff 0%, #e8efff 100%);
+    --card-background: rgba(255, 255, 255, 0.85);
+    --title-box-background: linear-gradient(90deg, #6b48ff, #00ddeb);
+    --hr-color: rgba(139, 148, 171, 0.3);
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --accent1: #aaff66;
+    --accent2: #ff2ea4;
+    --accent3: #ffcc33;
+    --accent4: #ff6b6b;
+    --accent5: #33cccc;
+    --intro-conclusion-accent: #6b48ff;
+    --quiz-accent: #ff66cc;
+}
+
+/*
+ * Reset default styles and enable smooth scrolling
+ * Ensures consistent rendering across browsers
+ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+}
+
+/*
+ * Style the body with base typography and background
+ * Applies fade-in animation for page load
+ */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    line-height: 1.8;
+    color: var(--text-color);
+    background: var(--background-color);
+    padding: 30px;
+    animation: fadeIn 1s ease-in;
+}
+
+/*
+ * Define fade-in animation for page load
+ * Transitions opacity and vertical position
+ */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/*
+ * Style the main container for content
+ * Uses glassmorphism with blur and shadow, lifts on hover
+ */
+.container {
+    width: 85%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: var(--card-background);
+    backdrop-filter: blur(10px);
+    padding: 50px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/*
+ * Add hover effect for container
+ * Slightly lifts and deepens shadow
+ */
+.container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px var(--shadow-color);
+}
+
+/*
+ * Style the header for title placement
+ * Aligns content flexibly
+ */
+.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+/*
+ * Style the title box with gradient background
+ * Centers title with shadow, deepens on hover
+ */
+.title-box {
+    flex-grow: 1;
+    background: var(--title-box-background);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    transition: box-shadow 0.3s ease;
+}
+
+/*
+ * Enhance title box shadow on hover
+ */
+.title-box:hover {
+    box-shadow: 0 8px 20px var(--shadow-color);
+}
+
+/*
+ * Style the main title within the title box
+ * Large, white, centered with text shadow
+ */
+.title-box h1 {
+    font-size: 2.8rem;
+    color: #ffffff;
+    margin: 0;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/*
+ * Style horizontal rule as a subtle divider
+ */
+hr {
+    border: 0;
+    height: 1px;
+    background: var(--hr-color);
+    margin: 30px 0;
+}
+
+/*
+ * Style section header container
+ * Positions header elements relatively
+ */
+.section-header {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+/*
+ * Style h2 headings with primary color and left border
+ * Smooth color transition on hover
+ */
+h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    padding-left: 15px;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+/*
+ * Add vertical border before h2 headings
+ * Matches primary color
+ */
+.section-header h2::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+/*
+ * Style section underline with gradient
+ * Animates width on load
+ */
+.section-underline {
+    display: block;
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+    margin-top: 10px;
+    animation: slideIn 0.5s ease-out;
+}
+
+/*
+ * Define slide-in animation for section underline
+ * Expands width from 0 to 100px
+ */
+@keyframes slideIn {
+    from { width: 0; }
+    to { width: 100px; }
+}
+
+/*
+ * Style h3 headings for subsections
+ * Medium size, dark text
+ */
+h3 {
+    font-size: 1.6rem;
+    color: var(--text-color);
+    margin: 30px 0 20px;
+    font-weight: 500;
+}
+
+/*
+ * Style paragraphs with readable font size
+ * Slightly muted text color
+ */
+p {
+    margin: 15px 0;
+    font-size: 1.15rem;
+    color: #2f3559;
+}
+
+/*
+ * Style unordered and ordered lists
+ * Indented with consistent spacing
+ */
+ul, ol {
+    margin: 15px 0;
+    padding-left: 30px;
+}
+
+/*
+ * Style list items with readable font size
+ */
+li {
+    margin-bottom: 12px;
+    font-size: 1.15rem;
+}
+
+/*
+ * Style links with secondary color and animated underline
+ * Smooth color transition on hover
+ */
+a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+/*
+ * Add animated underline effect for links
+ * Expands on hover
+ */
+a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background: var(--secondary-color);
+    transition: width 0.3s ease;
+}
+
+/*
+ * Define hover effect for links
+ * Darkens color and expands underline
+ */
+a:hover {
+    color: darken(var(--secondary-color), 10%);
+}
+
+/*
+ * Complete underline expansion on link hover
+ */
+a:hover::after {
+    width: 100%;
+}
+
+/*
+ * Style table of contents with glassmorphism
+ * Lifts slightly on hover
+ */
+.toc {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--card-background);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    border: 1px solid rgba(107, 72, 255, 0.2);
+    transition: transform 0.3s ease;
+}
+
+/*
+ * Apply lift effect to TOC on hover
+ */
+.toc:hover {
+    transform: translateY(-3px);
+}
+
+/*
+ * Style TOC list without bullets
+ */
+.toc ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+/*
+ * Space TOC list items
+ */
+.toc li {
+    margin-bottom: 10px;
+}
+
+/*
+ * Style TOC links with primary color
+ * Animates color and position on hover
+ */
+.toc a {
+    color: var(--primary-color);
+    font-weight: 500;
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+/*
+ * Define TOC link hover effect
+ * Changes to secondary color and shifts right
+ */
+.toc a:hover {
+    color: var(--secondary-color);
+    transform: translateX(5px);
+}
+
+/*
+ * Float TOC right on wide screens
+ * Adjusts margins for alignment
+ */
+@media (min-width: 1024px) {
+    .toc {
+        float: right;
+        width: 25%;
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+    .section-intro {
+        overflow: hidden;
+    }
+}
+
+/*
+ * Stack TOC above content on narrow screens
+ */
+@media (max-width: 1023px) {
+    .toc {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+}
+
+/*
+ * Style cards for examples, scenarios, best practices, callouts, and attribution
+ * Glassmorphism with blur and shadow, scales on hover
+ */
+.example, .scenario, .best-practices, .callout, .attribution-note {
+    background: var(--card-background);
+    backdrop-filter: blur(8px);
+    padding: 25px;
+    margin: 25px 0;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/*
+ * Apply scale and shadow enhancement on card hover
+ */
+.example:hover, .scenario:hover, .best-practices:hover, .callout:hover, .attribution-note:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 20px var(--shadow-color);
+}
+
+/*
+ * Style example cards with primary color border
+ */
+.example {
+    border-left: 4px solid var(--primary-color);
+}
+
+/*
+ * Style scenario cards with coral border
+ */
+.scenario {
+    border-left: 4px solid var(--accent4);
+}
+
+/*
+ * Style best practices cards with cyan border and tint
+ */
+.best-practices {
+    border-left: 4px solid var(--secondary-color);
+    background: rgba(0, 221, 235, 0.1);
+}
+
+/*
+ * Style callout cards with cyan border and purple tint
+ */
+.callout {
+    border-left: 4px solid var(--secondary-color);
+    background: rgba(107, 72, 255, 0.05);
+}
+
+/*
+ * Style callout headers with target icon
+ * Aligns icon and text with spacing
+ */
+.callout h4 {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/*
+ * Add target icon before callout headers
+ */
+.callout h4::before {
+    content: '🎯';
+    font-size: 1.5rem;
+}
+
+/*
+ * Style attribution note with purple border and tint
+ */
+.attribution-note {
+    border-left: 4px solid var(--primary-color);
+    background: rgba(107, 72, 255, 0.05);
+}
+
+/*
+ * Style documentation links with italicized, muted text
+ */
+.documentation {
+    margin-top: 20px;
+    font-style: italic;
+    font-size: 1rem;
+    color: #5a607f;
+}
+
+/*
+ * Style inline code and code blocks with navy background
+ * Monospace font for terminal-like appearance
+ */
+code, pre code {
+    background: #1a1e3a;
+    color: #e0e6ff;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/*
+ * Style code blocks with padding and shadow
+ * Enables horizontal scrolling for overflow
+ */
+pre code {
+    display: block;
+    padding: 15px;
+    margin: 15px 0;
+    line-height: 1.6;
+    overflow-x: auto;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+/*
+ * Style section dividers with wave SVG background
+ * Subtle purple tint for transition
+ */
+.section-divider {
+    height: 100px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%236b48ff' fill-opacity='0.1' d='M0,192L48,186.7C96,181,192,171,288,192C384,213,480,267,576,266.7C672,267,768,213,864,181.3C960,149,1056,139,1152,160C1248,181,1344,235,1392,261.3L1440,288L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") no-repeat center bottom;
+    background-size: cover;
+    margin: 30px 0;
+}
+
+/*
+ * Base styling for all sections
+ * Rounded corners and padding for consistency
+ */
+.section {
+    border-radius: 15px;
+    padding: 20px;
+}
+
+/*
+ * Style content sections with alternating colors
+ * Cycles through lime, magenta, yellow, coral, teal
+ * Excludes Intro, Conclusion, Quiz, and Attribution
+ */
+.section:not(.section-intro):not(.section-conclusion):not(.section-quiz):not(.section-attribution):nth-of-type(5n+1) {
+    background: rgba(170, 255, 102, 0.05);
+    border-left: 3px solid var(--accent1);
+}
+
+.section:not(.section-intro):not(.section-conclusion):not(.section-quiz):not(.section-attribution):nth-of-type(5n+2) {
+    background: rgba(255, 46, 164, 0.05);
+    border-left: 3px solid var(--accent2);
+}
+
+.section:not(.section-intro):not(.section-conclusion):not(.section-quiz):not(.section-attribution):nth-of-type(5n+3) {
+    background: rgba(255, 204, 51, 0.05);
+    border-left: 3px solid var(--accent3);
+}
+
+.section:not(.section-intro):not(.section-conclusion):not(.section-quiz):not(.section-attribution):nth-of-type(5n+4) {
+    background: rgba(255, 107, 107, 0.05);
+    border-left: 3px solid var(--accent4);
+}
+
+.section:not(.section-intro):not(.section-conclusion):not(.section-quiz):not(.section-attribution):nth-of-type(5n) {
+    background: rgba(51, 204, 204, 0.05);
+    border-left: 3px solid var(--accent5);
+}
+
+/*
+ * Style Introduction, Conclusion, and Attribution with purple scheme
+ */
+.section-intro, .section-conclusion, .section-attribution {
+    background: rgba(107, 72, 255, 0.05);
+    border-left: 3px solid var(--intro-conclusion-accent);
+}
+
+/*
+ * Style Knowledge Check with pink scheme
+ */
+.section-quiz {
+    background: rgba(255, 102, 204, 0.05);
+    border-left: 3px solid var(--quiz-accent);
+}
+
+/*
+ * Style quiz container for question-answer pairs
+ */
+.quiz-container {
+    margin: 20px 0;
+}
+
+/*
+ * Space quiz items vertically
+ */
+.quiz-item {
+    margin-bottom: 15px;
+}
+
+/*
+ * Hide quiz toggle checkbox
+ */
+.quiz-toggle {
+    display: none;
+}
+
+/*
+ * Style quiz questions as clickable text
+ * Purple text with hover effect
+ */
+.quiz-question {
+    display: block;
+    font-size: 1.15rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+}
+
+/*
+ * Add hover effect to quiz questions
+ * Light purple tint
+ */
+.quiz-question:hover {
+    background: rgba(107, 72, 255, 0.1);
+}
+
+/*
+ * Style quiz answers as hidden cards
+ * Collapsed by default with smooth expansion
+ */
+.quiz-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: var(--card-background);
+    backdrop-filter: blur(8px);
+    padding: 0 15px;
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px var(--shadow-color);
+}
+
+/*
+ * Expand quiz answer when toggle is checked
+ * Adds padding and margin for visibility
+ */
+.quiz-toggle:checked + .quiz-question + .quiz-answer {
+    max-height: 200px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+/*
+ * Add focus outline for quiz toggle
+ * Enhances keyboard accessibility
+ */
+.quiz-toggle:focus + .quiz-question {
+    outline: 2px solid var(--secondary-color);
+}
+
+/*
+ * Responsive adjustments for medium screens
+ * Reduces padding, adjusts font sizes
+ */
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+    .container {
+        width: 95%;
+        padding: 30px;
+    }
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .title-box {
+        width: 100%;
+    }
+    .title-box h1 {
+        font-size: 2.2rem;
+        padding: 20px;
+    }
+    h2 {
+        font-size: 1.7rem;
+    }
+    h3 {
+        font-size: 1.4rem;
+    }
+    p, li {
+        font-size: 1.05rem;
+    }
+    .section-divider {
+        height: 60px;
+    }
+}
+
+/*
+ * Responsive adjustments for small screens
+ * Further reduces font sizes and padding
+ */
+@media (max-width: 480px) {
+    .title-box h1 {
+        font-size: 1.9rem;
+    }
+    .container {
+        padding: 20px;
+    }
+    .section-divider {
+        height: 40px;
+    }
+}
