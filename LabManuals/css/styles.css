@@ -120,6 +120,29 @@ a:hover {
     text-decoration: underline;
 }
 
+.toc {
+    margin: 20px 0;
+    padding: 15px;
+    background: var(--card-background);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.toc ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+.toc li {
+    margin-bottom: 8px;
+}
+@media (min-width: 1024px) {
+    .toc {
+        position: sticky;
+        top: 20px;
+        width: 25%;
+        float: right;
+    }
+}
+
 .example, .scenario, .best-practices {
     background: var(--card-background);
     padding: 20px;
