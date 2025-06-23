@@ -442,6 +442,9 @@ a:hover::after {
 .attribution-note {
     border-left: 4px solid var(--primary-color);
     background: rgba(107, 72, 255, 0.05);
+	color: #5a607f;
+	font-style: italic;
+    font-size: 1rem;
 }
 
 /*
