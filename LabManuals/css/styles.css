@@ -613,7 +613,7 @@ pre code {
  * Adds padding and margin for visibility
  */
 .quiz-toggle:checked + .quiz-question + .quiz-answer {
-    max-height: 200px;
+    max-height: 800px;
     padding: 15px;
     margin: 10px 0;
 }
