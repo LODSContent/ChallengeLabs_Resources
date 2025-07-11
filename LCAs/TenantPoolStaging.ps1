@@ -2,7 +2,6 @@
    Title: Create TAP enabled user, establish credential variables and configure the Tenant for lab use
    Description: Creates a new user with a Temporary Access Password and establishes credential variables for the lab. Also configures the Tenant for lab use.
    Target: Cloud Subscription - PowerShell - 7.4.0 | Az 11.1.0 (RC)
-   Version: 2025.06.03.2316
 #>
 
 param (
@@ -11,6 +10,7 @@ param (
     $AppSecret,
     $UserName,
     $Password,
+    $SubscriptionId,
     $ScriptingAppId,
     $ScriptingAppSecret,
     [switch]$SkipCleanup,
@@ -29,9 +29,14 @@ if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '
     Return $False
 }
 
+if ($SubscriptionId -like '*@lab*') {
+    $SubscriptionId = $Null
+}
+
 $UserName = $UserName.trim(" ")
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
+$SubscriptionId = $SubscriptionId.trim(" ")
 
 $PoolUserName = $UserName
 $PoolPassword = $Password
@@ -71,7 +76,7 @@ if (!$SkipCleanup) {
 	}
 	
 	# URL of the script on GitHub
-	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup.ps1"
+	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup-Dev.ps1"
 	
 	# Fetch the script content using Invoke-WebRequest
 	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
@@ -212,9 +217,10 @@ WorkforceIntegration.ReadWrite.All
 # Get existing Service Principal
 try {
     $sp = Get-MgServicePrincipal -Filter "DisplayName eq '$AppName'" -ErrorAction SilentlyContinue
-    if ($scriptDebug) { Send-DebugMessage "Found Service Principal for $($sp.AppId)" }
+    $ScriptingAppId = $sp.AppId
+    if ($scriptDebug) { Send-DebugMessage "Found Service Principal for $ScriptingAppId" }
 } catch {
-    if ($scriptDebug) { Send-DebugMessage "Could not find Service Principal for $($sp.AppId)" }
+    if ($scriptDebug) { Send-DebugMessage "Could not find Service Principal for $ScriptingAppId" }
 }
 # Assign Global Administrator role
 try {
@@ -639,6 +645,62 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
       } catch {
          if ($ScriptDebug) {Send-DebugMessage "Failure assigning licenses to selected user accounts."}
       }    
+   }
+
+   # Clean and configure Trial Subscription if present
+   if ($SubscriptionId) {
+	# Add a secret to the Service Principal
+	$secretBody = @{
+		"passwordCredential" = @{
+			"displayName" = "Script Secret"
+			"endDateTime" = (Get-Date).AddDays(1).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+		}
+	} | ConvertTo-Json -Depth 10
+	
+	try {
+ 		$secret = Invoke-MgGraphRequest `
+			-Method POST `
+			-Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($sp.id)/addPassword" `
+			-Body $secretBody `
+			-ContentType "application/json"
+	 	$ScriptingAppSecret = $Secret.SecretText
+   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 10 seconds." }
+		Start-Sleep -seconds 10
+	
+		# Create a secure string for the client secret
+		$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
+		
+		# Create a PSCredential object
+		$credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
+		
+		# Authenticate with Azure
+		Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $TenantName | Out-Null
+		
+		# Set the context to the correct subscription
+		Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
+		
+		# Remove and re-add Owner Role to the lab user
+		try {
+		    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
+	     	    if ($scriptDebug) { Send-DebugMessage "Removed existing Owner role for $TapUser." }
+		} catch {
+	 	    if ($scriptDebug) { Send-DebugMessage "Failed to remove existing Owner role for $TapUser. It may not exist." }
+		}
+		
+  		try {
+    		    New-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
+	  	    if ($scriptDebug) { Send-DebugMessage "Set the Owner role for $TapUser." }
+		} catch {
+		    if ($scriptDebug) { Send-DebugMessage "Failed to set the Owner role for $TapUser." }
+  		}
+		# Remove all Resource Groups
+		try {
+  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
+		    Get-AzResourceGroup | ForEach-Object {$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force}
+		} catch {}
+ 	} catch {
+		if ($scriptDebug) { Send-DebugMessage "Failed to create additional secret and could not set the Owner role for $TapUser." }
+ 	}
    }
 
     # Update lab variables based on TAP success
