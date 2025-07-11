@@ -663,7 +663,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			-Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($sp.id)/addPassword" `
 			-Body $secretBody `
 			-ContentType "application/json"
-	 	if ($scriptDebug) { Send-DebugMessage "Created secret $($Secret.SecretText). Sleeping for 10 seconds." }
+	 	$ScriptingAppSecret = $Secret.SecretText
+   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 10 seconds." }
 		Start-Sleep -seconds 10
 	
 		# Create a secure string for the client secret
