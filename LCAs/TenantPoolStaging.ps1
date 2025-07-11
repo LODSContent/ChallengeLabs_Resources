@@ -664,8 +664,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			-Body $secretBody `
 			-ContentType "application/json"
 	 	$ScriptingAppSecret = $Secret.SecretText
-   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 10 seconds." }
-		Start-Sleep -seconds 10
+   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 15 seconds." }
+		Start-Sleep -seconds 15
 	
 		# Create a secure string for the client secret
 		$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
