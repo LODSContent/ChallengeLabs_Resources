@@ -29,14 +29,15 @@ if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '
     Return $False
 }
 
-if ($SubscriptionId -like '*@lab*') {
+if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
     $SubscriptionId = $Null
+} else {
+    $SubscriptionId = $SubscriptionId.trim(" ")
 }
 
 $UserName = $UserName.trim(" ")
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
-$SubscriptionId = $SubscriptionId.trim(" ")
 
 $PoolUserName = $UserName
 $PoolPassword = $Password
@@ -76,7 +77,7 @@ if (!$SkipCleanup) {
 	}
 	
 	# URL of the script on GitHub
-	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup-Dev.ps1"
+	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup.ps1"
 	
 	# Fetch the script content using Invoke-WebRequest
 	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
@@ -91,8 +92,9 @@ if (!$SkipCleanup) {
  }
 
 # MgGraph Authentication block (Cloud Subscription Target)
-$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
-$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
+$SecureToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName -AsSecureString).Token
+# Convert SecureString back to plain text for Invoke-RestMethod headers
+$AccessToken = [System.Net.NetworkCredential]::new("", $SecureToken).Password
 Connect-MgGraph -AccessToken $SecureToken -NoWelcome
 $Context = Get-MgContext
 $AppName = $Context.AppName
@@ -664,8 +666,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			-Body $secretBody `
 			-ContentType "application/json"
 	 	$ScriptingAppSecret = $Secret.SecretText
-   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 10 seconds." }
-		Start-Sleep -seconds 10
+   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 15 seconds." }
+		Start-Sleep -seconds 15
 	
 		# Create a secure string for the client secret
 		$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
@@ -695,6 +697,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
   		}
 		# Remove all Resource Groups
 		try {
+  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
 		    Get-AzResourceGroup | ForEach-Object {$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force}
 		} catch {}
  	} catch {
