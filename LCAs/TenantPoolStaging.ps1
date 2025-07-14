@@ -31,12 +31,13 @@ if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '
 
 if ($SubscriptionId -like '*@lab*') {
     $SubscriptionId = $Null
+} else {
+    $SubscriptionId = $SubscriptionId.trim(" ")
 }
 
 $UserName = $UserName.trim(" ")
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
-$SubscriptionId = $SubscriptionId.trim(" ")
 
 $PoolUserName = $UserName
 $PoolPassword = $Password
