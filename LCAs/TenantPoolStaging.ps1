@@ -29,7 +29,7 @@ if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '
     Return $False
 }
 
-if ($SubscriptionId -like '*@lab*') {
+if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
     $SubscriptionId = $Null
 } else {
     $SubscriptionId = $SubscriptionId.trim(" ")
