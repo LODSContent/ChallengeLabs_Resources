@@ -18,33 +18,6 @@ param (
     [switch]$ScriptDebug
 )
 
-<#
-if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
-    $RandomHex = -join (Get-Random ((0..9) + (97..105 | %{[char]$_})) -Count 12)
-    $Password = "Pw1@$RandomHex"
-}
-#>
-
-if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
-    Return $False
-}
-
-if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
-    $SubscriptionId = $Null
-} else {
-    $SubscriptionId = $SubscriptionId.trim(" ")
-}
-
-$UserName = $UserName.trim(" ")
-$Password = $Password.trim(" ")
-$TenantName = $TenantName.trim(" ")
-
-$PoolUserName = $UserName
-$PoolPassword = $Password
-$TapUser = "LabAdmin@$TenantName"
-$LegacyPassword = $Password
-$Lifetime = 300
-
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -66,6 +39,35 @@ function Send-DebugMessage {
    }
    #Write-Host $Message
 }
+
+<#
+if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
+    $RandomHex = -join (Get-Random ((0..9) + (97..105 | %{[char]$_})) -Count 12)
+    $Password = "Pw1@$RandomHex"
+}
+#>
+
+if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
+    Return $False
+}
+
+if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
+    $SubscriptionId = $Null
+    if ($ScriptDebug) { Send-DebugMessage "SubscriptionId not present." }
+} else {
+    $SubscriptionId = $SubscriptionId.trim(" ")
+    if ($ScriptDebug) { Send-DebugMessage "Found SubscriptionId: $SubscriptionId" }
+}
+
+$UserName = $UserName.trim(" ")
+$Password = $Password.trim(" ")
+$TenantName = $TenantName.trim(" ")
+
+$PoolUserName = $UserName
+$PoolPassword = $Password
+$TapUser = "LabAdmin@$TenantName"
+$LegacyPassword = $Password
+$Lifetime = 300
 
 # Run cleanup routine
 if (!$SkipCleanup) {
