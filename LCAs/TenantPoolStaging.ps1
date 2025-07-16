@@ -677,11 +677,21 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 		$credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
 		
 		# Authenticate with Azure
-		Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $TenantName | Out-Null
-		
+		try {
+  			Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $TenantName | Out-Null
+     			if ($scriptDebug) { Send-DebugMessage "Successfully initiated Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
+		} catch {
+			if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
+  		}
+  
 		# Set the context to the correct subscription
-		Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
-		
+		try {
+  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
+     			if ($scriptDebug) { Send-DebugMessage "Successfully used Set-AzContext with SubscriptionId: $SubscriptionId" }
+		} catch {
+			if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
+  		}
+    
 		# Remove and re-add Owner Role to the lab user
 		try {
 		    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
