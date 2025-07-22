@@ -94,6 +94,7 @@ if (!$SkipCleanup) {
  }
 
 #try {
+	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName as: $AppName in the TenantPoolStaging script." }
 	# MgGraph Authentication block (Cloud Subscription Target)
 	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
 	$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
