@@ -11,7 +11,8 @@ param (
 )
 
 if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
-    Return $False
+    if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
+    throw "Tenant name or password are blank."
 }
 
 $Password = $Password.trim(" ")
@@ -44,13 +45,38 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
     Throw "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process."
 } 
 
-# MgGraph Authentication block (Cloud Subscription Target)
-$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
-$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
-Connect-MgGraph -AccessToken $SecureToken -NoWelcome
-$Context = Get-MgContext
-$AppName = $Context.AppName
-if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
+try {
+	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName as: $AppName in the TenantPoolPostCleanup script." }
+	# MgGraph Authentication block (Cloud Subscription Target)
+	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
+	$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
+	Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+	$Context = Get-MgContext
+	$AppName = $Context.AppName
+	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
+} catch {
+   if ($ScriptDebug) { Send-DebugMessage "Failed to connect to: $TenantName as: $AppName" }
+   throw "Failed to connect to: $TenantName as: $AppName"
+}
+
+# Tenant validation to ensure script is running in the proper Tenant
+$VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
+if ($VerifiedDomain -Like "*Hexelo*") {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
+} else {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
+	throw "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
+}
+
+# Create fingerprint group
+try {
+	if ($ScriptDebug) { Send-DebugMessage "Creating Fingerprint Group" }
+	$TimeStamp = (Get-Date).DateTime
+	$FileTime = (get-date).ToFileTime()
+	New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "challengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+} catch {
+	if ($ScriptDebug) { Send-DebugMessage "Failed to create Fingerprint Group" }
+}
 
 # Create a random password for new admins and password resets
 if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
@@ -529,154 +555,6 @@ try {
     } catch {
         if ($ScriptDebug) {Send-DebugMessage "Conditional Access policies could not be removed."}
     } 
-
-   # Remove all Exchange Online Protection policies, rules, and protection alerts
-   if (-not (Get-Module -Name ExchangeOnlineManagement -ListAvailable)) {
-       if ($ScriptDebug) { Send-DebugMessage "ExchangeOnlineManagement module not found; skipping EOP cleanup" }
-   } else {
-       try {
-           $totalItems = 0
-   
-           # Configure Exchange.ManageAsApp permission and Exchange Administrator role for $AppName
-           try {
-               # Get the app's service principal by display name
-               $app = Get-MgServicePrincipal -Filter "displayName eq '$AppName'"
-               if (-not $app) { throw "App '$AppName' not found" }
-   
-               # Add Exchange.ManageAsApp permission
-               $graphApp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'" # Microsoft Graph
-               $exchangePermissionId = $graphApp.AppRoles | Where-Object { $_.Value -eq "Exchange.ManageAsApp" } | Select-Object -ExpandProperty Id
-               if ($exchangePermissionId) {
-                   $currentPermissions = Get-MgApplication -Filter "appId eq '$($app.AppId)'" | Select-Object -ExpandProperty RequiredResourceAccess
-                   $graphAccess = $currentPermissions | Where-Object { $_.ResourceAppId -eq $graphApp.AppId }
-                   if (-not ($graphAccess.ResourceAccess | Where-Object { $_.Id -eq $exchangePermissionId })) {
-                       $newPermissions = $currentPermissions
-                       if (-not $graphAccess) {
-                           $newPermissions += @{
-                               ResourceAppId = $graphApp.AppId
-                               ResourceAccess = @()
-                           }
-                           $graphAccess = $newPermissions[-1]
-                       }
-                       $graphAccess.ResourceAccess += @{
-                           Id = $exchangePermissionId
-                           Type = "Role"
-                       }
-                       Update-MgApplication -ApplicationId $app.AppObjectId -RequiredResourceAccess $newPermissions
-                       if ($ScriptDebug) { Send-DebugMessage "Added Exchange.ManageAsApp permission to app '$AppName'" }
-                   }
-   
-                   # Grant admin consent
-                   $consent = Get-MgOauth2PermissionGrant -Filter "clientId eq '$($app.Id)' and resourceId eq '$($graphApp.Id)' and scope eq 'Exchange.ManageAsApp'"
-                   if (-not $consent) {
-                       New-MgOauth2PermissionGrant -ClientId $app.Id -ConsentType "AllPrincipals" -ResourceId $graphApp.Id -Scope "Exchange.ManageAsApp"
-                       if ($ScriptDebug) { Send-DebugMessage "Granted admin consent for Exchange.ManageAsApp to app '$AppName'" }
-                   }
-               }
-   
-               # Assign Exchange Administrator role
-               $exchangeAdminRole = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'Exchange Administrator'"
-               if ($exchangeAdminRole) {
-                   $existingAssignment = Get-MgRoleManagementDirectoryRoleAssignment -Filter "principalId eq '$($app.Id)' and roleDefinitionId eq '$($exchangeAdminRole.Id)'"
-                   if (-not $existingAssignment) {
-                       New-MgRoleManagementDirectoryRoleAssignment -PrincipalId $app.Id -RoleDefinitionId $exchangeAdminRole.Id -DirectoryScopeId "/"
-                       if ($ScriptDebug) { Send-DebugMessage "Assigned Exchange Administrator role to app '$AppName'" }
-                   }
-               }
-           } catch {
-               if ($ScriptDebug) { Send-DebugMessage "Failed to configure Exchange permissions/role for app '$AppName': $_" }
-           }
-   
-           # Authenticate using Azure access token for Exchange Online
-           $exAccessToken = (Get-AzAccessToken -ResourceUrl "https://ps.outlook.com" -TenantId $TenantName).Token
-           Connect-ExchangeOnline -AccessToken $exAccessToken -ShowProgress $false
-   
-           # Remove Hosted Content Filter (Anti-Spam) Policies and Rules
-           try {
-               $spamRules = Get-HostedContentFilterRule
-               foreach ($rule in $spamRules) {
-                   try { Remove-HostedContentFilterRule -Identity $rule.Name -Confirm:$false } catch {}
-               }
-               $spamPolicies = Get-HostedContentFilterPolicy | Where-Object { $_.IsDefault -eq $false }
-               foreach ($policy in $spamPolicies) {
-                   try { Remove-HostedContentFilterPolicy -Identity $policy.Name -Confirm:$false } catch {}
-               }
-               $totalItems += ($spamRules.Count + $spamPolicies.Count)
-           } catch {}
-   
-           # Remove Anti-Phishing Policies and Rules
-           try {
-               $phishRules = Get-AntiPhishRule
-               foreach ($rule in $phishRules) {
-                   try { Remove-AntiPhishRule -Identity $rule.Name -Confirm:$false } catch {}
-               }
-               $phishPolicies = Get-AntiPhishPolicy | Where-Object { $_.IsDefault -eq $false }
-               foreach ($policy in $phishPolicies) {
-                   try { Remove-AntiPhishPolicy -Identity $policy.Name -Confirm:$false } catch {}
-               }
-               try { Set-AntiPhishPolicy -Identity "Default" -Enabled $false } catch {}
-               $totalItems += ($phishRules.Count + $phishPolicies.Count + 1)
-           } catch {}
-   
-           # Remove Safe Attachment Policies and Rules
-           try {
-               $attachmentRules = Get-SafeAttachmentRule
-               foreach ($rule in $attachmentRules) {
-                   try { Remove-SafeAttachmentRule -Identity $rule.Name -Confirm:$false } catch {}
-               }
-               $attachmentPolicies = Get-SafeAttachmentPolicy | Where-Object { $_.IsDefault -eq $false }
-               foreach ($policy in $attachmentPolicies) {
-                   try { Remove-SafeAttachmentPolicy -Identity $policy.Name -Confirm:$false } catch {}
-               }
-               $totalItems += ($attachmentRules.Count + $attachmentPolicies.Count)
-           } catch {}
-   
-           # Remove Safe Links Policies and Rules
-           try {
-               $linksRules = Get-SafeLinksRule
-               foreach ($rule in $linksRules) {
-                   try { Remove-SafeLinksRule -Identity $rule.Name -Confirm:$false } catch {}
-               }
-               $linksPolicies = Get-SafeLinksPolicy | Where-Object { $_.IsDefault -eq $false }
-               foreach ($policy in $linksPolicies) {
-                   try { Remove-SafeLinksPolicy -Identity $policy.Name -Confirm:$false } catch {}
-               }
-               $totalItems += ($linksRules.Count + $linksPolicies.Count)
-           } catch {}
-   
-           # Remove Malware Filter Policies and Rules
-           try {
-               $malwareRules = Get-MalwareFilterRule
-               foreach ($rule in $malwareRules) {
-                   try { Remove-MalwareFilterRule -Identity $rule.Name -Confirm:$false } catch {}
-               }
-               $malwarePolicies = Get-MalwareFilterPolicy | Where-Object { $_.IsDefault -eq $false }
-               foreach ($policy in $malwarePolicies) {
-                   try { Remove-MalwareFilterPolicy -Identity $policy.Name -Confirm:$false } catch {}
-               }
-               $totalItems += ($malwareRules.Count + $malwarePolicies.Count)
-           } catch {}
-   
-           # Remove Protection Alerts
-           try {
-               $alerts = Get-ProtectionAlert
-               foreach ($alert in $alerts) {
-                   try { Remove-ProtectionAlert -Identity $alert.Name -Confirm:$false } catch {}
-               }
-               $totalItems += $alerts.Count
-           } catch {}
-   
-           if ($ScriptDebug) {
-               if ($totalItems -gt 0) { Send-DebugMessage "Processed $totalItems EOP policies, rules, and alerts" }
-               else { Send-DebugMessage "No EOP policies, rules, or alerts found" }
-               Send-DebugMessage "Completed EOP policy, rule, and alert cleanup"
-           }
-       } catch {
-           if ($ScriptDebug) { Send-DebugMessage "Critical failure in EOP policy, rule, and alert cleanup: $_" }
-       } finally {
-           try { Disconnect-ExchangeOnline -Confirm:$false } catch {}
-       }
-   }
 
     # Reset security defaults (commented out)
     # Update-MgPolicyAuthorizationPolicy -DefaultUserRolePermissions @{"securityDefaultEnforced" = $true} -ErrorAction SilentlyContinue
