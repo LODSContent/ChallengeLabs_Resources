@@ -94,7 +94,7 @@ if (!$SkipCleanup) {
 	}
  }
 
-#try {
+try {
 	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName as: $AppName in the TenantPoolStaging script." }
 	# MgGraph Authentication block (Cloud Subscription Target)
 	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
@@ -103,9 +103,18 @@ if (!$SkipCleanup) {
 	$Context = Get-MgContext
 	$AppName = $Context.AppName
 	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
-#} catch {
-#	throw "Failed to connect to: $TenantName as: $AppName"
-#}
+} catch {
+	throw "Failed to connect to: $TenantName as: $AppName"
+}
+
+# Tenant validation to ensure script is running in the proper Tenant
+$VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
+if ($VerifiedDomain -Like "*Hexelo*") {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
+} else {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
+	throw "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
+}
 
 # Update Service Principal Permissions
 $Permissions = @'
