@@ -44,18 +44,12 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
     Throw "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process."
 } 
 
-try {
-	# MgGraph Authentication block (Cloud Subscription Target)
-	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
-	$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
-	Connect-MgGraph -AccessToken $SecureToken -NoWelcome
-	$Context = Get-MgContext
-	$AppName = $Context.AppName
-	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
-} catch {
-   if ($ScriptDebug) { Send-DebugMessage "Failed to connect to: $TenantName as: $AppName" }
-   Throw "Failed to connect to: $TenantName as: $AppName - Exiting cleanup process."
-}
+# MgGraph Authentication block (Cloud Subscription Target)
+$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
+$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
+Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+$Context = Get-MgContext
+if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $($Context.AppName)" }
 
 # Create a random password for new admins and password resets
 if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
