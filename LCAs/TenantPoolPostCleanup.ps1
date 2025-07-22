@@ -45,7 +45,7 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
     Throw "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process."
 } 
 
-#try {
+try {
 	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName as: $AppName in the TenantPoolPostCleanup script." }
 	# MgGraph Authentication block (Cloud Subscription Target)
 	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
@@ -54,16 +54,22 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
 	$Context = Get-MgContext
 	$AppName = $Context.AppName
 	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
-#} catch {
-#   if ($ScriptDebug) { Send-DebugMessage "Failed to connect to: $TenantName as: $AppName" }
-#   throw "Failed to connect to: $TenantName as: $AppName"
-#}
+} catch {
+   if ($ScriptDebug) { Send-DebugMessage "Failed to connect to: $TenantName as: $AppName" }
+   throw "Failed to connect to: $TenantName as: $AppName"
+}
 
 # Create fingerprint group
-if ($ScriptDebug) { Send-DebugMessage "Creating Fingerprint Group" }
-$TimeStamp = (Get-Date).DateTime
-New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "challengelabscleanup" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+try {
+	if ($ScriptDebug) { Send-DebugMessage "Creating Fingerprint Group" }
+	$TimeStamp = (Get-Date).DateTime
+	$FileTime = (get-date).ToFileTime()
+	New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "challengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+} catch {
+	if ($ScriptDebug) { Send-DebugMessage "Failed to create Fingerprint Group" }
+}
 
+# Tenant validation to ensure script is running in the proper Tenant
 $VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
 if ($VerifiedDomain -Like "*Hexelo*") {
 	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
