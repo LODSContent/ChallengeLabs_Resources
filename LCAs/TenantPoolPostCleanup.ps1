@@ -64,7 +64,9 @@ try {
 	New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "Challenge Labs Cleanup - $TimeStamp" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
  } catch {}
 
-if ((get-mgorganization).DisplayName -notLike "*Hexelo*") {
+if ((get-mgorganization).DisplayName -Like "*Hexelo*") {
+	if ($ScriptDebug) { Send-DebugMessage "$TenantName contains 'Hexelo'. Continuing script." }
+} else {
 	if ($ScriptDebug) { Send-DebugMessage "$TenantName does not contain 'Hexelo'. Exiting script." }
 	throw "$TenantName does not contain 'Hexelo'. Exiting script."
 }
