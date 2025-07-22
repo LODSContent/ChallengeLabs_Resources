@@ -13,7 +13,7 @@ param (
     $SubscriptionId,
     $ScriptingAppId,
     $ScriptingAppSecret,
-    [switch]$SkipCleanup,
+    [switch]$SkipCleanup=$True,
     [switch]$CreateLabUsers,
     [switch]$ScriptDebug
 )
@@ -93,18 +93,13 @@ if (!$SkipCleanup) {
 	}
  }
 
-try {
-	# MgGraph Authentication block (Cloud Subscription Target)
-	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
-	$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
-	Connect-MgGraph -AccessToken $SecureToken -NoWelcome
-	$Context = Get-MgContext
-	$AppName = $Context.AppName
-	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
-} catch {
-	if ($ScriptDebug) { Send-DebugMessage "Failed to connect to: $TenantName as: $AppName)" }
-	Throw "Failed to connect to: $TenantName as: $AppName - Exiting staging process."
-}
+# MgGraph Authentication block (Cloud Subscription Target)
+$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
+$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
+Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+$Context = Get-MgContext
+$AppName = $Context.AppName
+if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
 
 # Update Service Principal Permissions
 $Permissions = @'
