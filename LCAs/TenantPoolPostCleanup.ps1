@@ -60,7 +60,7 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
 #}
 
 $TimeStamp = (Get-Date).DateTime
-New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "Challenge Labs Cleanup - $TimeStamp" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "Challenge Labs Cleanup" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
 
 $VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
 if ($VerifiedDomain -Like "*Hexelo*") {
