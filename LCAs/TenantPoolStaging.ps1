@@ -15,7 +15,7 @@ param (
     $ScriptingAppSecret,
     [switch]$SkipCleanup,
     [switch]$CreateLabUsers,
-    [switch]$ScriptDebug=$True
+    [switch]$ScriptDebug
 )
 
 function Send-DebugMessage {
