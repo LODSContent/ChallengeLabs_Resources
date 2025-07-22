@@ -48,7 +48,8 @@ if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*
 #>
 
 if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
-    Return $False
+    if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
+    throw "Tenant name or password are blank."
 }
 
 if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
