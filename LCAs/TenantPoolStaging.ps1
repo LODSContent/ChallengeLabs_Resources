@@ -95,9 +95,8 @@ if (!$SkipCleanup) {
 
 try {
 	# MgGraph Authentication block (Cloud Subscription Target)
-	$SecureToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName -AsSecureString).Token
-	# Convert SecureString back to plain text for Invoke-RestMethod headers
-	$AccessToken = [System.Net.NetworkCredential]::new("", $SecureToken).Password
+	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
+	$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
 	Connect-MgGraph -AccessToken $SecureToken -NoWelcome
 	$Context = Get-MgContext
 	$AppName = $Context.AppName
