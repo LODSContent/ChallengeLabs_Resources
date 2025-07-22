@@ -93,7 +93,7 @@ if (!$SkipCleanup) {
 	}
  }
 
-try {
+#try {
 	# MgGraph Authentication block (Cloud Subscription Target)
 	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
 	$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
@@ -101,9 +101,9 @@ try {
 	$Context = Get-MgContext
 	$AppName = $Context.AppName
 	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
-} catch {
-	throw "Failed to connect to: $TenantName as: $AppName"
-}
+#} catch {
+#	throw "Failed to connect to: $TenantName as: $AppName"
+#}
 
 # Update Service Principal Permissions
 $Permissions = @'
