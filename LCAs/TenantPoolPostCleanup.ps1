@@ -59,6 +59,8 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
 #   throw "Failed to connect to: $TenantName as: $AppName"
 #}
 
+# Create fingerprint group
+if ($ScriptDebug) { Send-DebugMessage "Creating Fingerprint Group" }
 $TimeStamp = (Get-Date).DateTime
 New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "challengelabscleanup" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
 
