@@ -73,7 +73,7 @@ try {
 	if ($ScriptDebug) { Send-DebugMessage "Creating Fingerprint Group" }
 	$TimeStamp = (Get-Date).DateTime
 	$FileTime = (get-date).ToFileTime()
-	New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "challengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+	New-MgGroup -DisplayName "zChallenge Labs Cleanup - $TimeStamp"  -MailNickname "zchallengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
 } catch {
 	if ($ScriptDebug) { Send-DebugMessage "Failed to create Fingerprint Group" }
 }
