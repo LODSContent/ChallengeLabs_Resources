@@ -11,7 +11,7 @@ param (
 )
 
 if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
-    Return $False
+    throw "Tenant name or password are blank."
 }
 
 $Password = $Password.trim(" ")
