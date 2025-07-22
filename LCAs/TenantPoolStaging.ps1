@@ -13,9 +13,9 @@ param (
     $SubscriptionId,
     $ScriptingAppId,
     $ScriptingAppSecret,
-    [switch]$SkipCleanup=$True,
+    [switch]$SkipCleanup,
     [switch]$CreateLabUsers,
-    [switch]$ScriptDebug
+    [switch]$ScriptDebug=$True
 )
 
 function Send-DebugMessage {
