@@ -59,6 +59,15 @@ try {
    throw "Failed to connect to: $TenantName as: $AppName"
 }
 
+# Tenant validation to ensure script is running in the proper Tenant
+$VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
+if ($VerifiedDomain -Like "*Hexelo*") {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
+} else {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
+	throw "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
+}
+
 # Create fingerprint group
 try {
 	if ($ScriptDebug) { Send-DebugMessage "Creating Fingerprint Group" }
@@ -67,15 +76,6 @@ try {
 	New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "challengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
 } catch {
 	if ($ScriptDebug) { Send-DebugMessage "Failed to create Fingerprint Group" }
-}
-
-# Tenant validation to ensure script is running in the proper Tenant
-$VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
-if ($VerifiedDomain -Like "*Hexelo*") {
-	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
-} else {
-	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
-	throw "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
 }
 
 # Create a random password for new admins and password resets
