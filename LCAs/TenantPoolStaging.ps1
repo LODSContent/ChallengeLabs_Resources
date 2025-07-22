@@ -686,6 +686,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
      			if ($scriptDebug) { Send-DebugMessage "Successfully initiated Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
 		} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
+   			throw "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
   		}
   
 		# Set the context to the correct subscription
@@ -694,6 +695,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
      			if ($scriptDebug) { Send-DebugMessage "Successfully used Set-AzContext with SubscriptionId: $SubscriptionId" }
 		} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
+   			throw "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
   		}
     
 		# Remove and re-add Owner Role to the lab user
