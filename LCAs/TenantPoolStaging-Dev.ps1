@@ -18,33 +18,6 @@ param (
     [switch]$ScriptDebug
 )
 
-<#
-if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
-    $RandomHex = -join (Get-Random ((0..9) + (97..105 | %{[char]$_})) -Count 12)
-    $Password = "Pw1@$RandomHex"
-}
-#>
-
-if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
-    Return $False
-}
-
-if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
-    $SubscriptionId = $Null
-} else {
-    $SubscriptionId = $SubscriptionId.trim(" ")
-}
-
-$UserName = $UserName.trim(" ")
-$Password = $Password.trim(" ")
-$TenantName = $TenantName.trim(" ")
-
-$PoolUserName = $UserName
-$PoolPassword = $Password
-$TapUser = "LabAdmin@$TenantName"
-$LegacyPassword = $Password
-$Lifetime = 300
-
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -66,6 +39,36 @@ function Send-DebugMessage {
    }
    #Write-Host $Message
 }
+
+<#
+if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
+    $RandomHex = -join (Get-Random ((0..9) + (97..105 | %{[char]$_})) -Count 12)
+    $Password = "Pw1@$RandomHex"
+}
+#>
+
+if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
+    if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
+    throw "Tenant name or password are blank."
+}
+
+if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
+    $SubscriptionId = $Null
+    if ($ScriptDebug) { Send-DebugMessage "SubscriptionId not present." }
+} else {
+    $SubscriptionId = $SubscriptionId.trim(" ")
+    if ($ScriptDebug) { Send-DebugMessage "Found SubscriptionId: $SubscriptionId" }
+}
+
+$UserName = $UserName.trim(" ")
+$Password = $Password.trim(" ")
+$TenantName = $TenantName.trim(" ")
+
+$PoolUserName = $UserName
+$PoolPassword = $Password
+$TapUser = "LabAdmin@$TenantName"
+$LegacyPassword = $Password
+$Lifetime = 300
 
 # Run cleanup routine
 if (!$SkipCleanup) {
@@ -91,13 +94,27 @@ if (!$SkipCleanup) {
 	}
  }
 
-# MgGraph Authentication block (Cloud Subscription Target)
-$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
-$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
-Connect-MgGraph -AccessToken $SecureToken -NoWelcome
-$Context = Get-MgContext
-$AppName = $Context.AppName
-if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
+try {
+	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName as: $AppName in the TenantPoolStaging script." }
+	# MgGraph Authentication block (Cloud Subscription Target)
+	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
+	$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
+	Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+	$Context = Get-MgContext
+	$AppName = $Context.AppName
+	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
+} catch {
+	throw "Failed to connect to: $TenantName as: $AppName"
+}
+
+# Tenant validation to ensure script is running in the proper Tenant
+$VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
+if ($VerifiedDomain -Like "*Hexelo*") {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
+} else {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
+	throw "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
+}
 
 # Update Service Principal Permissions
 $Permissions = @'
@@ -665,8 +682,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			-Body $secretBody `
 			-ContentType "application/json"
 	 	$ScriptingAppSecret = $Secret.SecretText
-   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 15 seconds." }
-		Start-Sleep -seconds 15
+   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 30 seconds." }
+		Start-Sleep -seconds 30
 	
 		# Create a secure string for the client secret
 		$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
@@ -675,11 +692,23 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 		$credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
 		
 		# Authenticate with Azure
-		Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $TenantName | Out-Null
-		
+		try {
+  			Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $TenantName | Out-Null
+     			if ($scriptDebug) { Send-DebugMessage "Successfully initiated Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
+		} catch {
+			if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
+   			throw "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
+  		}
+  
 		# Set the context to the correct subscription
-		Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
-		
+		try {
+  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
+     			if ($scriptDebug) { Send-DebugMessage "Successfully used Set-AzContext with SubscriptionId: $SubscriptionId" }
+		} catch {
+			if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
+   			throw "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
+  		}
+    
 		# Remove and re-add Owner Role to the lab user
 		try {
 		    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
