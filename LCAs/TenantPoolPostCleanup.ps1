@@ -59,16 +59,15 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
 #   throw "Failed to connect to: $TenantName as: $AppName"
 #}
 
-try {
-	$TimeStamp = (Get-Date).DateTime
-	New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "Challenge Labs Cleanup - $TimeStamp" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
- } catch {}
+$TimeStamp = (Get-Date).DateTime
+New-MgGroup -DisplayName "Challenge Labs Cleanup - $TimeStamp"  -MailNickname "Challenge Labs Cleanup - $TimeStamp" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
 
-if ((get-mgorganization).VerifiedDomains.Name -Like "*Hexelo*") {
-	if ($ScriptDebug) { Send-DebugMessage "$TenantName contains 'Hexelo'. Continuing script." }
+$VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
+if ($VerifiedDomain -Like "*Hexelo*") {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
 } else {
-	if ($ScriptDebug) { Send-DebugMessage "$TenantName does not contain 'Hexelo'. Exiting script." }
-	throw "$TenantName does not contain 'Hexelo'. Exiting script."
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
+	throw "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
 }
 
 # Create a random password for new admins and password resets
