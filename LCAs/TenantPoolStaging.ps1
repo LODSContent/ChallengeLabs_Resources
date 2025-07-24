@@ -40,6 +40,8 @@ function Send-DebugMessage {
    #Write-Host $Message
 }
 
+if ($ScriptDebug) { Send-DebugMessage "Starting TenantPoolStaging for $TenantName" }
+
 <#
 if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*") {
     $RandomHex = -join (Get-Random ((0..9) + (97..105 | %{[char]$_})) -Count 12)
@@ -68,7 +70,7 @@ $PoolUserName = $UserName
 $PoolPassword = $Password
 $TapUser = "LabAdmin@$TenantName"
 $LegacyPassword = $Password
-$Lifetime = 300
+$Lifetime = 480
 
 # Run cleanup routine
 if (!$SkipCleanup) {
@@ -78,7 +80,9 @@ if (!$SkipCleanup) {
 	    Password = $Password
 	    ScriptDebug = $ScriptDebug    
 	}
-	
+
+ 	if ($ScriptDebug) { Send-DebugMessage "Starting TenantPoolPostCleanup for $TenantName" }
+ 
 	# URL of the script on GitHub
 	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup.ps1"
 	
@@ -88,9 +92,9 @@ if (!$SkipCleanup) {
 	$CleanupResponse = & $scriptBlock @Params
 	
 	if ($CleanupResponse) {
-		if ($ScriptDebug) { Send-DebugMessage "Cleanup completed successfully for $TenantName" }
+		if ($ScriptDebug) { Send-DebugMessage "TenantPoolPostCleanup completed successfully for $TenantName" }
 	} else {
-		if ($ScriptDebug) { Send-DebugMessage "Possible errors running cleanup for $TenantName" }
+		if ($ScriptDebug) { Send-DebugMessage "Possible errors running TenantPoolPostCleanup for $TenantName" }
 	}
  }
 
@@ -759,5 +763,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
     Set-LabVariable -Name CredentialPool -Value 'No'
     if ($ScriptDebug) { Send-DebugMessage "Credential Pool not available. Falling back on manual credentials." }
 }
+
+if ($ScriptDebug) { Send-DebugMessage "Finished TenantPoolStaging for $TenantName" }
 
 return $true
