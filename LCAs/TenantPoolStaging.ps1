@@ -70,7 +70,7 @@ $PoolUserName = $UserName
 $PoolPassword = $Password
 $TapUser = "LabAdmin@$TenantName"
 $LegacyPassword = $Password
-$Lifetime = 480
+$Lifetime = 720
 
 # Run cleanup routine
 if (!$SkipCleanup) {
@@ -478,10 +478,10 @@ if ($UserName -ne $null -or $UserName -ne '') {
                 "isRegistrationRequired" = $false
             }
         )
-        "defaultLifetimeInMinutes" = 60
+        "defaultLifetimeInMinutes" = 720
         "defaultLength"         = 8
         "minimumLifetimeInMinutes" = 60
-        "maximumLifetimeInMinutes" = 480
+        "maximumLifetimeInMinutes" = 720
         "isUsableOnce"          = $false  # Allow multiple uses
     }
 
