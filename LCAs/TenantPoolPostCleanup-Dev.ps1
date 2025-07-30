@@ -7,12 +7,17 @@
 param (
     $TenantName,
     $Password,
+    $LabInstanceId,
     [switch]$ScriptDebug    
 )
 
 if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
     if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
     throw "Tenant name or password are blank."
+}
+
+if (($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
+	$LabInstanceId = "NoID"
 }
 
 $Password = $Password.trim(" ")
@@ -64,7 +69,7 @@ try {
 	if ($ScriptDebug) { Send-DebugMessage "Creating Fingerprint Group" }
 	$TimeStamp = (Get-Date).DateTime
 	$FileTime = (get-date).ToFileTime()
-	New-MgGroup -DisplayName "zChallenge Labs Cleanup - $TimeStamp"  -MailNickname "zchallengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+	New-MgGroup -DisplayName "zChallenge Labs Cleanup - $LabInstanceId - $TimeStamp"  -MailNickname "zchallengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
 } catch {
 	if ($ScriptDebug) { Send-DebugMessage "Failed to create Fingerprint Group" }
 }
