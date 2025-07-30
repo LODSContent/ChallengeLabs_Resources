@@ -38,7 +38,7 @@ if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '
     throw "Tenant name or password are blank."
 }
 
-if (($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
+if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 	$LabInstanceId = "NoID"
 }
 if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
