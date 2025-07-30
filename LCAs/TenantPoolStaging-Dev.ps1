@@ -289,7 +289,9 @@ foreach ($api in $Permissions.Keys) {
 	if (-not $apiSp) {
 		if ($ScriptDebug) { Send-DebugMessage "Service Principal for API $api (appId: $apiAppId) not found in tenant $TenantName" }
 		continue
-	}
+	} else {
+		if ($ScriptDebug) { Send-DebugMessage "Service Principal for API '$api' found." }
+ 	}
 	
 	# Get the current permissions of the service principal
 	$appPerms = (get-mgcontext).Scopes | Sort-Object
