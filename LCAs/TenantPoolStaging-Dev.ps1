@@ -64,6 +64,7 @@ if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
 if (($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 	$LabInstanceId = "NoID"
 }
+if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
 $UserName = $UserName.trim(" ")
 $Password = $Password.trim(" ")
