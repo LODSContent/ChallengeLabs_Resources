@@ -41,6 +41,7 @@ if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '
 if (($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 	$LabInstanceId = "NoID"
 }
+if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
