@@ -7,16 +7,9 @@
 param (
     $TenantName,
     $Password,
+    $LabInstanceId,
     [switch]$ScriptDebug    
 )
-
-if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
-    if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
-    throw "Tenant name or password are blank."
-}
-
-$Password = $Password.trim(" ")
-$TenantName = $TenantName.trim(" ")
 
 function Send-DebugMessage {
     param (
@@ -39,6 +32,19 @@ function Send-DebugMessage {
    }
    #Write-Host $Message
 }
+
+if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
+    if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
+    throw "Tenant name or password are blank."
+}
+
+if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
+	$LabInstanceId = "NoID"
+}
+if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
+
+$Password = $Password.trim(" ")
+$TenantName = $TenantName.trim(" ")
 
 if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Variable*") {
     if ($ScriptDebug) { Send-DebugMessage "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process." }
@@ -64,7 +70,7 @@ try {
 	if ($ScriptDebug) { Send-DebugMessage "Creating Fingerprint Group" }
 	$TimeStamp = (Get-Date).DateTime
 	$FileTime = (get-date).ToFileTime()
-	New-MgGroup -DisplayName "zChallenge Labs Cleanup - $TimeStamp"  -MailNickname "zchallengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
+	New-MgGroup -DisplayName "zChallenge Labs Cleanup - $LabInstanceId - $TimeStamp"  -MailNickname "zchallengelabscleanup$FileTime" -MailEnabled:$False -SecurityEnabled:$True | Out-Null
 } catch {
 	if ($ScriptDebug) { Send-DebugMessage "Failed to create Fingerprint Group" }
 }
