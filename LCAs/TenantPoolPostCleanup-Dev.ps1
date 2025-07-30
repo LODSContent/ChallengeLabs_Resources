@@ -11,18 +11,6 @@ param (
     [switch]$ScriptDebug    
 )
 
-if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
-    if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
-    throw "Tenant name or password are blank."
-}
-
-if (($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
-	$LabInstanceId = "NoID"
-}
-
-$Password = $Password.trim(" ")
-$TenantName = $TenantName.trim(" ")
-
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -44,6 +32,18 @@ function Send-DebugMessage {
    }
    #Write-Host $Message
 }
+
+if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
+    if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
+    throw "Tenant name or password are blank."
+}
+
+if (($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
+	$LabInstanceId = "NoID"
+}
+
+$Password = $Password.trim(" ")
+$TenantName = $TenantName.trim(" ")
 
 if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Variable*") {
     if ($ScriptDebug) { Send-DebugMessage "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process." }
