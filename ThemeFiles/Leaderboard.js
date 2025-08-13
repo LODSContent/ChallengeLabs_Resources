@@ -1,13 +1,13 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.04
+ * Version: 1.05
  * Date: August 13, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID 
- *              handling (displayed in uppercase) and timeout management for server requests. The player 
- *              name and game ID entry form is placed in a "Leaderboard" section under a "Challenge Labs" 
- *              tab in the existing tab bar, appended to the .tabs container with proper classes for display.
- *              Includes tab-switching logic to handle dynamic tabs and ensure visibility.
+ *              handling (displayed in uppercase) and timeout management for server requests. The game ID 
+ *              entry form is placed in a "Leaderboard" section under a "Challenge Labs" tab, with a 
+ *              display for the server-generated player name and errors. Tab-switching logic ensures 
+ *              visibility with a green underline on selection.
  */
 
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
@@ -31,20 +31,27 @@ function setLabVariable(name, value) {
 
 // Handle tab switching
 function initializeTabSwitching() {
-    if (debug) { console.log("Leaderboard: Initializing tab switching"); }
-    $('#tabHolder').on('click', '.tabHeading', function() {
-        if (debug) { console.log(`Leaderboard: Tab clicked - ${$(this).data('target')}`); }
-        // Remove selected state from all tabs
-        $('.tabHeading').removeClass('selected').attr('aria-selected', 'false').attr('tabindex', '-1');
-        // Add selected state to clicked tab
-        $(this).addClass('selected').attr('aria-selected', 'true').attr('tabindex', '0');
-        // Hide all tab content
-        $('.tab').css('display', 'none');
-        // Show target tab content
-        const target = $(this).data('target');
-        $(`#${target}`).css('display', 'block');
-        if (debug) { console.log(`Leaderboard: Showing tab content - ${target}`); }
-    });
+    if (debug) { console.log("Leaderboard: Checking for existing tab-switching logic"); }
+    // Check if existing handler exists
+    const hasExistingHandler = $('#tabHolder').data('events') && $('#tabHolder').data('events').click;
+    if (!hasExistingHandler) {
+        if (debug) { console.log("Leaderboard: Initializing tab switching"); }
+        $('#tabHolder').on('click', '.tabHeading', function() {
+            if (debug) { console.log(`Leaderboard: Tab clicked - ${$(this).data('target')}`); }
+            // Remove selected state from all tabs
+            $('.tabHeading').removeClass('selected').attr('aria-selected', 'false').attr('tabindex', '-1');
+            // Add selected state to clicked tab
+            $(this).addClass('selected').attr('aria-selected', 'true').attr('tabindex', '0');
+            // Hide all tab content
+            $('.tab').css('display', 'none');
+            // Show target tab content
+            const target = $(this).data('target');
+            $(`#${target}`).css('display', 'block');
+            if (debug) { console.log(`Leaderboard: Showing tab content - ${target}`); }
+        });
+    } else {
+        if (debug) { console.log("Leaderboard: Existing tab-switching logic detected, skipping initialization"); }
+    }
 }
 
 // end shared functions
@@ -57,21 +64,19 @@ if (leaderboard) {
     function initPlayer() {
         if (debug) { console.log("Leaderboard: Initializing player"); }
         var lab = JSON.parse($('[data-name="labVariables"]').val());
-        lab.Variable.playerName = $('#playerName').val();
         lab.Variable.gameID = $('#gameID').val().toUpperCase(); // Normalize to uppercase
-        lab.Variable.serverAddress = $('#serverAddress').val();
-        if (debug) { console.log(`Leaderboard: Player data - Name: ${lab.Variable.playerName}, GameID: ${lab.Variable.gameID}, Server: ${lab.Variable.serverAddress}`); }
+        if (debug) { console.log(`Leaderboard: Player data - GameID: ${lab.Variable.gameID}`); }
        
         // Update gameID input field to show uppercase
         $('#gameID').val(lab.Variable.gameID);
        
         if (lab.Variable.gameID.length > 1) {
             if (debug) { console.log("Leaderboard: Initializing player for marcoscore"); }
-            let leaderboardURL = 'https://' + lab.Variable.serverAddress + '/submit';
+            let leaderboardURL = 'https://marcoscore.cyberjunk.com/submit'; // Hardcoded server address
             let xhttp = new XMLHttpRequest();
             let json = JSON.stringify({
                 "gameID": lab.Variable.gameID,
-                "playerName": lab.Variable.playerName,
+                "playerName": lab.Variable.playerName || "", // Allow server to generate name
                 "scoreAdd": lab.Variable.totalScore
             });
             if (debug) { console.log(`Leaderboard: Sending POST to ${leaderboardURL}`); }
@@ -85,12 +90,10 @@ if (leaderboard) {
                     let response = JSON.parse(xhttp.responseText);
                     if (response.success && response.playerName) {
                         if (debug) { console.log("Leaderboard: Received playerName from marcoscore response"); }
-                        if (!lab.Variable.playerName) {
-                            lab.Variable.playerName = response.playerName;
-                            if (debug) { console.log(`Leaderboard: Updated playerName to ${lab.Variable.playerName}`); }
-                            $('#playerName').val(lab.Variable.playerName);
-                            $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-                        }
+                        lab.Variable.playerName = response.playerName;
+                        $('#player-name-display').html(`Your Player Name is: ${lab.Variable.playerName}`);
+                        if (debug) { console.log(`Leaderboard: Updated playerName to ${lab.Variable.playerName}`); }
+                        $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                     }
                 } else if (this.readyState === 4) {
                     if (debug) { console.log(`Leaderboard: marcoscore player initialization failed - Status: ${this.status}`); }
@@ -100,7 +103,7 @@ if (leaderboard) {
             };
             xhttp.ontimeout = function() {
                 if (debug) { console.log("Leaderboard: marcoscore player initialization timed out"); }
-                $('#leaderboard-error').html('<div style="color: red;">Error: Request to MarcoScore timed out. Please check Game ID or server address and try again.</div>');
+                $('#leaderboard-error').html('<div style="color: red;">Error: Request to MarcoScore timed out. Please check Game ID and try again.</div>');
             };
         } else {
             if (debug) { console.log("Leaderboard: Invalid gameID, skipping initialization"); }
@@ -117,11 +120,11 @@ if (leaderboard) {
         lab.Variable.gameID = lab.Variable.gameID.toUpperCase(); // Normalize to uppercase
         if (lab.Variable.gameID.length > 1) {
             if (debug) { console.log("Leaderboard: Posting score to marcoscore"); }
-            let leaderboardURL = 'https://' + lab.Variable.serverAddress + '/submit';
+            let leaderboardURL = 'https://marcoscore.cyberjunk.com/submit'; // Hardcoded server address
             let xhttp = new XMLHttpRequest();
             let json = JSON.stringify({
                 "gameID": lab.Variable.gameID,
-                "playerName": lab.Variable.playerName,
+                "playerName": lab.Variable.playerName || "", // Allow server to generate name
                 "scoreAdd": score
             });
             if (debug) { console.log(`Leaderboard: Sending POST to ${leaderboardURL}`); }
@@ -135,12 +138,10 @@ if (leaderboard) {
                     let response = JSON.parse(xhttp.responseText);
                     if (response.success && response.playerName) {
                         if (debug) { console.log("Leaderboard: Received playerName from marcoscore response"); }
-                        if (!lab.Variable.playerName) {
-                            lab.Variable.playerName = response.playerName;
-                            if (debug) { console.log(`Leaderboard: Updated playerName to ${lab.Variable.playerName}`); }
-                            $('#playerName').val(lab.Variable.playerName);
-                            $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-                        }
+                        lab.Variable.playerName = response.playerName;
+                        $('#player-name-display').html(`Your Player Name is: ${lab.Variable.playerName}`);
+                        if (debug) { console.log(`Leaderboard: Updated playerName to ${lab.Variable.playerName}`); }
+                        $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                     }
                 } else if (this.readyState === 4) {
                     if (debug) { console.log(`Leaderboard: marcoscore score post failed - Status: ${this.status}`); }
@@ -150,7 +151,7 @@ if (leaderboard) {
             };
             xhttp.ontimeout = function() {
                 if (debug) { console.log("Leaderboard: marcoscore score post timed out"); }
-                $('#leaderboard-error').html('<div style="color: red;">Error: Score post to MarcoScore timed out. Please check Game ID or server address and try again.</div>');
+                $('#leaderboard-error').html('<div style="color: red;">Error: Score post to MarcoScore timed out. Please check Game ID and try again.</div>');
             };
         } else {
             if (debug) { console.log("Leaderboard: Invalid gameID, skipping score post"); }
@@ -282,8 +283,7 @@ if (leaderboard) {
                 let debugVar = getLabVariable('debug');
                 if (!debugVar) { debugVar = "False"; }
                 let serverType = 'marcoscore'; // Only support marcoscore
-                let serverAddress = getLabVariable('ServerAddress');
-                if (!serverAddress) { serverAddress = "marcoscore.cyberjunk.com"; }
+                let serverAddress = 'marcoscore.cyberjunk.com'; // Hardcoded
                 let gameID = getLabVariable('GameID');
                 if (!gameID) { gameID = ""; }
                 else { gameID = gameID.toUpperCase(); } // Normalize default gameID
@@ -345,16 +345,10 @@ if (leaderboard) {
                             <div class="leaderboard-section">
                                 <h4>Leaderboard</h4>
                                 <hr>
-                                <label for="playerName">Enter your Player or Team name:</label>
-                                <input type="text" placeholder="" id="playerName" value="${lab.Variable.playerName}">
-                                <br><br>
                                 <label for="gameID">Enter the Game ID:</label>
                                 <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
-                                <br><br>
-                                <label for="serverAddress">Enter the server address:</label>
-                                <input type="text" placeholder="" id="serverAddress" value="${lab.Variable.serverAddress}">
-                                <br><br>
                                 <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
+                                <div id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</div>
                                 <div id="leaderboard-error"></div>
                             </div>
                         </div>
@@ -366,16 +360,10 @@ if (leaderboard) {
                         <div class="leaderboard-section">
                             <h4>Leaderboard</h4>
                             <hr>
-                            <label for="playerName">Enter your Player or Team name:</label>
-                            <input type="text" placeholder="" id="playerName" value="${lab.Variable.playerName}">
-                            <br><br>
                             <label for="gameID">Enter the Game ID:</label>
                             <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
-                            <br><br>
-                            <label for="serverAddress">Enter the server address:</label>
-                            <input type="text" placeholder="" id="serverAddress" value="${lab.Variable.serverAddress}">
-                            <br><br>
                             <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
+                            <div id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</div>
                             <div id="leaderboard-error"></div>
                         </div>
                     `);
@@ -395,6 +383,12 @@ if (leaderboard) {
                     if (debug) { console.log("Leaderboard: Triggering click on Challenge Labs tab"); }
                     $('[data-target="challengeLabsTab"]').click();
                 }
+                // Ensure tab content visibility
+                if (debug) { console.log("Leaderboard: Ensuring Challenge Labs tab visibility"); }
+                $('.tab').css('display', 'none');
+                $('#challengeLabsTab').css('display', 'block');
+                $('.tabHeading').removeClass('selected').attr('aria-selected', 'false').attr('tabindex', '-1');
+                $('[data-target="challengeLabsTab"]').addClass('selected').attr('aria-selected', 'true').attr('tabindex', '0');
             }
         } else {
             if (debug) { console.log("Leaderboard: Skipping initialization - editorWrapper present or Leaderboard variable not set"); }
