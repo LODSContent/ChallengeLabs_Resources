@@ -1,12 +1,13 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.02
+ * Version: 1.03
  * Date: August 13, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID 
  *              handling (displayed in uppercase) and timeout management for server requests. The player 
  *              name and game ID entry form is placed in a "Leaderboard" section under a "Challenge Labs" 
- *              tab in the existing tab bar. Supports penalty and task scoring with debug logging.
+ *              tab in the existing tab bar, appended to the .tabs container with proper classes for display.
+ *              Supports penalty and task scoring with debug logging.
  */
 
 if (debug) { console.log("Leaderboard: Script is loading"); }
@@ -269,8 +270,6 @@ if (leaderboard) {
                 else { gameID = gameID.toUpperCase(); } // Normalize default gameID
                 let playerName = getLabVariable('PlayerName');
                 if (!playerName) { playerName = ""; }
-                let playerID = getLabVariable('PlayerID');
-                if (!playerID) { playerID = ""; }
                 let stepPenalty = getLabVariable('StepPenalty');
                 if (!stepPenalty) { stepPenalty = 100; }
                 let totalPenalty = getLabVariable('TotalPenalty');
@@ -288,7 +287,6 @@ if (leaderboard) {
                     serverAddress: serverAddress,
                     gameID: gameID,
                     playerName: playerName,
-                    playerID: playerID,
                     stepPenalty: stepPenalty,
                     totalPenalty: totalPenalty,
                     scoreValue: scoreValue,
@@ -323,8 +321,8 @@ if (leaderboard) {
                 let challengeLabsContent = $('#challengeLabsTab');
                 if (challengeLabsContent.length === 0) {
                     if (debug) { console.log("Leaderboard: Creating Challenge Labs tab content"); }
-                    $('.instructions-client').append(`
-                        <div id="challengeLabsTab" class="tab-content" style="display: none;">
+                    $('.tabs').append(`
+                        <div id="challengeLabsTab" class="tab tab-content zoomable" style="display: none;">
                             <div class="leaderboard-section">
                                 <h4>Leaderboard</h4>
                                 <hr>
@@ -370,6 +368,11 @@ if (leaderboard) {
                 $('#leaderboardSubmitBtn').on('click', function() {
                     initPlayer();
                 });
+                // Ensure tab-switching logic is triggered
+                if (challengeLabsTab.length === 0) {
+                    if (debug) { console.log("Leaderboard: Triggering click on Challenge Labs tab"); }
+                    $('[data-target="challengeLabsTab"]').click();
+                }
             }
         } else {
             if (debug) { console.log("Leaderboard: Skipping initialization - editorWrapper present or Leaderboard variable not set"); }
