@@ -1,15 +1,16 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.03
+ * Version: 1.04
  * Date: August 13, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID 
  *              handling (displayed in uppercase) and timeout management for server requests. The player 
  *              name and game ID entry form is placed in a "Leaderboard" section under a "Challenge Labs" 
  *              tab in the existing tab bar, appended to the .tabs container with proper classes for display.
- *              Supports penalty and task scoring with debug logging.
+ *              Includes tab-switching logic to handle dynamic tabs and ensure visibility.
  */
 
+if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
 if (debug) { console.log("Leaderboard: Script is loading"); }
 
 // begin shared functions
@@ -26,6 +27,24 @@ function getLabVariable(name) {
 function setLabVariable(name, value) {
     if (debug) { console.log(`Leaderboard: Setting lab variable ${name} to ${value}`); }
     $('[data-name="' + name + '"]').val(value).trigger("change");
+}
+
+// Handle tab switching
+function initializeTabSwitching() {
+    if (debug) { console.log("Leaderboard: Initializing tab switching"); }
+    $('#tabHolder').on('click', '.tabHeading', function() {
+        if (debug) { console.log(`Leaderboard: Tab clicked - ${$(this).data('target')}`); }
+        // Remove selected state from all tabs
+        $('.tabHeading').removeClass('selected').attr('aria-selected', 'false').attr('tabindex', '-1');
+        // Add selected state to clicked tab
+        $(this).addClass('selected').attr('aria-selected', 'true').attr('tabindex', '0');
+        // Hide all tab content
+        $('.tab').css('display', 'none');
+        // Show target tab content
+        const target = $(this).data('target');
+        $(`#${target}`).css('display', 'block');
+        if (debug) { console.log(`Leaderboard: Showing tab content - ${target}`); }
+    });
 }
 
 // end shared functions
@@ -342,6 +361,7 @@ if (leaderboard) {
                     `);
                 } else {
                     if (debug) { console.log("Leaderboard: Appending Leaderboard section to existing Challenge Labs tab"); }
+                    challengeLabsContent.find('.leaderboard-section').remove(); // Remove existing section to avoid duplicates
                     challengeLabsContent.append(`
                         <div class="leaderboard-section">
                             <h4>Leaderboard</h4>
@@ -368,7 +388,9 @@ if (leaderboard) {
                 $('#leaderboardSubmitBtn').on('click', function() {
                     initPlayer();
                 });
-                // Ensure tab-switching logic is triggered
+                // Initialize tab switching
+                initializeTabSwitching();
+                // Trigger click on Challenge Labs tab if newly created
                 if (challengeLabsTab.length === 0) {
                     if (debug) { console.log("Leaderboard: Triggering click on Challenge Labs tab"); }
                     $('[data-target="challengeLabsTab"]').click();
