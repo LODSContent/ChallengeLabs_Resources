@@ -1,14 +1,14 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.09
+ * Version: 1.10
  * Date: August 13, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID 
  *              handling (displayed in uppercase) and timeout management for server requests. The game ID 
  *              entry form is placed in a "Leaderboard" section under a "Challenge Labs" tab, with a 
  *              display for the server-generated player name and errors. The scoreboard name is displayed 
- *              next to the Leaderboard header upon connection. Tab-switching logic ensures visibility with 
- *              a green underline, respecting the page's default tab.
+ *              next to the Leaderboard header, retrieved from the POST /submit response. Tab-switching 
+ *              logic ensures visibility with a green underline, respecting the page's default tab.
  */
 
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
@@ -61,15 +61,6 @@ let leaderboard = getLabVariable('Leaderboard');
 if (leaderboard) {
     if (debug) { console.log("Leaderboard: Leaderboard enabled, proceeding with initialization"); }
    
-    // Initialize Socket.IO client
-    let socket;
-    if (typeof io === 'undefined') {
-        if (debug) { console.log("Leaderboard: Socket.IO not loaded, scoreboard name will not be displayed"); }
-    } else {
-        socket = io('https://marcoscore.cyberjunk.com');
-        if (debug) { console.log("Leaderboard: Socket.IO client initialized"); }
-    }
-   
     // Initialize the player on the leaderboard
     function initPlayer() {
         if (debug) { console.log("Leaderboard: Initializing player"); }
@@ -102,12 +93,12 @@ if (leaderboard) {
                         if (debug) { console.log("Leaderboard: Received playerName from marcoscore response"); }
                         lab.Variable.playerName = response.playerName;
                         $('#player-name-display').html(`Your Player Name is: ${lab.Variable.playerName}`);
+                        if (response.scoreboardName) {
+                            if (debug) { console.log(`Leaderboard: Received scoreboardName - ${response.scoreboardName}`); }
+                            $('#leaderboard-header').text(`Leaderboard: ${response.scoreboardName}`);
+                        }
                         if (debug) { console.log(`Leaderboard: Updated playerName to ${lab.Variable.playerName}`); }
                         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-                        // Join scoreboard via Socket.IO if available
-                        if (socket) {
-                            socket.emit('joinScoreboard', lab.Variable.gameID);
-                        }
                     }
                 } else if (this.readyState === 4) {
                     if (debug) { console.log(`Leaderboard: marcoscore player initialization failed - Status: ${this.status}`); }
@@ -154,6 +145,10 @@ if (leaderboard) {
                         if (debug) { console.log("Leaderboard: Received playerName from marcoscore response"); }
                         lab.Variable.playerName = response.playerName;
                         $('#player-name-display').html(`Your Player Name is: ${lab.Variable.playerName}`);
+                        if (response.scoreboardName) {
+                            if (debug) { console.log(`Leaderboard: Received scoreboardName - ${response.scoreboardName}`); }
+                            $('#leaderboard-header').text(`Leaderboard: ${response.scoreboardName}`);
+                        }
                         if (debug) { console.log(`Leaderboard: Updated playerName to ${lab.Variable.playerName}`); }
                         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                     }
@@ -399,22 +394,6 @@ if (leaderboard) {
                 $('#leaderboardSubmitBtn').on('click', function() {
                     initPlayer();
                 });
-                // Handle Socket.IO connection response for scoreboard name
-                if (socket) {
-                    socket.on('connectionResponse', (data) => {
-                        if (data.success && data.name) {
-                            if (debug) { console.log(`Leaderboard: Received scoreboard name - ${data.name}`); }
-                            $('#leaderboard-header').text(`Leaderboard: ${data.name}`);
-                        }
-                    });
-                    // Handle Socket.IO update event for scoreboard name
-                    socket.on('update', (data) => {
-                        if (data.name) {
-                            if (debug) { console.log(`Leaderboard: Updated scoreboard name - ${data.name}`); }
-                            $('#leaderboard-header').text(`Leaderboard: ${data.name}`);
-                        }
-                    });
-                }
                 // Initialize tab switching
                 initializeTabSwitching();
                 // Ensure default tab is preserved
