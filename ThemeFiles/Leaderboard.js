@@ -1,7 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.12
+ * Version: 1.13
  * Date: August 13, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
@@ -9,8 +9,8 @@
  * display for the server-generated player name and errors. The scoreboard name is displayed
  * next to the Leaderboard header, retrieved from the POST /submit response. The player name
  * is displayed in h3 format, preceded by the text "Your Player Name Is: " in normal text,
- * one line below the gameID input box and submit button. Tab-switching logic ensures visibility
- * with a green underline, respecting the page's default tab.
+ * both on the same line, one line below the gameID input box and submit button. Tab-switching
+ * logic ensures visibility with a green underline, respecting the page's default tab.
  */
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
 if (debug) { console.log("Leaderboard: Script is loading"); }
@@ -364,7 +364,7 @@ if (leaderboard) {
                                 <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                                 <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
                                 <br>
-                                <span>Your Player Name Is: </span><h3 id="player-name-display">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
+                                <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
                                 <div id="leaderboard-error"></div>
                             </div>
                         </div>
@@ -380,7 +380,7 @@ if (leaderboard) {
                             <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                             <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
                             <br>
-                            <span>Your Player Name Is: </span><h3 id="player-name-display">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
+                            <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
                             <div id="leaderboard-error"></div>
                         </div>
                     `);
