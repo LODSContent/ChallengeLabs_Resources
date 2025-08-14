@@ -366,7 +366,7 @@ if (leaderboard) {
                                 <label for="gameID">Enter the Game ID:</label>
                                 <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                                 <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
-                                <div id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</div>
+                                <div id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: <h3>${lab.Variable.playerName}</h3>` : ''}</div>
                                 <div id="leaderboard-error"></div>
                             </div>
                         </div>
