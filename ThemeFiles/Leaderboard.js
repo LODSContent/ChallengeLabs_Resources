@@ -1,13 +1,13 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.05
+ * Version: 1.06
  * Date: August 13, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID 
  *              handling (displayed in uppercase) and timeout management for server requests. The game ID 
  *              entry form is placed in a "Leaderboard" section under a "Challenge Labs" tab, with a 
  *              display for the server-generated player name and errors. Tab-switching logic ensures 
- *              visibility with a green underline on selection.
+ *              visibility with a green underline on selection, respecting the page's default tab.
  */
 
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
@@ -378,17 +378,18 @@ if (leaderboard) {
                 });
                 // Initialize tab switching
                 initializeTabSwitching();
-                // Trigger click on Challenge Labs tab if newly created
-                if (challengeLabsTab.length === 0) {
-                    if (debug) { console.log("Leaderboard: Triggering click on Challenge Labs tab"); }
-                    $('[data-target="challengeLabsTab"]').click();
+                // Ensure default tab is preserved
+                let defaultTab = $('.tabHeading.selected');
+                if (defaultTab.length > 0) {
+                    if (debug) { console.log(`Leaderboard: Preserving default tab - ${defaultTab.data('target')}`); }
+                    $('.tab').css('display', 'none');
+                    $(`#${defaultTab.data('target')}`).css('display', 'block');
+                } else {
+                    if (debug) { console.log("Leaderboard: No default tab found, using first tab"); }
+                    $('.tabHeading').first().addClass('selected').attr('aria-selected', 'true').attr('tabindex', '0');
+                    $('.tab').css('display', 'none');
+                    $('.tab').first().css('display', 'block');
                 }
-                // Ensure tab content visibility
-                if (debug) { console.log("Leaderboard: Ensuring Challenge Labs tab visibility"); }
-                $('.tab').css('display', 'none');
-                $('#challengeLabsTab').css('display', 'block');
-                $('.tabHeading').removeClass('selected').attr('aria-selected', 'false').attr('tabindex', '-1');
-                $('[data-target="challengeLabsTab"]').addClass('selected').attr('aria-selected', 'true').attr('tabindex', '0');
             }
         } else {
             if (debug) { console.log("Leaderboard: Skipping initialization - editorWrapper present or Leaderboard variable not set"); }
