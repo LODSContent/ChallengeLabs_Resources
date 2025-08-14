@@ -1,15 +1,16 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.11
+ * Version: 1.12
  * Date: August 13, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
  * entry form is placed in a "Leaderboard" section under a "Challenge Labs" tab, with a
  * display for the server-generated player name and errors. The scoreboard name is displayed
  * next to the Leaderboard header, retrieved from the POST /submit response. The player name
- * is displayed as an h3 element one line below the gameID input box and submit button.
- * Tab-switching logic ensures visibility with a green underline, respecting the page's default tab.
+ * is displayed in h3 format, preceded by the text "Your Player Name Is: " in normal text,
+ * one line below the gameID input box and submit button. Tab-switching logic ensures visibility
+ * with a green underline, respecting the page's default tab.
  */
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
 if (debug) { console.log("Leaderboard: Script is loading"); }
@@ -88,7 +89,7 @@ if (leaderboard) {
                     if (response.success && response.playerName) {
                         if (debug) { console.log("Leaderboard: Received playerName from marcoscore response"); }
                         lab.Variable.playerName = response.playerName;
-                        $('#player-name-display').html(`Your Player Name is: ${lab.Variable.playerName}`);
+                        $('#player-name-display').text(response.playerName); // Update only the h3 with player name
                         if (response.scoreboardName) {
                             if (debug) { console.log(`Leaderboard: Received scoreboardName - ${response.scoreboardName}`); }
                             $('#leaderboard-header').text(`Leaderboard: ${response.scoreboardName}`);
@@ -140,7 +141,7 @@ if (leaderboard) {
                     if (response.success && response.playerName) {
                         if (debug) { console.log("Leaderboard: Received playerName from marcoscore response"); }
                         lab.Variable.playerName = response.playerName;
-                        $('#player-name-display').html(`Your Player Name is: ${lab.Variable.playerName}`);
+                        $('#player-name-display').text(response.playerName); // Update only the h3 with player name
                         if (response.scoreboardName) {
                             if (debug) { console.log(`Leaderboard: Received scoreboardName - ${response.scoreboardName}`); }
                             $('#leaderboard-header').text(`Leaderboard: ${response.scoreboardName}`);
@@ -363,7 +364,7 @@ if (leaderboard) {
                                 <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                                 <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
                                 <br>
-                                <h3 id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</h3>
+                                <span>Your Player Name Is: </span><h3 id="player-name-display">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
                                 <div id="leaderboard-error"></div>
                             </div>
                         </div>
@@ -379,7 +380,7 @@ if (leaderboard) {
                             <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                             <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
                             <br>
-                            <h3 id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</h3>
+                            <span>Your Player Name Is: </span><h3 id="player-name-display">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
                             <div id="leaderboard-error"></div>
                         </div>
                     `);
