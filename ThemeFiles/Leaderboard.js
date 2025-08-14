@@ -1,13 +1,14 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.06
+ * Version: 1.07
  * Date: August 13, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID 
  *              handling (displayed in uppercase) and timeout management for server requests. The game ID 
  *              entry form is placed in a "Leaderboard" section under a "Challenge Labs" tab, with a 
- *              display for the server-generated player name and errors. Tab-switching logic ensures 
- *              visibility with a green underline on selection, respecting the page's default tab.
+ *              display for the server-generated player name (as h3) and errors. The scoreboard name is 
+ *              displayed next to the Leaderboard header upon connection. Tab-switching logic ensures 
+ *              visibility with a green underline, respecting the page's default tab.
  */
 
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
@@ -60,6 +61,10 @@ let leaderboard = getLabVariable('Leaderboard');
 if (leaderboard) {
     if (debug) { console.log("Leaderboard: Leaderboard enabled, proceeding with initialization"); }
    
+    // Initialize Socket.IO client
+    const socket = io('https://marcoscore.cyberjunk.com');
+    if (debug) { console.log("Leaderboard: Socket.IO client initialized"); }
+
     // Initialize the player on the leaderboard
     function initPlayer() {
         if (debug) { console.log("Leaderboard: Initializing player"); }
@@ -94,6 +99,8 @@ if (leaderboard) {
                         $('#player-name-display').html(`Your Player Name is: ${lab.Variable.playerName}`);
                         if (debug) { console.log(`Leaderboard: Updated playerName to ${lab.Variable.playerName}`); }
                         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
+                        // Join scoreboard via Socket.IO
+                        socket.emit('joinScoreboard', lab.Variable.gameID);
                     }
                 } else if (this.readyState === 4) {
                     if (debug) { console.log(`Leaderboard: marcoscore player initialization failed - Status: ${this.status}`); }
@@ -343,12 +350,12 @@ if (leaderboard) {
                     $('.tabs').append(`
                         <div id="challengeLabsTab" class="tab tab-content zoomable" style="display: none;">
                             <div class="leaderboard-section">
-                                <h4>Leaderboard</h4>
+                                <h4 id="leaderboard-header">Leaderboard</h4>
                                 <hr>
                                 <label for="gameID">Enter the Game ID:</label>
                                 <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                                 <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
-                                <div id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</div>
+                                <h3 id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</h3>
                                 <div id="leaderboard-error"></div>
                             </div>
                         </div>
@@ -358,12 +365,12 @@ if (leaderboard) {
                     challengeLabsContent.find('.leaderboard-section').remove(); // Remove existing section to avoid duplicates
                     challengeLabsContent.append(`
                         <div class="leaderboard-section">
-                            <h4>Leaderboard</h4>
+                            <h4 id="leaderboard-header">Leaderboard</h4>
                             <hr>
                             <label for="gameID">Enter the Game ID:</label>
                             <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                             <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
-                            <div id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</div>
+                            <h3 id="player-name-display">${lab.Variable.playerName ? `Your Player Name is: ${lab.Variable.playerName}` : ''}</h3>
                             <div id="leaderboard-error"></div>
                         </div>
                     `);
@@ -375,6 +382,20 @@ if (leaderboard) {
                 // Add submit button listener
                 $('#leaderboardSubmitBtn').on('click', function() {
                     initPlayer();
+                });
+                // Handle Socket.IO connection response
+                socket.on('connectionResponse', (data) => {
+                    if (data.success && data.name) {
+                        if (debug) { console.log(`Leaderboard: Received scoreboard name - ${data.name}`); }
+                        $('#leaderboard-header').text(`Leaderboard: ${data.name}`);
+                    }
+                });
+                // Handle Socket.IO update event for scoreboard name
+                socket.on('update', (data) => {
+                    if (data.name) {
+                        if (debug) { console.log(`Leaderboard: Updated scoreboard name - ${data.name}`); }
+                        $('#leaderboard-header').text(`Leaderboard: ${data.name}`);
+                    }
                 });
                 // Initialize tab switching
                 initializeTabSwitching();
