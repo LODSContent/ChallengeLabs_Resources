@@ -1,7 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.15
+ * Version: 1.16
  * Date: August 15, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
@@ -12,7 +12,7 @@
  * both on the same line, one line below the gameID input box and submit button. Tab-switching
  * logic ensures visibility with a green underline, respecting the page's default tab. Separate
  * MutationObservers watch for dynamically added "scriptTask pass" and "feedback positive"
- * elements to trigger scoring, with duplicate prevention.
+ * elements to trigger scoring after successful validation, with duplicate prevention.
  */
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
 if (debug) { console.log("Leaderboard: Script is loading"); }
@@ -224,7 +224,7 @@ if (leaderboard) {
                 if (!scoredTasks.includes(parseInt(scriptTasks[i])) && scriptTasks[i] != "" && scriptTasks[i] != null) {
                     if (debug) { console.log(`Leaderboard: Found new scored task - ID ${scriptTasks[i]}`); }
                     scoredTasks.push(parseInt(scriptTasks[i]));
-                    var score = parseInt(lab.Variable.scoreValue);
+                    var score = parseInt(lab.Variable.scoreValue) || 1000; // Default to 1000
                     if (debug) { console.log(`Leaderboard: Calculated task score - ${score}`); }
                     // Send the score to the server
                     postScore(score);
@@ -264,7 +264,7 @@ if (leaderboard) {
                 if (!scoredFeedbacks.includes(feedbackItems[i]) && feedbackItems[i] != "" && feedbackItems[i] != null) {
                     if (debug) { console.log(`Leaderboard: Found new positive feedback - ID ${feedbackItems[i]}`); }
                     scoredFeedbacks.push(feedbackItems[i]);
-                    var score = parseInt(lab.Variable.scoreValue);
+                    var score = parseInt(lab.Variable.scoreValue) || 1000; // Default to 1000
                     if (debug) { console.log(`Leaderboard: Calculated feedback score - ${score}`); }
                     // Send the score to the server
                     postScore(score);
@@ -292,7 +292,8 @@ if (leaderboard) {
             const scriptTaskObserver = new MutationObserver((mutations) => {
                 if (debug) { console.log("Leaderboard: Detected scriptTask mutation"); }
                 mutations.forEach(mu => {
-                    if (mu.type !== "attributes" || mu.attributeName !== "class") return;
+                    if (mu.type !== "attributes" || mu.attributeName !== "class" || !mu.target.classList.contains('pass')) return;
+                    if (debug) { console.log("Leaderboard: Valid scriptTask.pass mutation detected"); }
                     getScriptTasks();
                 });
             });
@@ -300,7 +301,13 @@ if (leaderboard) {
                 if (debug) { console.log("Leaderboard: Detected feedbackHolder mutation"); }
                 mutations.forEach(mu => {
                     if (mu.type !== "childList") return;
-                    getFeedbackScores();
+                    if (debug) { console.log("Leaderboard: Checking for new feedback.positive elements"); }
+                    mu.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 && node.classList.contains('feedback') && node.classList.contains('positive')) {
+                            if (debug) { console.log("Leaderboard: Valid feedback.positive node added"); }
+                            getFeedbackScores();
+                        }
+                    });
                 });
             });
             // Observe scriptTask elements
@@ -354,7 +361,7 @@ if (leaderboard) {
                 let totalPenalty = getLabVariable('TotalPenalty');
                 if (!totalPenalty) { totalPenalty = 0; }
                 let scoreValue = getLabVariable('ScoreValue');
-                if (!scoreValue) { scoreValue = 1000; }
+                if (!scoreValue) { scoreValue = 1000; } // Default to 1000
                 let totalScore = getLabVariable('TotalScore');
                 if (!totalScore) { totalScore = 0; }
                 let leaderboard = getLabVariable('Leaderboard');
@@ -434,10 +441,9 @@ if (leaderboard) {
                             <label for="gameID">Enter the Game ID:</label>
                             <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                             <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
-                                <br>
-                                <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
-                                <div id="leaderboard-error"></div>
-                            </div>
+                            <br>
+                            <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
+                            <div id="leaderboard-error"></div>
                         </div>
                     `);
                 }
