@@ -1,7 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.20
+ * Version: 1.21
  * Date: August 15, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
@@ -14,9 +14,9 @@
  * MutationObservers watch for dynamically added "scriptTask pass" elements (attribute changes)
  * and "feedback positive" elements (child list and attribute changes) to trigger scoring after
  * successful validation, with duplicate prevention for both scriptTasks and feedbackItems using
- * a debounced scoring mechanism to handle rapid re-validations.
- */
-if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
+ * a debounced scoring mechanism. StepItems apply penalties only once per unique step, tracked by
+ * clicked status.
+
 if (debug) { console.log("Leaderboard: Script is loading"); }
 
 // begin shared functions
@@ -192,14 +192,23 @@ if (leaderboard) {
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
     }
   
+    // Lock to prevent concurrent stepItems executions
+    let isProcessingStepItems = false;
+  
     // Handle step clicks for penalties
     function stepClicked(step) {
+        if (isProcessingStepItems) {
+            if (debug) { console.log("Leaderboard: Skipping stepClicked, already processing"); }
+            return;
+        }
+        isProcessingStepItems = true;
         if (debug) { console.log(`Leaderboard: Processing step click - Step ${step}`); }
         try {
             var lab = JSON.parse($('[data-name="labVariables"]').val());
         } catch (e) {
             if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
             $('#leaderboard-error').html('<div style="color: red;">Error: Lab variables not found.</div>');
+            isProcessingStepItems = false;
             return;
         }
         for (let i = 0; i < lab.stepItems.length; i++) {
@@ -211,14 +220,14 @@ if (leaderboard) {
                         lab.Variable.totalPenalty = parseInt(lab.Variable.totalPenalty) + parseInt(lab.Variable.stepPenalty);
                         let score = parseInt(lab.Variable.stepPenalty) * -1;
                         if (debug) { console.log(`Leaderboard: Calculated penalty score - ${score}`); }
+                        lab.stepItems[i].clicked = "True";
                         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                         postScore(score);
-                        lab = JSON.parse($('[data-name="labVariables"]').val());
-                        lab.stepItems[i].clicked = "True";
                         if (debug) { console.log(`Leaderboard: Marked step ${step} as clicked`); }
                     } else {
                         if (debug) { console.log(`Leaderboard: Skipping already clicked step - ${step}`); }
                     }
+                    break; // Exit loop after processing the matching step
                 } catch (e) {
                     if (debug) { console.log(`Leaderboard: Error processing step ${step} - ${e.message}`); }
                 }
@@ -226,6 +235,7 @@ if (leaderboard) {
         }
         if (debug) { console.log("Leaderboard: Saving updated lab variables after step click"); }
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
+        isProcessingStepItems = False;
     }
   
     // Lock to prevent concurrent getScriptTasks executions
