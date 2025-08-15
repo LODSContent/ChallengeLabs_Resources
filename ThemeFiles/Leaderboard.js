@@ -15,7 +15,7 @@
  * and "feedback positive" elements (child list and attribute changes) to trigger scoring after
  * successful validation, with duplicate prevention for both scriptTasks and feedbackItems.
  */
-if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
+//if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
 if (debug) { console.log("Leaderboard: Script is loading"); }
 // begin shared functions
 // Retrieve a lab variable listed in Markdown as a case-insensitive variable name
