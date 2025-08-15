@@ -1,7 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.19
+ * Version: 1.20
  * Date: August 15, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
@@ -13,9 +13,10 @@
  * logic ensures visibility with a green underline, respecting the page's default tab. Separate
  * MutationObservers watch for dynamically added "scriptTask pass" elements (attribute changes)
  * and "feedback positive" elements (child list and attribute changes) to trigger scoring after
- * successful validation, with duplicate prevention for both scriptTasks and feedbackItems.
+ * successful validation, with duplicate prevention for both scriptTasks and feedbackItems using
+ * a debounced scoring mechanism to handle rapid re-validations.
  */
-//if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
+if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
 if (debug) { console.log("Leaderboard: Script is loading"); }
 
 // begin shared functions
@@ -227,14 +228,23 @@ if (leaderboard) {
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
     }
   
+    // Lock to prevent concurrent getScriptTasks executions
+    let isProcessingScriptTasks = false;
+  
     // Handle script task scoring
     const debouncedGetScriptTasks = debounce(function() {
+        if (isProcessingScriptTasks) {
+            if (debug) { console.log("Leaderboard: Skipping getScriptTasks, already processing"); }
+            return;
+        }
+        isProcessingScriptTasks = true;
         if (debug) { console.log("Leaderboard: Checking for completed script tasks"); }
         try {
             var lab = JSON.parse($('[data-name="labVariables"]').val());
         } catch (e) {
             if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
             $('#leaderboard-error').html('<div style="color: red;">Error: Lab variables not found.</div>');
+            isProcessingScriptTasks = false;
             return;
         }
         var scoredTasks = lab.scriptTasks || [];
@@ -244,6 +254,7 @@ if (leaderboard) {
             if (debug) { console.log(`Leaderboard: Found scriptTask.pass with ID ${id}`); }
             return id;
         }).get();
+        let newTasksAdded = false;
         for (let i = 0; i < scriptTasks.length; i++) {
             try {
                 const taskId = parseInt(scriptTasks[i]);
@@ -254,12 +265,12 @@ if (leaderboard) {
                 if (!scoredTasks.includes(taskId)) {
                     if (debug) { console.log(`Leaderboard: Found new scored task - ID ${taskId}`); }
                     scoredTasks.push(taskId);
+                    newTasksAdded = true;
+                    lab.scriptTasks = scoredTasks;
+                    $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                     let score = parseInt(lab.Variable.scoreValue) || 1000;
                     if (debug) { console.log(`Leaderboard: Calculated task score - ${score}`); }
                     postScore(score);
-                    lab = JSON.parse($('[data-name="labVariables"]').val());
-                    lab.scriptTasks = scoredTasks;
-                    $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                 } else {
                     if (debug) { console.log(`Leaderboard: Skipping already scored task - ID ${taskId}`); }
                 }
@@ -268,9 +279,12 @@ if (leaderboard) {
             }
         }
         if (debug) { console.log(`Leaderboard: Saving updated lab variables with scored tasks: ${JSON.stringify(scoredTasks)}`); }
-        lab.scriptTasks = scoredTasks;
-        $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-    }, 300);
+        if (!newTasksAdded) {
+            lab.scriptTasks = scoredTasks;
+            $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
+        }
+        isProcessingScriptTasks = false;
+    }, 500);
   
     // Handle feedback scoring
     function getFeedbackScores() {
