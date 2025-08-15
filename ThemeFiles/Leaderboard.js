@@ -1,7 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.21
+ * Version: 1.22
  * Date: August 15, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
@@ -15,9 +15,8 @@
  * and "feedback positive" elements (child list and attribute changes) to trigger scoring after
  * successful validation, with duplicate prevention for both scriptTasks and feedbackItems using
  * a debounced scoring mechanism. StepItems apply penalties only once per unique step, tracked by
- * clicked status.
-*/
-
+ * clicked status, with debounced click handling to prevent rapid clicks.
+ */
 if (debug) { console.log("Leaderboard: Script is loading"); }
 
 // begin shared functions
@@ -58,7 +57,7 @@ function initializeTabSwitching() {
         if (debug) { console.log("Leaderboard: Existing tab-switching logic detected, skipping initialization"); }
     }
 }
-// Debounce function to limit rapid observer triggers
+// Debounce function to limit rapid observer and click triggers
 function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -176,7 +175,7 @@ if (leaderboard) {
                         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                     }
                 } else if (this.readyState === 4) {
-                    if (debug) { console.log(`Leaderboard: marcoscore score post failed - Status: ${this.status}`); }
+                    if (debug) { console.log(`Leaderboard: marcoscore player initialization failed - Status: ${this.status}`); }
                     let errorMessage = this.status === 204 ? 'Invalid Game ID. Please check and try again.' : `Failed to post score (Status: ${this.status}). Please try again.`;
                     $('#leaderboard-error').html(`<div style="color: red;">${errorMessage}</div>`);
                 }
@@ -196,8 +195,8 @@ if (leaderboard) {
     // Lock to prevent concurrent stepItems executions
     let isProcessingStepItems = false;
   
-    // Handle step clicks for penalties
-    function stepClicked(step) {
+    // Debounced stepClicked to handle rapid clicks
+    const debouncedStepClicked = debounce(function(step) {
         if (isProcessingStepItems) {
             if (debug) { console.log("Leaderboard: Skipping stepClicked, already processing"); }
             return;
@@ -212,32 +211,33 @@ if (leaderboard) {
             isProcessingStepItems = false;
             return;
         }
-        for (let i = 0; i < lab.stepItems.length; i++) {
-            if (lab.stepItems[i].stepNumber == step) {
-                try {
-                    let clicked = lab.stepItems[i].clicked;
-                    if (clicked == "False") {
-                        if (debug) { console.log(`Leaderboard: Step ${step} not previously clicked, applying penalty`); }
-                        lab.Variable.totalPenalty = parseInt(lab.Variable.totalPenalty) + parseInt(lab.Variable.stepPenalty);
-                        let score = parseInt(lab.Variable.stepPenalty) * -1;
-                        if (debug) { console.log(`Leaderboard: Calculated penalty score - ${score}`); }
-                        lab.stepItems[i].clicked = "True";
-                        $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-                        postScore(score);
-                        if (debug) { console.log(`Leaderboard: Marked step ${step} as clicked`); }
-                    } else {
-                        if (debug) { console.log(`Leaderboard: Skipping already clicked step - ${step}`); }
-                    }
-                    break; // Exit loop after processing the matching step
-                } catch (e) {
-                    if (debug) { console.log(`Leaderboard: Error processing step ${step} - ${e.message}`); }
-                }
+        // Validate step index
+        if (!Number.isInteger(step) || step < 0 || step >= lab.stepItems.length) {
+            if (debug) { console.log(`Leaderboard: Invalid step index ${step}, skipping`); }
+            isProcessingStepItems = false;
+            return;
+        }
+        try {
+            let clicked = lab.stepItems[step].clicked;
+            if (clicked == "False") {
+                if (debug) { console.log(`Leaderboard: Step ${step} not previously clicked, applying penalty`); }
+                lab.Variable.totalPenalty = parseInt(lab.Variable.totalPenalty) + parseInt(lab.Variable.stepPenalty);
+                let score = parseInt(lab.Variable.stepPenalty) * -1;
+                if (debug) { console.log(`Leaderboard: Calculated penalty score - ${score}`); }
+                lab.stepItems[step].clicked = "True";
+                $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
+                postScore(score);
+                if (debug) { console.log(`Leaderboard: Marked step ${step} as clicked`); }
+            } else {
+                if (debug) { console.log(`Leaderboard: Skipping already clicked step - ${step}`); }
             }
+        } catch (e) {
+            if (debug) { console.log(`Leaderboard: Error processing step ${step} - ${e.message}`); }
         }
         if (debug) { console.log("Leaderboard: Saving updated lab variables after step click"); }
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-        isProcessingStepItems = False;
-    }
+        isProcessingStepItems = false;
+    }, 500);
   
     // Lock to prevent concurrent getScriptTasks executions
     let isProcessingScriptTasks = false;
@@ -403,13 +403,13 @@ if (leaderboard) {
             const foundSteps = $('[class^="stepItem"], .hint > details, .know-icon > summary, .hint-icon > summary, .moreKnowledge');
             const stepItems = [];
             for (let i = 0; i < foundSteps.length; i++) {
-                foundSteps[i].setAttribute('itemNumber', i); // Fix indexing to use [i]
+                foundSteps[i].setAttribute('itemNumber', i); // Set unique itemNumber for each element
                 const obj = {
                     stepNumber: i,
                     clicked: 'False'
                 };
                 stepItems.push(obj);
-                foundSteps[i].addEventListener('click', () => stepClicked(i)); // Replace eval with direct listener
+                foundSteps[i].addEventListener('click', () => debouncedStepClicked(i)); // Use debouncedStepClicked
                 if (debug) { console.log(`Leaderboard: Adding click listener for step ${i}`); }
             }
             if (debug) { console.log(`Leaderboard: Registered ${stepItems.length} step items`); }
@@ -524,16 +524,14 @@ if (leaderboard) {
                 initializeTabSwitching();
                 // Ensure default tab is preserved
                 let defaultTab = $('.tabHeading.selected');
-                if (defaultTab.length > 0) {
-                    if (debug) { console.log(`Leaderboard: Preserving default tab - ${defaultTab.data('target')}`); }
-                    $('.tab').css('display', 'none');
-                    $(`#${defaultTab.data('target')}`).css('display', 'block');
-                } else {
-                    if (debug) { console.log("Leaderboard: No default tab found, using first tab"); }
-                    $('.tabHeading').first().addClass('selected').attr('aria-selected', 'true').attr('tabindex', '0');
-                    $('.tab').css('display', 'none');
-                    $('.tab').first().css('display', 'block');
-                }
+                if (debug) { console.log(`Leaderboard: Preserving default tab - ${defaultTab.data('target')}`); }
+                $('.tab').css('display', 'none');
+                $(`#${defaultTab.data('target')}`).css('display', 'block');
+            } else {
+                if (debug) { console.log("Leaderboard: No default tab found, using first tab"); }
+                $('.tabHeading').first().addClass('selected').attr('aria-selected', 'true').attr('tabindex', '0');
+                $('.tab').css('display', 'none');
+                $('.tab').first().css('display', 'block');
             }
         } else {
             if (debug) { console.log("Leaderboard: Skipping initialization - editorWrapper present or Leaderboard variable not set"); }
