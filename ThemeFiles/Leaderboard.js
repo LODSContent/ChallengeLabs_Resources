@@ -1,7 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.16
+ * Version: 1.17
  * Date: August 15, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
@@ -11,8 +11,9 @@
  * is displayed in h3 format, preceded by the text "Your Player Name Is: " in normal text,
  * both on the same line, one line below the gameID input box and submit button. Tab-switching
  * logic ensures visibility with a green underline, respecting the page's default tab. Separate
- * MutationObservers watch for dynamically added "scriptTask pass" and "feedback positive"
- * elements to trigger scoring after successful validation, with duplicate prevention.
+ * MutationObservers watch for dynamically added "scriptTask pass" elements (attribute changes)
+ * and "feedback positive" elements (child list and attribute changes) to trigger scoring after
+ * successful validation, with duplicate prevention.
  */
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
 if (debug) { console.log("Leaderboard: Script is loading"); }
@@ -63,7 +64,13 @@ if (leaderboard) {
     // Initialize the player on the leaderboard
     function initPlayer() {
         if (debug) { console.log("Leaderboard: Initializing player"); }
-        var lab = JSON.parse($('[data-name="labVariables"]').val());
+        try {
+            var lab = JSON.parse($('[data-name="labVariables"]').val());
+        } catch (e) {
+            if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
+            $('#leaderboard-error').html('<div style="color: red;">Error: Lab variables not found.</div>');
+            return;
+        }
         lab.Variable.gameID = $('#gameID').val().toUpperCase(); // Normalize to uppercase
         if (debug) { console.log(`Leaderboard: Player data - GameID: ${lab.Variable.gameID}`); }
       
@@ -120,7 +127,13 @@ if (leaderboard) {
     // Post a score to the leaderboard server
     function postScore(score) {
         if (debug) { console.log(`Leaderboard: Posting score - ${score}`); }
-        var lab = JSON.parse($('[data-name="labVariables"]').val());
+        try {
+            var lab = JSON.parse($('[data-name="labVariables"]').val());
+        } catch (e) {
+            if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
+            $('#leaderboard-error').html('<div style="color: red;">Error: Lab variables not found.</div>');
+            return;
+        }
         lab.Variable.gameID = lab.Variable.gameID.toUpperCase(); // Normalize to uppercase
         if (lab.Variable.gameID.length > 1) {
             if (debug) { console.log("Leaderboard: Posting score to marcoscore"); }
@@ -172,30 +185,30 @@ if (leaderboard) {
     // Handle step clicks for penalties
     function stepClicked(step) {
         if (debug) { console.log(`Leaderboard: Processing step click - Step ${step}`); }
-        // Get the current lab variables
-        var lab = JSON.parse($('[data-name="labVariables"]').val());
-        for (i = 0; i < lab.stepItems.length; i++) {
-            // Find a match between the current array index and the passed step number
+        try {
+            var lab = JSON.parse($('[data-name="labVariables"]').val());
+        } catch (e) {
+            if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
+            $('#leaderboard-error').html('<div style="color: red;">Error: Lab variables not found.</div>');
+            return;
+        }
+        for (let i = 0; i < lab.stepItems.length; i++) {
             if (lab.stepItems[i].stepNumber == step) {
-                // Get the status of the item to find if it has already been clicked
                 try {
-                    clicked = lab.stepItems[i].clicked;
+                    let clicked = lab.stepItems[i].clicked;
+                    if (clicked == "False") {
+                        if (debug) { console.log(`Leaderboard: Step ${step} not previously clicked, applying penalty`); }
+                        lab.Variable.totalPenalty = parseInt(lab.Variable.totalPenalty) + parseInt(lab.Variable.stepPenalty);
+                        let score = parseInt(lab.Variable.stepPenalty) * -1;
+                        if (debug) { console.log(`Leaderboard: Calculated penalty score - ${score}`); }
+                        $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
+                        postScore(score);
+                        lab = JSON.parse($('[data-name="labVariables"]').val());
+                        lab.stepItems[i].clicked = "True";
+                        if (debug) { console.log(`Leaderboard: Marked step ${step} as clicked`); }
+                    }
                 } catch (e) {
-                    clicked = '';
-                }
-                if (clicked == "False") {
-                    if (debug) { console.log(`Leaderboard: Step ${step} not previously clicked, applying penalty`); }
-                    // Add to the step penalty
-                    lab.Variable.totalPenalty = parseInt(lab.Variable.totalPenalty) + parseInt(lab.Variable.stepPenalty);
-                    var score = parseInt(lab.Variable.stepPenalty) * -1;
-                    if (debug) { console.log(`Leaderboard: Calculated penalty score - ${score}`); }
-                    // Send data to scoring service
-                    $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-                    postScore(score);
-                    lab = JSON.parse($('[data-name="labVariables"]').val());
-                    // Set clicked to True so we don't add again
-                    lab.stepItems[i].clicked = "True";
-                    if (debug) { console.log(`Leaderboard: Marked step ${step} as clicked`); }
+                    if (debug) { console.log(`Leaderboard: Error processing step ${step} - ${e.message}`); }
                 }
             }
         }
@@ -206,29 +219,25 @@ if (leaderboard) {
     // Handle script task scoring
     function getScriptTasks() {
         if (debug) { console.log("Leaderboard: Checking for completed script tasks"); }
-        // Get the lab variables
         try {
             var lab = JSON.parse($('[data-name="labVariables"]').val());
         } catch (e) {
             if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
+            $('#leaderboard-error').html('<div style="color: red;">Error: Lab variables not found.</div>');
             return;
         }
-        // Find all scriptTask pass elements
         var scriptTasks = $('.scriptTask.pass').map(function() {
             return $(this).data("id");
         }).get();
-        // Create an array to hold the scored task items
         var scoredTasks = lab.scriptTasks || [];
         for (let i = 0; i < scriptTasks.length; i++) {
             try {
                 if (!scoredTasks.includes(parseInt(scriptTasks[i])) && scriptTasks[i] != "" && scriptTasks[i] != null) {
                     if (debug) { console.log(`Leaderboard: Found new scored task - ID ${scriptTasks[i]}`); }
                     scoredTasks.push(parseInt(scriptTasks[i]));
-                    var score = parseInt(lab.Variable.scoreValue) || 1000; // Default to 1000
+                    let score = parseInt(lab.Variable.scoreValue) || 1000;
                     if (debug) { console.log(`Leaderboard: Calculated task score - ${score}`); }
-                    // Send the score to the server
                     postScore(score);
-                    // Update lab variables after posting score
                     lab = JSON.parse($('[data-name="labVariables"]').val());
                     lab.scriptTasks = scoredTasks;
                     $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
@@ -238,7 +247,6 @@ if (leaderboard) {
             }
         }
         if (debug) { console.log("Leaderboard: Saving updated lab variables with scored tasks"); }
-        // Save the scored tasks back to the lab object
         lab.scriptTasks = scoredTasks;
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
     }
@@ -246,29 +254,25 @@ if (leaderboard) {
     // Handle feedback scoring
     function getFeedbackScores() {
         if (debug) { console.log("Leaderboard: Checking for positive feedback elements"); }
-        // Get the lab variables
         try {
             var lab = JSON.parse($('[data-name="labVariables"]').val());
         } catch (e) {
             if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
+            $('#leaderboard-error').html('<div style="color: red;">Error: Lab variables not found.</div>');
             return;
         }
-        // Find all feedback positive elements
         var feedbackItems = $('.feedbackHolder .feedback.positive').map(function() {
-            return $(this).parent().attr('id'); // Use feedbackHolder ID
+            return $(this).parent().attr('id');
         }).get();
-        // Create an array to hold the scored feedback items
         var scoredFeedbacks = lab.feedbackItems || [];
         for (let i = 0; i < feedbackItems.length; i++) {
             try {
                 if (!scoredFeedbacks.includes(feedbackItems[i]) && feedbackItems[i] != "" && feedbackItems[i] != null) {
                     if (debug) { console.log(`Leaderboard: Found new positive feedback - ID ${feedbackItems[i]}`); }
                     scoredFeedbacks.push(feedbackItems[i]);
-                    var score = parseInt(lab.Variable.scoreValue) || 1000; // Default to 1000
+                    let score = parseInt(lab.Variable.scoreValue) || 1000;
                     if (debug) { console.log(`Leaderboard: Calculated feedback score - ${score}`); }
-                    // Send the score to the server
                     postScore(score);
-                    // Update lab variables after posting score
                     lab = JSON.parse($('[data-name="labVariables"]').val());
                     lab.feedbackItems = scoredFeedbacks;
                     $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
@@ -278,7 +282,6 @@ if (leaderboard) {
             }
         }
         if (debug) { console.log("Leaderboard: Saving updated lab variables with scored feedback"); }
-        // Save the scored feedback items back to the lab object
         lab.feedbackItems = scoredFeedbacks;
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
     }
@@ -300,24 +303,41 @@ if (leaderboard) {
             const feedbackObserver = new MutationObserver((mutations) => {
                 if (debug) { console.log("Leaderboard: Detected feedbackHolder mutation"); }
                 mutations.forEach(mu => {
-                    if (mu.type !== "childList") return;
-                    if (debug) { console.log("Leaderboard: Checking for new feedback.positive elements"); }
-                    mu.addedNodes.forEach(node => {
-                        if (node.nodeType === 1 && node.classList.contains('feedback') && node.classList.contains('positive')) {
-                            if (debug) { console.log("Leaderboard: Valid feedback.positive node added"); }
-                            getFeedbackScores();
-                        }
-                    });
+                    if (mu.type === "childList") {
+                        if (debug) { console.log("Leaderboard: Checking for new feedback.positive elements"); }
+                        mu.addedNodes.forEach(node => {
+                            if (node.nodeType === 1 && node.classList.contains('feedback') && node.classList.contains('positive')) {
+                                if (debug) { console.log("Leaderboard: Valid feedback.positive node added"); }
+                                getFeedbackScores();
+                            }
+                        });
+                    } else if (mu.type === "attributes" && mu.attributeName === "class" && mu.target.classList.contains('positive')) {
+                        if (debug) { console.log("Leaderboard: Valid feedback.positive class change detected"); }
+                        getFeedbackScores();
+                    }
                 });
             });
             // Observe scriptTask elements
             const scriptTasks = document.querySelectorAll(".scriptTask");
             if (debug) { console.log(`Leaderboard: Observing ${scriptTasks.length} scriptTask elements`); }
             scriptTasks.forEach(el => scriptTaskObserver.observe(el, { attributes: true }));
-            // Observe feedbackHolder elements for child list changes
+            // Observe feedbackHolder elements for child list and attribute changes
             const feedbackHolders = document.querySelectorAll(".feedbackHolder");
             if (debug) { console.log(`Leaderboard: Observing ${feedbackHolders.length} feedbackHolder elements`); }
-            feedbackHolders.forEach(el => feedbackObserver.observe(el, { childList: true, subtree: true }));
+            feedbackHolders.forEach(el => feedbackObserver.observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] }));
+            // Watch document for new feedbackHolder elements
+            const documentObserver = new MutationObserver((mutations) => {
+                if (debug) { console.log("Leaderboard: Detected document mutation, checking for new feedbackHolder elements"); }
+                mutations.forEach(mu => {
+                    mu.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 && node.classList.contains('feedbackHolder')) {
+                            if (debug) { console.log(`Leaderboard: New feedbackHolder detected - ID ${node.id}`); }
+                            feedbackObserver.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+                        }
+                    });
+                });
+            });
+            documentObserver.observe(document.body, { childList: true, subtree: true });
   
             // Get the lab variables
             try {
@@ -325,21 +345,21 @@ if (leaderboard) {
                 if (debug) { console.log("Leaderboard: Successfully parsed lab variables"); }
             } catch (e) {
                 if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
+                $('#leaderboard-error').html('<div style="color: red;">Error: Lab variables not found.</div>');
             }
           
             // Find all stepItem class elements and put them in an array
-            foundSteps = $('[class^="stepItem"], .hint > details, .know-icon > summary, .hint-icon > summary, .moreKnowledge');
-            var stepItems = [];
-            for (i = 0; i < foundSteps.length; i++) {
-                foundSteps[0].setAttribute('itemNumber', i);
-                var obj = {
+            const foundSteps = $('[class^="stepItem"], .hint > details, .know-icon > summary, .hint-icon > summary, .moreKnowledge');
+            const stepItems = [];
+            for (let i = 0; i < foundSteps.length; i++) {
+                foundSteps[i].setAttribute('itemNumber', i); // Fix indexing to use [i]
+                const obj = {
                     stepNumber: i,
                     clicked: 'False'
                 };
                 stepItems.push(obj);
-                listener = 'foundSteps[' + i + '].addEventListener(\'click\', function() { stepClicked(' + i + '); });';
+                foundSteps[i].addEventListener('click', () => stepClicked(i)); // Replace eval with direct listener
                 if (debug) { console.log(`Leaderboard: Adding click listener for step ${i}`); }
-                eval(listener);
             }
             if (debug) { console.log(`Leaderboard: Registered ${stepItems.length} step items`); }
           
@@ -347,42 +367,34 @@ if (leaderboard) {
             if (!lab) {
                 if (debug) { console.log("Leaderboard: No lab variables found, setting defaults"); }
                 // Defaults for variables
-                let debugVar = getLabVariable('debug');
-                if (!debugVar) { debugVar = "False"; }
-                let serverType = 'marcoscore'; // Only support marcoscore
-                let serverAddress = 'marcoscore.cyberjunk.com'; // Hardcoded
-                let gameID = getLabVariable('GameID');
-                if (!gameID) { gameID = ""; }
-                else { gameID = gameID.toUpperCase(); } // Normalize default gameID
-                let playerName = getLabVariable('PlayerName');
-                if (!playerName) { playerName = ""; }
-                let stepPenalty = getLabVariable('StepPenalty');
-                if (!stepPenalty) { stepPenalty = 100; }
-                let totalPenalty = getLabVariable('TotalPenalty');
-                if (!totalPenalty) { totalPenalty = 0; }
-                let scoreValue = getLabVariable('ScoreValue');
-                if (!scoreValue) { scoreValue = 1000; } // Default to 1000
-                let totalScore = getLabVariable('TotalScore');
-                if (!totalScore) { totalScore = 0; }
-                let leaderboard = getLabVariable('Leaderboard');
-                if (!leaderboard) { leaderboard = "False"; }
+                const debugVar = getLabVariable('debug') || "False";
+                const serverType = 'marcoscore'; // Only support marcoscore
+                const serverAddress = 'marcoscore.cyberjunk.com'; // Hardcoded
+                let gameID = getLabVariable('GameID') || "";
+                if (gameID) gameID = gameID.toUpperCase(); // Normalize default gameID
+                const playerName = getLabVariable('PlayerName') || "";
+                const stepPenalty = getLabVariable('StepPenalty') || 100;
+                const totalPenalty = getLabVariable('TotalPenalty') || 0;
+                const scoreValue = getLabVariable('ScoreValue') || 1000; // Default to 1000
+                const totalScore = getLabVariable('TotalScore') || 0;
+                const leaderboard = getLabVariable('Leaderboard') || "False";
                 // Creating a labVariables object
-                var labVariables = {
+                const labVariables = {
                     debug: debugVar,
-                    serverType: serverType,
-                    serverAddress: serverAddress,
-                    gameID: gameID,
-                    playerName: playerName,
-                    stepPenalty: stepPenalty,
-                    totalPenalty: totalPenalty,
-                    scoreValue: scoreValue,
-                    totalScore: totalScore,
-                    leaderboard: leaderboard
+                    serverType,
+                    serverAddress,
+                    gameID,
+                    playerName,
+                    stepPenalty,
+                    totalPenalty,
+                    scoreValue,
+                    totalScore,
+                    leaderboard
                 };
                 // Creating a lab object to store everything
-                var lab = {
+                lab = {
                     Variable: labVariables,
-                    stepItems: stepItems,
+                    stepItems,
                     feedbackItems: [] // Initialize feedbackItems for tracking scored feedback
                 };
                 if (debug) { console.log("Leaderboard: Default lab variables set"); }
@@ -395,13 +407,14 @@ if (leaderboard) {
             // Add or update Challenge Labs tab
             if (lab.Variable.leaderboard != 'False') {
                 if (debug) { console.log("Leaderboard: Preparing to add Challenge Labs tab"); }
-                let tabHolder = $('#tabHolder');
+                const tabHolder = $('#tabHolder');
                 if (tabHolder.length === 0) {
                     if (debug) { console.log("Leaderboard: Error: #tabHolder not found"); }
+                    $('#leaderboard-error').html('<div style="color: red;">Error: Tab holder not found.</div>');
                     return;
                 }
-                let challengeLabsTab = $('[data-target="challengeLabsTab"]');
-                let nextTabId = tabHolder.find('.tabHeading').length; // Next ID after existing tabs
+                const challengeLabsTab = $('[data-target="challengeLabsTab"]');
+                const nextTabId = tabHolder.find('.tabHeading').length; // Next ID after existing tabs
                 if (challengeLabsTab.length === 0) {
                     if (debug) { console.log("Leaderboard: Creating new Challenge Labs tab"); }
                     tabHolder.append(`
@@ -409,9 +422,10 @@ if (leaderboard) {
                     `);
                 }
                 // Add or update Leaderboard section in Challenge Labs tab
-                let tabsContainer = $('.tabs');
+                const tabsContainer = $('.tabs');
                 if (tabsContainer.length === 0) {
                     if (debug) { console.log("Leaderboard: Error: .tabs container not found"); }
+                    $('#leaderboard-error').html('<div style="color: red;">Error: Tabs container not found.</div>');
                     return;
                 }
                 let challengeLabsContent = $('#challengeLabsTab');
@@ -424,10 +438,10 @@ if (leaderboard) {
                                 <hr>
                                 <label for="gameID">Enter the Game ID:</label>
                                 <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
-                                <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
+                                <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px" aria-label="Submit Game ID">Submit</button>
                                 <br>
-                                <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
-                                <div id="leaderboard-error"></div>
+                                <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;" aria-live="polite">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
+                                <div id="leaderboard-error" aria-live="assertive"></div>
                             </div>
                         </div>
                     `);
@@ -440,10 +454,10 @@ if (leaderboard) {
                             <hr>
                             <label for="gameID">Enter the Game ID:</label>
                             <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
-                            <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
+                            <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px" aria-label="Submit Game ID">Submit</button>
                             <br>
-                            <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
-                            <div id="leaderboard-error"></div>
+                            <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;" aria-live="polite">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
+                            <div id="leaderboard-error" aria-live="assertive"></div>
                         </div>
                     `);
                 }
