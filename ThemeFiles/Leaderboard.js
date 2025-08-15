@@ -300,7 +300,7 @@ if (leaderboard) {
                 let totalPenalty = getLabVariable('TotalPenalty');
                 if (!totalPenalty) { totalPenalty = 0; }
                 let scoreValue = getLabVariable('ScoreValue');
-                if (!scoreValue) { scoreValue = 0; }
+                if (!scoreValue) { scoreValue = 1000; }
                 let totalScore = getLabVariable('TotalScore');
                 if (!totalScore) { totalScore = 0; }
                 let leaderboard = getLabVariable('Leaderboard');
