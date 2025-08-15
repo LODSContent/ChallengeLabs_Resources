@@ -16,6 +16,7 @@
  * successful validation, with duplicate prevention for both scriptTasks and feedbackItems using
  * a debounced scoring mechanism. StepItems apply penalties only once per unique step, tracked by
  * clicked status.
+*/
 
 if (debug) { console.log("Leaderboard: Script is loading"); }
 
