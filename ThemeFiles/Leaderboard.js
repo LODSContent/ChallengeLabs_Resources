@@ -1,7 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.18
+ * Version: 1.19
  * Date: August 15, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
@@ -15,8 +15,9 @@
  * and "feedback positive" elements (child list and attribute changes) to trigger scoring after
  * successful validation, with duplicate prevention for both scriptTasks and feedbackItems.
  */
-//if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
+if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
 if (debug) { console.log("Leaderboard: Script is loading"); }
+
 // begin shared functions
 // Retrieve a lab variable listed in Markdown as a case-insensitive variable name
 function getLabVariable(name) {
@@ -54,6 +55,14 @@ function initializeTabSwitching() {
     } else {
         if (debug) { console.log("Leaderboard: Existing tab-switching logic detected, skipping initialization"); }
     }
+}
+// Debounce function to limit rapid observer triggers
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
 }
 // end shared functions
 // begin leaderboard lab code
@@ -206,6 +215,8 @@ if (leaderboard) {
                         lab = JSON.parse($('[data-name="labVariables"]').val());
                         lab.stepItems[i].clicked = "True";
                         if (debug) { console.log(`Leaderboard: Marked step ${step} as clicked`); }
+                    } else {
+                        if (debug) { console.log(`Leaderboard: Skipping already clicked step - ${step}`); }
                     }
                 } catch (e) {
                     if (debug) { console.log(`Leaderboard: Error processing step ${step} - ${e.message}`); }
@@ -217,7 +228,7 @@ if (leaderboard) {
     }
   
     // Handle script task scoring
-    function getScriptTasks() {
+    const debouncedGetScriptTasks = debounce(function() {
         if (debug) { console.log("Leaderboard: Checking for completed script tasks"); }
         try {
             var lab = JSON.parse($('[data-name="labVariables"]').val());
@@ -236,7 +247,11 @@ if (leaderboard) {
         for (let i = 0; i < scriptTasks.length; i++) {
             try {
                 const taskId = parseInt(scriptTasks[i]);
-                if (!scoredTasks.includes(taskId) && scriptTasks[i] != "" && scriptTasks[i] != null) {
+                if (isNaN(taskId) || taskId == null) {
+                    if (debug) { console.log(`Leaderboard: Invalid task ID ${scriptTasks[i]}, skipping`); }
+                    continue;
+                }
+                if (!scoredTasks.includes(taskId)) {
                     if (debug) { console.log(`Leaderboard: Found new scored task - ID ${taskId}`); }
                     scoredTasks.push(taskId);
                     let score = parseInt(lab.Variable.scoreValue) || 1000;
@@ -245,7 +260,7 @@ if (leaderboard) {
                     lab = JSON.parse($('[data-name="labVariables"]').val());
                     lab.scriptTasks = scoredTasks;
                     $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-                } else if (scoredTasks.includes(taskId)) {
+                } else {
                     if (debug) { console.log(`Leaderboard: Skipping already scored task - ID ${taskId}`); }
                 }
             } catch (e) {
@@ -255,7 +270,7 @@ if (leaderboard) {
         if (debug) { console.log(`Leaderboard: Saving updated lab variables with scored tasks: ${JSON.stringify(scoredTasks)}`); }
         lab.scriptTasks = scoredTasks;
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-    }
+    }, 300);
   
     // Handle feedback scoring
     function getFeedbackScores() {
@@ -285,7 +300,7 @@ if (leaderboard) {
                     lab = JSON.parse($('[data-name="labVariables"]').val());
                     lab.feedbackItems = scoredFeedbacks;
                     $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
-                } else if (scoredFeedbacks.includes(feedbackItems[i])) {
+                } else {
                     if (debug) { console.log(`Leaderboard: Skipping already scored feedback - ID ${feedbackItems[i]}`); }
                 }
             } catch (e) {
@@ -308,7 +323,7 @@ if (leaderboard) {
                 mutations.forEach(mu => {
                     if (mu.type !== "attributes" || mu.attributeName !== "class" || !mu.target.classList.contains('pass')) return;
                     if (debug) { console.log("Leaderboard: Valid scriptTask.pass mutation detected"); }
-                    getScriptTasks();
+                    debouncedGetScriptTasks();
                 });
             });
             const feedbackObserver = new MutationObserver((mutations) => {
