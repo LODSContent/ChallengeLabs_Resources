@@ -1,7 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.14
+ * Version: 1.15
  * Date: August 15, 2025
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
@@ -10,8 +10,8 @@
  * next to the Leaderboard header, retrieved from the POST /submit response. The player name
  * is displayed in h3 format, preceded by the text "Your Player Name Is: " in normal text,
  * both on the same line, one line below the gameID input box and submit button. Tab-switching
- * logic ensures visibility with a green underline, respecting the page's default tab. A
- * MutationObserver watches for dynamically added "scriptTask pass" and "feedback positive"
+ * logic ensures visibility with a green underline, respecting the page's default tab. Separate
+ * MutationObservers watch for dynamically added "scriptTask pass" and "feedback positive"
  * elements to trigger scoring, with duplicate prevention.
  */
 if (typeof debug === 'undefined') { var debug = false; } // Ensure debug is defined
@@ -213,32 +213,33 @@ if (leaderboard) {
             if (debug) { console.log(`Leaderboard: Error parsing lab variables - ${e.message}`); }
             return;
         }
-        // Find all stepItem class elements and put them in an array
-        var scriptTasks = $('[class="scriptTask pass"]').map(function() {
+        // Find all scriptTask pass elements
+        var scriptTasks = $('.scriptTask.pass').map(function() {
             return $(this).data("id");
         }).get();
         // Create an array to hold the scored task items
         var scoredTasks = lab.scriptTasks || [];
-        for (i = 0; i < scriptTasks.length; i++) {
+        for (let i = 0; i < scriptTasks.length; i++) {
             try {
                 if (!scoredTasks.includes(parseInt(scriptTasks[i])) && scriptTasks[i] != "" && scriptTasks[i] != null) {
                     if (debug) { console.log(`Leaderboard: Found new scored task - ID ${scriptTasks[i]}`); }
                     scoredTasks.push(parseInt(scriptTasks[i]));
-                    var score = lab.Variable.scoreValue;
+                    var score = parseInt(lab.Variable.scoreValue);
                     if (debug) { console.log(`Leaderboard: Calculated task score - ${score}`); }
                     // Send the score to the server
-                    $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                     postScore(score);
+                    // Update lab variables after posting score
                     lab = JSON.parse($('[data-name="labVariables"]').val());
+                    lab.scriptTasks = scoredTasks;
+                    $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                 }
             } catch (e) {
                 if (debug) { console.log(`Leaderboard: Error processing task ${scriptTasks[i]} - ${e.message}`); }
             }
         }
+        if (debug) { console.log("Leaderboard: Saving updated lab variables with scored tasks"); }
         // Save the scored tasks back to the lab object
         lab.scriptTasks = scoredTasks;
-        if (debug) { console.log("Leaderboard: Saving updated lab variables with scored tasks"); }
-        // Set labVariables to the current value of the lab object
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
     }
   
@@ -263,21 +264,22 @@ if (leaderboard) {
                 if (!scoredFeedbacks.includes(feedbackItems[i]) && feedbackItems[i] != "" && feedbackItems[i] != null) {
                     if (debug) { console.log(`Leaderboard: Found new positive feedback - ID ${feedbackItems[i]}`); }
                     scoredFeedbacks.push(feedbackItems[i]);
-                    var score = lab.Variable.scoreValue;
+                    var score = parseInt(lab.Variable.scoreValue);
                     if (debug) { console.log(`Leaderboard: Calculated feedback score - ${score}`); }
                     // Send the score to the server
-                    $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                     postScore(score);
+                    // Update lab variables after posting score
                     lab = JSON.parse($('[data-name="labVariables"]').val());
+                    lab.feedbackItems = scoredFeedbacks;
+                    $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
                 }
             } catch (e) {
                 if (debug) { console.log(`Leaderboard: Error processing feedback ${feedbackItems[i]} - ${e.message}`); }
             }
         }
+        if (debug) { console.log("Leaderboard: Saving updated lab variables with scored feedback"); }
         // Save the scored feedback items back to the lab object
         lab.feedbackItems = scoredFeedbacks;
-        if (debug) { console.log("Leaderboard: Saving updated lab variables with scored feedback"); }
-        // Set labVariables to the current value of the lab object
         $('[data-name="labVariables"]').val(JSON.stringify(lab)).trigger("change");
     }
   
@@ -286,23 +288,29 @@ if (leaderboard) {
         if (debug) { console.log("Leaderboard: Starting initialization"); }
         if ($('[id="editorWrapper"]').length == 0 && getLabVariable('Leaderboard')) {
             if (debug) { console.log("Leaderboard: Editor wrapper not present and Leaderboard variable set, proceeding"); }
-            // Watch for changes to script results and feedback elements
-            const attrObserver = new MutationObserver((mutations) => {
-                if (debug) { console.log("Leaderboard: Detected DOM mutation"); }
+            // Initialize separate MutationObservers for script tasks and feedback
+            const scriptTaskObserver = new MutationObserver((mutations) => {
+                if (debug) { console.log("Leaderboard: Detected scriptTask mutation"); }
                 mutations.forEach(mu => {
                     if (mu.type !== "attributes" || mu.attributeName !== "class") return;
                     getScriptTasks();
+                });
+            });
+            const feedbackObserver = new MutationObserver((mutations) => {
+                if (debug) { console.log("Leaderboard: Detected feedbackHolder mutation"); }
+                mutations.forEach(mu => {
+                    if (mu.type !== "childList") return;
                     getFeedbackScores();
                 });
             });
             // Observe scriptTask elements
             const scriptTasks = document.querySelectorAll(".scriptTask");
             if (debug) { console.log(`Leaderboard: Observing ${scriptTasks.length} scriptTask elements`); }
-            scriptTasks.forEach(el => attrObserver.observe(el, { attributes: true }));
-            // Observe feedback elements within feedbackHolder
-            const feedbackHolders = document.querySelectorAll(".feedbackHolder .feedback");
-            if (debug) { console.log(`Leaderboard: Observing ${feedbackHolders.length} feedback elements`); }
-            feedbackHolders.forEach(el => attrObserver.observe(el, { attributes: true }));
+            scriptTasks.forEach(el => scriptTaskObserver.observe(el, { attributes: true }));
+            // Observe feedbackHolder elements for child list changes
+            const feedbackHolders = document.querySelectorAll(".feedbackHolder");
+            if (debug) { console.log(`Leaderboard: Observing ${feedbackHolders.length} feedbackHolder elements`); }
+            feedbackHolders.forEach(el => feedbackObserver.observe(el, { childList: true, subtree: true }));
   
             // Get the lab variables
             try {
@@ -426,9 +434,10 @@ if (leaderboard) {
                             <label for="gameID">Enter the Game ID:</label>
                             <input type="text" placeholder="" id="gameID" value="${lab.Variable.gameID}">
                             <button type="button" id="leaderboardSubmitBtn" class="primary" style="margin:10px">Submit</button>
-                            <br>
-                            <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
-                            <div id="leaderboard-error"></div>
+                                <br>
+                                <span style="display: inline;">Your Player Name Is: </span><h3 id="player-name-display" style="display: inline;">${lab.Variable.playerName ? lab.Variable.playerName : ''}</h3>
+                                <div id="leaderboard-error"></div>
+                            </div>
                         </div>
                     `);
                 }
