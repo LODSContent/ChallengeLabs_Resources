@@ -49,7 +49,7 @@ function labNotifications() {
             if (debug) { console.log(`Displaying api notification: ${id}`); }
             //addHeader($page0);
             //addNotification($page0, id, type, innerHTML);
-            window.api.v1.sendLabNotification("${summary} \n\n${details}");
+            window.api.v1.sendLabNotification(`${summary} \n\n${details}`);
         } else {
             if (debug) {
                 console.log(`Skipped notification: ${id} - ${exists ? 'already exists' : !isActive ? 'outside date range' : 'no content match'}`);
