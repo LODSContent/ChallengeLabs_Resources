@@ -32,7 +32,8 @@ function labNotifications() {
         if (debug) { console.log(`Processing notification: ${id}`); }
 
         // Build notification HTML
-        const innerHTML = `<details><summary>${summary}</summary><br>${details}</details>`;
+        // const innerHTML = `<details><summary>${summary}</summary><br>${details}</details>`;
+        const innerHTML = `${summary}\n\n${details}`;
         const regex = new RegExp(queryString, "is");
 
         // Date range check
