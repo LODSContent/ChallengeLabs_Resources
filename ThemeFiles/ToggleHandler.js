@@ -72,14 +72,12 @@ function handleToggles() {
 
     // Helper Functions
     function getToggleValue(name) {
-        return $(`select[data-name="${name}"]`).val()?.toLowerCase() || null;
+        return window.api.v1.getLabVariable(name).val()?.toLowerCase() || null;
     }
 
     function setSelectValue(name, condition, value) {
         if (condition === 'yes') {
-            const $select = $(`select[data-name="${name}"]`);
-            $select.find(`option[value="${value}"]`).prop('selected', true);
-            $select.trigger('change');
+            window.api.v1.setLabVariable(name,value);
         }
     }
 
