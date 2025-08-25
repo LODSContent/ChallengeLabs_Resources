@@ -32,7 +32,6 @@ function labNotifications() {
         if (debug) { console.log(`Processing notification: ${id}`); }
 
         // Build notification HTML
-        // const innerHTML = `<details><summary>${summary}</summary><br>${details}</details>`;
         const innerHTML = `${summary}<hr><br><br>${details}`;
         const regex = new RegExp(queryString, "is");
 
@@ -48,8 +47,6 @@ function labNotifications() {
         const exists = document.getElementById(id);
         if (bodyText.search(regex) !== -1 && !exists && isActive) {
             if (debug) { console.log(`Displaying api notification: ${id}`); }
-            //addHeader($page0);
-            //addNotification($page0, id, type, innerHTML);
             window.api.v1.sendLabNotification(innerHTML);
         } else {
             if (debug) {
@@ -75,27 +72,6 @@ function getBodyText() {
     const $client = document.getElementById("labClient");
     const $preview = document.getElementById("previewWrapper");
     return $client?.innerHTML || $preview?.innerHTML || "";
-}
-
-function addHeader($node) {
-    if (!document.getElementById("labNotificationsHeader")) {
-        const header = document.createElement("h2");
-        header.innerHTML = "Lab Notifications";
-        header.className = "blink4 flash";
-        header.id = "labNotificationsHeader";
-        $node.appendChild(header);
-        if (debug) { console.log("Added Lab Notifications header"); }
-    }
-}
-
-function addNotification($node, id, type, innerHTML) {
-    const labNotification = document.createElement("blockquote");
-    labNotification.className = type;
-    labNotification.title = "Lab Notification";
-    labNotification.id = id;
-    labNotification.innerHTML = innerHTML;
-    $node.appendChild(labNotification);
-    if (debug) { console.log(`Added notification element: ${id}`); }
 }
 
 // Execute immediately (timeout removed, add back if needed)
