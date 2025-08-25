@@ -87,4 +87,6 @@ function handleToggles() {
 }
 
 // Execute immediately (timeout removed, add back if needed)
-handleToggles();
+setTimeout(() => {
+    handleToggles();
+}, 2000);    
