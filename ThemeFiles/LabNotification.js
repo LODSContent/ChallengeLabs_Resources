@@ -33,7 +33,7 @@ function labNotifications() {
 
         // Build notification HTML
         // const innerHTML = `<details><summary>${summary}</summary><br>${details}</details>`;
-        const innerHTML = `${summary}\n\n${details}`;
+        const innerHTML = `${summary}<hr><br>${details}`;
         const regex = new RegExp(queryString, "is");
 
         // Date range check
