@@ -47,8 +47,9 @@ function labNotifications() {
         const exists = document.getElementById(id);
         if (bodyText.search(regex) !== -1 && !exists && isActive) {
             if (debug) { console.log(`Displaying notification: ${id}`); }
-            addHeader($page0);
-            addNotification($page0, id, type, innerHTML);
+            //addHeader($page0);
+            //addNotification($page0, id, type, innerHTML);
+            window.api.v1.sendLabNotification(details);
         } else {
             if (debug) {
                 console.log(`Skipped notification: ${id} - ${exists ? 'already exists' : !isActive ? 'outside date range' : 'no content match'}`);
