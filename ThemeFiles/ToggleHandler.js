@@ -72,7 +72,7 @@ function handleToggles() {
 
     // Helper Functions
     function getToggleValue(name) {
-        return window.api.v1.getLabVariable(name).val()?.toLowerCase() || null;
+        return window.api.v1.getLabVariable(name)?.toLowerCase() || null;
     }
 
     function setSelectValue(name, condition, value) {
@@ -87,6 +87,4 @@ function handleToggles() {
 }
 
 // Execute immediately (timeout removed, add back if needed)
-setTimeout(() => {
-    handleToggles();
-}, 2000);    
+handleToggles();
