@@ -46,7 +46,7 @@ function labNotifications() {
         // Check conditions for display
         const exists = document.getElementById(id);
         if (bodyText.search(regex) !== -1 && !exists && isActive) {
-            if (debug) { console.log(`Displaying notification: ${id}`); }
+            if (debug) { console.log(`Displaying api notification: ${id}`); }
             //addHeader($page0);
             //addNotification($page0, id, type, innerHTML);
             window.api.v1.sendLabNotification(details);
