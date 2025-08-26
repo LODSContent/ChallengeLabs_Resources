@@ -69,6 +69,7 @@ if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 $UserName = $UserName.trim(" ")
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
+$TenantShortName = $TenantName.Split(".")[0]
 
 $PoolUserName = $UserName
 $PoolPassword = $Password
@@ -770,6 +771,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
          Set-LabVariable -Name UserName -Value $TapUser
          Set-LabVariable -Name Password -Value $TapPassword
          Set-LabVariable -Name TenantName -Value $TenantName
+		 Set-LabVariable -Name TenantShortName -Value $TenantShortName
          Set-LabVariable -Name PoolUserName -Value $PoolUserName
          Set-LabVariable -Name PoolPassword -Value $PoolPassword
          Set-LabVariable -Name TAPLifetime -Value $Lifetime
