@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.05
+ * Version: 2.06
  * Date: 9/4/2025
  * Description: Displays lab notification popups using sendLabNotification API and integrates them into the notifications menu, creating the menu if it doesn't exist, ensuring no duplicates within a session using sessionStorage. Updated to use jQuery for DOM manipulation, inspired by Leaderboard.js tab handling.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.05"); }
+    if (debug) { console.log("Starting lab notifications v2.06"); }
 
     // Ensure notifications button exists
     ensureNotificationsButton();
