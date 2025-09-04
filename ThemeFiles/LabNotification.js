@@ -1,20 +1,20 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.06
+ * Version: 2.07
  * Date: 9/4/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a new custom alerts menu, creating the menu and icon if they don't exist, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays lab notification popups using sendLabNotification API and integrates them into the existing notifications menu, fixing visibility of notificationsButton with CSS override, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.06"); }
+    if (debug) { console.log("Starting lab notifications v2.07"); }
 
-    // Ensure custom alerts button exists
-    ensureCustomAlertsButton();
+    // Ensure notifications button is visible and exists
+    ensureNotificationsButton();
 
-    // Ensure custom alerts menu exists
-    const customAlertsMenu = ensureCustomAlertsMenu();
+    // Ensure notifications menu exists
+    const notificationsMenu = ensureNotificationsMenu();
 
     // Fetch notification data
     const uri = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LabNotifications/labNotifications-dev.json';
@@ -61,8 +61,8 @@ function labNotifications() {
             if (debug) { console.log(`Displaying notification: ${id}`); }
             // Send notification to system
             window.api.v1.sendLabNotification(innerHTML);
-            // Add to custom alerts menu
-            appendNotificationToMenu(customAlertsMenu, id, innerHTML, now);
+            // Add to notifications menu
+            appendNotificationToMenu(notificationsMenu, id, innerHTML, now);
             // Mark notification as shown in sessionStorage
             sessionStorage.setItem(storageKey, 'shown');
         } else {
@@ -89,7 +89,7 @@ function getBodyText() {
     return $('#labClient').html() || $('#previewWrapper').html() || "";
 }
 
-function ensureCustomAlertsButton() {
+function ensureNotificationsButton() {
     let $iconHolder = $('.icon-holder');
     if ($iconHolder.length === 0) {
         $iconHolder = $('<div class="icon-holder"></div>');
@@ -97,58 +97,30 @@ function ensureCustomAlertsButton() {
         if (debug) { console.log("Created icon-holder"); }
     }
 
-    if ($('#customAlertsButton').length === 0) {
-        const $helpButton = $('.help-button');
-        const $customAlertsButton = $('<a tabindex="0" id="customAlertsButton" data-target="custom-alerts-menu" class="custom-alerts-button modal-menu-button icon primary-color-icon" role="button" aria-label="Custom Alerts" title="Custom Alerts"></a>');
-        $customAlertsButton.css({
-            'display': 'inline-block',
-            'width': '32px',
-            'height': '32px',
-            'background-color': '#007bff',
-            'background-image': 'url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmIj48cGF0aCBkPSJNMTkgMTJoLTR2LTZjMC0xLjEwNy0uODkzLTItMi0ycy0yIC44OTMtMiAydi02aC00YzEuNjY3IDEuMzMzIDQtMy42NjcgNC01IDAtMS43MzMgMS4yNjctMyAzLTMzIDEuNzMzIDAgMyAxLjI2NyAzIDN6bS00IDZjMCAxLjEwNy44OTMgMiAyIDJoMnY2aDR2Mmg0di0yaC00di02YzAtMS4xMDctLjg5My0yLTItMmgtdjJoLTR6IiAvPjwvc3ZnPg==)',
-            'background-repeat': 'no-repeat',
-            'background-position': 'center',
-            'background-size': '16px',
-            'border-radius': '4px',
-            'cursor': 'pointer'
-        });
-        if ($helpButton.length > 0) {
-            $customAlertsButton.insertBefore($helpButton);
-        } else {
-            $iconHolder.append($customAlertsButton);
-        }
-        if (debug) { console.log("Created custom alerts button"); }
-
-        // Add click event listener to toggle custom alerts menu
-        $customAlertsButton.on("click", () => {
-            const $menu = $('#custom-alerts-menu');
-            if ($menu.length > 0) {
-                $menu.css('display', $menu.css('display') === 'none' ? 'initial' : 'none');
-                if (debug) { console.log(`Toggled custom alerts menu to ${$menu.css('display')}`); }
-            }
-        });
+    if ($('#notificationsButton').length === 0) {
+        const $notificationsButton = $('<a tabindex="0" id="notificationsButton" data-target="notifications-menu" class="notifications-button modal-menu-button icon primary-color-icon active" role="button" aria-label="Notifications" title="Notifications"></a>');
+        $iconHolder.append($notificationsButton);
+        if (debug) { console.log("Created notifications button"); }
     }
+
+    // Override CSS visibility
+    $('#notificationsButton').css('visibility', 'visible');
+    if (debug) { console.log("Set notifications button visibility to visible"); }
 }
 
-function ensureCustomAlertsMenu() {
-    let $customAlertsMenu = $('#custom-alerts-menu');
-    if ($customAlertsMenu.length === 0) {
-        $customAlertsMenu = $('<div id="custom-alerts-menu" class="modal-menu page-background-color" role="dialog" aria-modal="true" aria-labelledby="custom-alerts-menu-title" style="display: none; left: 16px; right: 16px; width: initial;"></div>');
+function ensureNotificationsMenu() {
+    let $notificationsMenu = $('#notifications-menu');
+    if ($notificationsMenu.length === 0) {
+        $notificationsMenu = $('<div id="notifications-menu" class="modal-menu page-background-color" role="dialog" aria-modal="true" aria-labelledby="notifications-menu-title" style="display: none; left: 16px; right: 16px; width: initial;"></div>');
         const $titleBar = $('<div class="modal-menu-title-bar primary-color-background"></div>');
-        $titleBar.append('<h2 id="custom-alerts-menu-title" class="modal-menu-title">Custom Alerts</h2>');
+        $titleBar.append('<h2 id="notifications-menu-title" class="modal-menu-title">Notifications</h2>');
         $titleBar.append('<span><a class="close-modal-menu-button" tabindex="0" role="button" aria-label="Close" title="Close"></a></span>');
-        $customAlertsMenu.append($titleBar);
-        $customAlertsMenu.append('<div class="modal-menu-content"></div>');
-        $('body').append($customAlertsMenu);
-        if (debug) { console.log("Created custom alerts menu"); }
-
-        // Add click event listener to close button
-        $customAlertsMenu.find('.close-modal-menu-button').on("click", () => {
-            $customAlertsMenu.css('display', 'none');
-            if (debug) { console.log("Closed custom alerts menu"); }
-        });
+        $notificationsMenu.append($titleBar);
+        $notificationsMenu.append('<div class="modal-menu-content"></div>');
+        $('body').append($notificationsMenu);
+        if (debug) { console.log("Created notifications menu"); }
     }
-    return $customAlertsMenu[0];
+    return $notificationsMenu[0];
 }
 
 function appendNotificationToMenu(menu, id, content, date) {
