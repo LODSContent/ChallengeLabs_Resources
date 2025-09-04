@@ -1,14 +1,20 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.01
+ * Version: 2.02
  * Date: 9/4/2025
- * Description: Displays lab notification popups, ensuring each notification is shown only once per browser session using localStorage.
+ * Description: Displays lab notification popups and integrates them into the notifications menu, creating the menu if it doesn't exist, and ensuring no duplicates.
  */
 
 // Begin lab Notification code
 function labNotifications() {
     if (debug) { console.log("Starting lab notifications"); }
+
+    // Ensure notifications button exists
+    ensureNotificationsButton();
+
+    // Ensure notifications menu exists
+    const notificationsMenu = ensureNotificationsMenu();
 
     // Fetch notification data
     const uri = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LabNotifications/labNotifications-dev.json';
@@ -53,8 +59,9 @@ function labNotifications() {
         // Check conditions for display
         const exists = document.getElementById(id);
         if (bodyText.search(regex) !== -1 && !exists && isActive) {
-            if (debug) { console.log(`Displaying api notification: ${id}`); }
-            window.api.v1.sendLabNotification(innerHTML);
+            if (debug) { console.log(`Displaying notification: ${id}`); }
+            // Add to notifications menu instead of using window.api.v1.sendLabNotification
+            appendNotificationToMenu(notificationsMenu, id, innerHTML, now);
             // Mark notification as shown in localStorage
             localStorage.setItem(storageKey, 'shown');
         } else {
@@ -81,6 +88,78 @@ function getBodyText() {
     const $client = document.getElementById("labClient");
     const $preview = document.getElementById("previewWrapper");
     return $client?.innerHTML || $preview?.innerHTML || "";
+}
+
+function ensureNotificationsButton() {
+    let iconHolder = document.querySelector(".icon-holder");
+    if (!iconHolder) {
+        iconHolder = document.createElement("div");
+        iconHolder.className = "icon-holder";
+        document.body.appendChild(iconHolder);
+    }
+
+    if (!document.getElementById("notificationsButton")) {
+        const notificationsButton = document.createElement("a");
+        notificationsButton.id = "notificationsButton";
+        notificationsButton.setAttribute("tabindex", "0");
+        notificationsButton.setAttribute("data-target", "notifications-menu");
+        notificationsButton.className = "notifications-button modal-menu-button icon primary-color-icon active";
+        notificationsButton.setAttribute("role", "button");
+        notificationsButton.setAttribute("aria-label", "Notifications");
+        notificationsButton.setAttribute("title", "Notifications");
+        iconHolder.insertBefore(notificationsButton, iconHolder.firstChild);
+        if (debug) { console.log("Created notifications button"); }
+    }
+}
+
+function ensureNotificationsMenu() {
+    let notificationsMenu = document.getElementById("notifications-menu");
+    if (!notificationsMenu) {
+        notificationsMenu = document.createElement("div");
+        notificationsMenu.id = "notifications-menu";
+        notificationsMenu.className = "modal-menu page-background-color";
+        notificationsMenu.setAttribute("role", "dialog");
+        notificationsMenu.setAttribute("aria-modal", "true");
+        notificationsMenu.setAttribute("aria-labelledby", "notifications-menu-title");
+        notificationsMenu.style.display = "none"; // Initially hidden
+        notificationsMenu.style.left = "16px";
+        notificationsMenu.style.right = "16px";
+        notificationsMenu.style.width = "initial";
+
+        const titleBar = document.createElement("div");
+        titleBar.className = "modal-menu-title-bar primary-color-background";
+        titleBar.innerHTML = `
+            <h2 id="notifications-menu-title" class="modal-menu-title">Notifications</h2>
+            <span><a class="close-modal-menu-button" tabindex="0" role="button" aria-label="Close" title="Close"></a></span>
+        `;
+
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "modal-menu-content";
+
+        notificationsMenu.appendChild(titleBar);
+        notificationsMenu.appendChild(contentDiv);
+        document.body.appendChild(notificationsMenu);
+        if (debug) { console.log("Created notifications menu"); }
+    }
+    return notificationsMenu;
+}
+
+function appendNotificationToMenu(menu, id, content, date) {
+    const contentDiv = menu.querySelector(".modal-menu-content");
+    if (contentDiv.querySelector(`[data-id="${id}"]`)) {
+        if (debug) { console.log(`Notification ${id} already exists in menu, skipping`); }
+        return;
+    }
+
+    const notificationDiv = document.createElement("div");
+    notificationDiv.setAttribute("data-id", id);
+    notificationDiv.className = "listedNotification";
+    notificationDiv.innerHTML = `
+        <div class="listedNotificationDate">${date.toLocaleString()}</div>
+        <div class="listedNotificationBody">${content}</div>
+    `;
+    contentDiv.appendChild(notificationDiv);
+    if (debug) { console.log(`Added notification ${id} to menu`); }
 }
 
 // Execute immediately (timeout removed, add back if needed)
