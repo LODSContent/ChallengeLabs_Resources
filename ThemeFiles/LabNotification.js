@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.04
+ * Version: 2.05
  * Date: 9/4/2025
  * Description: Displays lab notification popups using sendLabNotification API and integrates them into the notifications menu, creating the menu if it doesn't exist, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.04"); }
+    if (debug) { console.log("Starting lab notifications v2.05"); }
 
     // Ensure notifications button exists
     ensureNotificationsButton();
@@ -97,7 +97,10 @@ function ensureNotificationsButton() {
     if (!iconHolder) {
         iconHolder = document.createElement("div");
         iconHolder.className = "icon-holder";
-        document.body.appendChild(iconHolder);
+        // Try to append to a common parent like a header or nav, fallback to body
+        const parent = document.querySelector("header, nav, #page0") || document.body;
+        parent.appendChild(iconHolder);
+        if (debug) { console.log(`Created icon-holder and appended to ${parent.tagName}${parent.id ? `#${parent.id}` : ''}`); }
     }
 
     if (!document.getElementById("notificationsButton")) {
@@ -109,8 +112,19 @@ function ensureNotificationsButton() {
         notificationsButton.setAttribute("role", "button");
         notificationsButton.setAttribute("aria-label", "Notifications");
         notificationsButton.setAttribute("title", "Notifications");
+        // Fallback style for visibility
+        notificationsButton.style.cssText = "display: inline-block; width: 24px; height: 24px; background: #007bff; border-radius: 4px; cursor: pointer;";
         iconHolder.insertBefore(notificationsButton, iconHolder.firstChild);
         if (debug) { console.log("Created notifications button"); }
+
+        // Add click event listener to toggle notifications menu
+        notificationsButton.addEventListener("click", () => {
+            const menu = document.getElementById("notifications-menu");
+            if (menu) {
+                menu.style.display = menu.style.display === "none" ? "initial" : "none";
+                if (debug) { console.log(`Toggled notifications menu to ${menu.style.display}`); }
+            }
+        });
     }
 }
 
@@ -127,6 +141,8 @@ function ensureNotificationsMenu() {
         notificationsMenu.style.left = "16px";
         notificationsMenu.style.right = "16px";
         notificationsMenu.style.width = "initial";
+        // Fallback style for visibility
+        notificationsMenu.style.cssText += "background: #fff; border: 1px solid #ccc; padding: 10px; z-index: 1000; position: absolute;";
 
         const titleBar = document.createElement("div");
         titleBar.className = "modal-menu-title-bar primary-color-background";
@@ -140,8 +156,19 @@ function ensureNotificationsMenu() {
 
         notificationsMenu.appendChild(titleBar);
         notificationsMenu.appendChild(contentDiv);
-        document.body.appendChild(notificationsMenu);
-        if (debug) { console.log("Created notifications menu"); }
+        // Append to a common parent or body
+        const parent = document.querySelector("#page0") || document.body;
+        parent.appendChild(notificationsMenu);
+        if (debug) { console.log(`Created notifications menu and appended to ${parent.tagName}${parent.id ? `#${parent.id}` : ''}`); }
+
+        // Add click event listener to close button
+        const closeButton = notificationsMenu.querySelector(".close-modal-menu-button");
+        if (closeButton) {
+            closeButton.addEventListener("click", () => {
+                notificationsMenu.style.display = "none";
+                if (debug) { console.log("Closed notifications menu"); }
+            });
+        }
     }
     return notificationsMenu;
 }
