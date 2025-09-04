@@ -8,7 +8,7 @@
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications"); }
+    if (debug) { console.log("Starting lab notifications v2.03"); }
 
     // Ensure notifications button exists
     ensureNotificationsButton();
