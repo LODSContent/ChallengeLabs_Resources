@@ -1,20 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.07
+ * Version: 2.08
  * Date: 9/4/2025
- * Description: Displays lab notification popups using sendLabNotification API and integrates them into the existing notifications menu, fixing visibility of notificationsButton with CSS override, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays lab notification popups using sendLabNotification API and merges them into the existing notifications menu's modal-menu-content, removing 'no notifications' message if present, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.07"); }
-
-    // Ensure notifications button is visible and exists
-    ensureNotificationsButton();
-
-    // Ensure notifications menu exists
-    const notificationsMenu = ensureNotificationsMenu();
+    if (debug) { console.log("Starting lab notifications v2.08"); }
 
     // Fetch notification data
     const uri = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LabNotifications/labNotifications-dev.json';
@@ -28,6 +22,12 @@ function labNotifications() {
     const now = new Date();
     if ($('#page0').length === 0) {
         if (debug) { console.log("Page0 element not found, aborting"); }
+        return;
+    }
+
+    const $contentDiv = $('#notifications-menu .modal-menu-content');
+    if ($contentDiv.length === 0) {
+        if (debug) { console.log("Notifications menu content div not found, aborting"); }
         return;
     }
 
@@ -61,8 +61,8 @@ function labNotifications() {
             if (debug) { console.log(`Displaying notification: ${id}`); }
             // Send notification to system
             window.api.v1.sendLabNotification(innerHTML);
-            // Add to notifications menu
-            appendNotificationToMenu(notificationsMenu, id, innerHTML, now);
+            // Add to notifications menu and remove 'no notifications' if present
+            appendNotificationToMenu($contentDiv, id, innerHTML, now);
             // Mark notification as shown in sessionStorage
             sessionStorage.setItem(storageKey, 'shown');
         } else {
@@ -89,47 +89,15 @@ function getBodyText() {
     return $('#labClient').html() || $('#previewWrapper').html() || "";
 }
 
-function ensureNotificationsButton() {
-    let $iconHolder = $('.icon-holder');
-    if ($iconHolder.length === 0) {
-        $iconHolder = $('<div class="icon-holder"></div>');
-        $('body').append($iconHolder);
-        if (debug) { console.log("Created icon-holder"); }
-    }
+function appendNotificationToMenu($contentDiv, id, content, date) {
+    // Remove 'no notifications' message if present
+    $contentDiv.find('.noNotifications').remove();
 
-    if ($('#notificationsButton').length === 0) {
-        const $notificationsButton = $('<a tabindex="0" id="notificationsButton" data-target="notifications-menu" class="notifications-button modal-menu-button icon primary-color-icon active" role="button" aria-label="Notifications" title="Notifications"></a>');
-        $iconHolder.append($notificationsButton);
-        if (debug) { console.log("Created notifications button"); }
-    }
-
-    // Override CSS visibility
-    $('#notificationsButton').css('visibility', 'visible');
-    if (debug) { console.log("Set notifications button visibility to visible"); }
-}
-
-function ensureNotificationsMenu() {
-    let $notificationsMenu = $('#notifications-menu');
-    if ($notificationsMenu.length === 0) {
-        $notificationsMenu = $('<div id="notifications-menu" class="modal-menu page-background-color" role="dialog" aria-modal="true" aria-labelledby="notifications-menu-title" style="display: none; left: 16px; right: 16px; width: initial;"></div>');
-        const $titleBar = $('<div class="modal-menu-title-bar primary-color-background"></div>');
-        $titleBar.append('<h2 id="notifications-menu-title" class="modal-menu-title">Notifications</h2>');
-        $titleBar.append('<span><a class="close-modal-menu-button" tabindex="0" role="button" aria-label="Close" title="Close"></a></span>');
-        $notificationsMenu.append($titleBar);
-        $notificationsMenu.append('<div class="modal-menu-content"></div>');
-        $('body').append($notificationsMenu);
-        if (debug) { console.log("Created notifications menu"); }
-    }
-    return $notificationsMenu[0];
-}
-
-function appendNotificationToMenu(menu, id, content, date) {
-    const $menu = $(menu);
-    const $contentDiv = $menu.find(".modal-menu-content");
     if ($contentDiv.find(`[data-id="${id}"]`).length > 0) {
         if (debug) { console.log(`Notification ${id} already exists in menu, skipping`); }
         return;
     }
+
     const $notificationDiv = $('<div class="listedNotification"></div>');
     $notificationDiv.attr('data-id', id);
     $notificationDiv.append(`<div class="listedNotificationDate">${date.toLocaleString()}</div>`);
