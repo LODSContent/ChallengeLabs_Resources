@@ -1,9 +1,9 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.00
- * Date: 8/25/2025
- * Description: Displays lab notification popups.
+ * Version: 2.01
+ * Date: 9/4/2025
+ * Description: Displays lab notification popups, ensuring each notification is shown only once per browser session using localStorage.
  */
 
 // Begin lab Notification code
@@ -31,6 +31,13 @@ function labNotifications() {
         const { id, summary, details, queryString, startDate, endDate, type } = message;
         if (debug) { console.log(`Processing notification: ${id}`); }
 
+        // Check if notification was already shown
+        const storageKey = `notification_${id}`;
+        if (localStorage.getItem(storageKey)) {
+            if (debug) { console.log(`Skipped notification: ${id} - already shown`); }
+            return;
+        }
+
         // Build notification HTML
         const innerHTML = `${summary}<hr><br><br>${details}`;
         const regex = new RegExp(queryString, "is");
@@ -48,6 +55,8 @@ function labNotifications() {
         if (bodyText.search(regex) !== -1 && !exists && isActive) {
             if (debug) { console.log(`Displaying api notification: ${id}`); }
             window.api.v1.sendLabNotification(innerHTML);
+            // Mark notification as shown in localStorage
+            localStorage.setItem(storageKey, 'shown');
         } else {
             if (debug) {
                 console.log(`Skipped notification: ${id} - ${exists ? 'already exists' : !isActive ? 'outside date range' : 'no content match'}`);
