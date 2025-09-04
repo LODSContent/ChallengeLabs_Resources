@@ -3,7 +3,7 @@
  * Authors: Mark Morgan
  * Version: 2.05
  * Date: 9/4/2025
- * Description: Displays lab notification popups using sendLabNotification API and integrates them into the notifications menu, creating the menu if it doesn't exist, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays lab notification popups using sendLabNotification API and integrates them into the notifications menu, creating the menu if it doesn't exist, ensuring no duplicates within a session using sessionStorage. Updated to use jQuery for DOM manipulation, inspired by Leaderboard.js tab handling.
  */
 
 // Begin lab Notification code
@@ -26,8 +26,7 @@ function labNotifications() {
     if (debug) { console.log(`Loaded ${messageObj.messages.length} notification messages`); }
 
     const now = new Date();
-    const $page0 = document.getElementById("page0");
-    if (!$page0) {
+    if ($('#page0').length === 0) {
         if (debug) { console.log("Page0 element not found, aborting"); }
         return;
     }
@@ -87,114 +86,72 @@ function fetchNotifications(url) {
 }
 
 function getBodyText() {
-    const $client = document.getElementById("labClient");
-    const $preview = document.getElementById("previewWrapper");
-    return $client?.innerHTML || $preview?.innerHTML || "";
+    return $('#labClient').html() || $('#previewWrapper').html() || "";
 }
 
 function ensureNotificationsButton() {
-    let iconHolder = document.querySelector(".icon-holder");
-    if (!iconHolder) {
-        iconHolder = document.createElement("div");
-        iconHolder.className = "icon-holder";
-        // Try to append to a common parent like a header or nav, fallback to body
-        const parent = document.querySelector("header, nav, #page0") || document.body;
-        parent.appendChild(iconHolder);
-        if (debug) { console.log(`Created icon-holder and appended to ${parent.tagName}${parent.id ? `#${parent.id}` : ''}`); }
+    let $iconHolder = $('.icon-holder');
+    if ($iconHolder.length === 0) {
+        $iconHolder = $('<div class="icon-holder"></div>');
+        $('body').append($iconHolder);
+        if (debug) { console.log("Created icon-holder"); }
     }
 
-    if (!document.getElementById("notificationsButton")) {
-        const notificationsButton = document.createElement("a");
-        notificationsButton.id = "notificationsButton";
-        notificationsButton.setAttribute("tabindex", "0");
-        notificationsButton.setAttribute("data-target", "notifications-menu");
-        notificationsButton.className = "notifications-button modal-menu-button icon primary-color-icon active";
-        notificationsButton.setAttribute("role", "button");
-        notificationsButton.setAttribute("aria-label", "Notifications");
-        notificationsButton.setAttribute("title", "Notifications");
-        // Fallback style for visibility
-        notificationsButton.style.cssText = "display: inline-block; width: 24px; height: 24px; background: #007bff; border-radius: 4px; cursor: pointer;";
-        iconHolder.insertBefore(notificationsButton, iconHolder.firstChild);
-        if (debug) { console.log("Created notifications button"); }
-
-        // Add click event listener to toggle notifications menu
-        notificationsButton.addEventListener("click", () => {
-            const menu = document.getElementById("notifications-menu");
-            if (menu) {
-                menu.style.display = menu.style.display === "none" ? "initial" : "none";
-                if (debug) { console.log(`Toggled notifications menu to ${menu.style.display}`); }
-            }
+    if ($('#notificationsButton').length === 0) {
+        const $notificationsButton = $('<a tabindex="0" id="notificationsButton" data-target="notifications-menu" class="notifications-button modal-menu-button icon primary-color-icon active" role="button" aria-label="Notifications" title="Notifications"></a>');
+        $notificationsButton.css({
+            'display': 'inline-block',
+            'width': '32px',
+            'height': '32px',
+            'background-color': '#007bff',
+            'background-image': 'url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmIj48cGF0aCBkPSJNMTIgMjJDMTAuODU2IDIyIDEwIDIxLjE0NCAxMCAyMFMxMC44NTYgMTggMTIgMThzMiAuODYgMiAyYzAgMS4xNDQtLjg1NiAyLTIgMnptMC0yMC02IDBjLTEuMTA3IDAtMiAuODk2LTIgMnYxMGMwIDEuMTA1Ljg5MyAyIDIgMmgxMnYyYzAgMS4xMDUtLjg5MyAyLTIgMkg2Yy0xLjEwNyAwLTIgLS44OTYtMi0ydi0xMGMwLTEuMTA0Ljg5My0yIDItMnptMTAtMGMwLTEuMTA1LS44OTMtMi0yLTJoLTJjLS41NTIgMC0xIC40NDgtMSAxczQuNDQ4IDAgNSAxYzEuMTA3IDAgMiAuODk2IDIgMnptLTIgMHYyYzAgMS4xMDUtLjg5MyAyLTIgMmgtMnYtMWMwLS41NTIuNDQ4LTEgMS0xaDJjMS4xMDcgMCAyIC44OTYgMiAyem0tNCA0YzAgMS4xMDUtLjg5MyAyLTIgMnMtMi0uODk1LTItMnYxMGMwIDEuMTA1Ljg5MyAyIDIgMmg0YzEuMTA3IDAgMi0uODk1IDItMnYtMTBjMC0xLjEwNS0uODkzLTItMi0zek0xMiA2Yy0zLjMxNCAwLTYtMi42ODYtNi02czIuNjg2LTYgNi02IDYgMi42ODYgNiA2LTIuNjg2IDYtNiA2eiIgLz48L3N2Zz4=)',
+            'background-repeat': 'no-repeat',
+            'background-position': 'center',
+            'background-size': '16px',
+            'border-radius': '4px',
+            'cursor': 'pointer'
         });
+        $iconHolder.prepend($notificationsButton);
+        if (debug) { console.log("Created notifications button"); }
     }
 }
 
 function ensureNotificationsMenu() {
-    let notificationsMenu = document.getElementById("notifications-menu");
-    if (!notificationsMenu) {
-        notificationsMenu = document.createElement("div");
-        notificationsMenu.id = "notifications-menu";
-        notificationsMenu.className = "modal-menu page-background-color";
-        notificationsMenu.setAttribute("role", "dialog");
-        notificationsMenu.setAttribute("aria-modal", "true");
-        notificationsMenu.setAttribute("aria-labelledby", "notifications-menu-title");
-        notificationsMenu.style.display = "initial"; // Match provided HTML
-        notificationsMenu.style.left = "16px";
-        notificationsMenu.style.right = "16px";
-        notificationsMenu.style.width = "initial";
-        // Fallback style for visibility
-        notificationsMenu.style.cssText += "background: #fff; border: 1px solid #ccc; padding: 10px; z-index: 1000; position: absolute;";
-
-        const titleBar = document.createElement("div");
-        titleBar.className = "modal-menu-title-bar primary-color-background";
-        titleBar.innerHTML = `
-            <h2 id="notifications-menu-title" class="modal-menu-title">Notifications</h2>
-            <span><a class="close-modal-menu-button" tabindex="0" role="button" aria-label="Close" title="Close"></a></span>
-        `;
-
-        const contentDiv = document.createElement("div");
-        contentDiv.className = "modal-menu-content";
-
-        notificationsMenu.appendChild(titleBar);
-        notificationsMenu.appendChild(contentDiv);
-        // Append to a common parent or body
-        const parent = document.querySelector("#page0") || document.body;
-        parent.appendChild(notificationsMenu);
-        if (debug) { console.log(`Created notifications menu and appended to ${parent.tagName}${parent.id ? `#${parent.id}` : ''}`); }
-
-        // Add click event listener to close button
-        const closeButton = notificationsMenu.querySelector(".close-modal-menu-button");
-        if (closeButton) {
-            closeButton.addEventListener("click", () => {
-                notificationsMenu.style.display = "none";
-                if (debug) { console.log("Closed notifications menu"); }
-            });
-        }
+    let $notificationsMenu = $('#notifications-menu');
+    if ($notificationsMenu.length === 0) {
+        $notificationsMenu = $('<div id="notifications-menu" class="modal-menu page-background-color" role="dialog" aria-modal="true" aria-labelledby="notifications-menu-title" style="display: none; left: 16px; right: 16px; width: initial;"></div>');
+        const $titleBar = $('<div class="modal-menu-title-bar primary-color-background"></div>');
+        $titleBar.append('<h2 id="notifications-menu-title" class="modal-menu-title">Notifications</h2>');
+        $titleBar.append('<span><a class="close-modal-menu-button" tabindex="0" role="button" aria-label="Close" title="Close"></a></span>');
+        $notificationsMenu.append($titleBar);
+        $notificationsMenu.append('<div class="modal-menu-content"></div>');
+        $('body').append($notificationsMenu);
+        if (debug) { console.log("Created notifications menu"); }
     }
-    return notificationsMenu;
+    return $notificationsMenu[0];
 }
 
 function appendNotificationToMenu(menu, id, content, date) {
-    const contentDiv = menu.querySelector(".modal-menu-content");
-    if (contentDiv.querySelector(`[data-id="${id}"]`)) {
+    const $menu = $(menu);
+    const $contentDiv = $menu.find(".modal-menu-content");
+    if ($contentDiv.find(`[data-id="${id}"]`).length > 0) {
         if (debug) { console.log(`Notification ${id} already exists in menu, skipping`); }
         return;
     }
-
-    const notificationDiv = document.createElement("div");
-    notificationDiv.setAttribute("data-id", id);
-    notificationDiv.className = "listedNotification";
-    notificationDiv.innerHTML = `
-        <div class="listedNotificationDate">${date.toLocaleString()}</div>
-        <div class="listedNotificationBody">${content}</div>
-    `;
-    contentDiv.appendChild(notificationDiv);
+    const $notificationDiv = $('<div class="listedNotification"></div>');
+    $notificationDiv.attr('data-id', id);
+    $notificationDiv.append(`<div class="listedNotificationDate">${date.toLocaleString()}</div>`);
+    $notificationDiv.append(`<div class="listedNotificationBody">${content}</div>`);
+    $contentDiv.append($notificationDiv);
     if (debug) { console.log(`Added notification ${id} to menu`); }
 }
 
-// Execute immediately (timeout removed, add back if needed)
-try {
-    labNotifications();
-} catch (err) {
-    console.error("Lab notifications failed:", err);
-}
+// Execute on document ready
+$(document).ready(function() {
+    try {
+        labNotifications();
+    } catch (err) {
+        console.error("Lab notifications failed:", err);
+    }
+});
 // End lab Notification code
