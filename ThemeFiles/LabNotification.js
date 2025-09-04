@@ -1,9 +1,9 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.02
+ * Version: 2.03
  * Date: 9/4/2025
- * Description: Displays lab notification popups and integrates them into the notifications menu, creating the menu if it doesn't exist, and ensuring no duplicates.
+ * Description: Displays lab notification popups and integrates them into the notifications menu, creating the menu if it doesn't exist, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
@@ -37,10 +37,10 @@ function labNotifications() {
         const { id, summary, details, queryString, startDate, endDate, type } = message;
         if (debug) { console.log(`Processing notification: ${id}`); }
 
-        // Check if notification was already shown
+        // Check if notification was already shown in this session
         const storageKey = `notification_${id}`;
-        if (localStorage.getItem(storageKey)) {
-            if (debug) { console.log(`Skipped notification: ${id} - already shown`); }
+        if (sessionStorage.getItem(storageKey)) {
+            if (debug) { console.log(`Skipped notification: ${id} - already shown in this session`); }
             return;
         }
 
@@ -60,10 +60,10 @@ function labNotifications() {
         const exists = document.getElementById(id);
         if (bodyText.search(regex) !== -1 && !exists && isActive) {
             if (debug) { console.log(`Displaying notification: ${id}`); }
-            // Add to notifications menu instead of using window.api.v1.sendLabNotification
+            // Add to notifications menu
             appendNotificationToMenu(notificationsMenu, id, innerHTML, now);
-            // Mark notification as shown in localStorage
-            localStorage.setItem(storageKey, 'shown');
+            // Mark notification as shown in sessionStorage
+            sessionStorage.setItem(storageKey, 'shown');
         } else {
             if (debug) {
                 console.log(`Skipped notification: ${id} - ${exists ? 'already exists' : !isActive ? 'outside date range' : 'no content match'}`);
