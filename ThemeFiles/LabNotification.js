@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.03
+ * Version: 2.04
  * Date: 9/4/2025
- * Description: Displays lab notification popups and integrates them into the notifications menu, creating the menu if it doesn't exist, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays lab notification popups using sendLabNotification API and integrates them into the notifications menu, creating the menu if it doesn't exist, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.03"); }
+    if (debug) { console.log("Starting lab notifications v2.04"); }
 
     // Ensure notifications button exists
     ensureNotificationsButton();
@@ -60,6 +60,8 @@ function labNotifications() {
         const exists = document.getElementById(id);
         if (bodyText.search(regex) !== -1 && !exists && isActive) {
             if (debug) { console.log(`Displaying notification: ${id}`); }
+            // Send notification to system
+            window.api.v1.sendLabNotification(innerHTML);
             // Add to notifications menu
             appendNotificationToMenu(notificationsMenu, id, innerHTML, now);
             // Mark notification as shown in sessionStorage
@@ -121,7 +123,7 @@ function ensureNotificationsMenu() {
         notificationsMenu.setAttribute("role", "dialog");
         notificationsMenu.setAttribute("aria-modal", "true");
         notificationsMenu.setAttribute("aria-labelledby", "notifications-menu-title");
-        notificationsMenu.style.display = "none"; // Initially hidden
+        notificationsMenu.style.display = "initial"; // Match provided HTML
         notificationsMenu.style.left = "16px";
         notificationsMenu.style.right = "16px";
         notificationsMenu.style.width = "initial";
