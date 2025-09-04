@@ -1,14 +1,17 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.08
+ * Version: 2.09
  * Date: 9/4/2025
- * Description: Displays lab notification popups using sendLabNotification API and merges them into the existing notifications menu's modal-menu-content, removing 'no notifications' message if present, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays lab notification popups using sendLabNotification API and merges them into the existing notifications menu's modal-menu-content, removing 'no notifications' message if present, ensuring no duplicates within a session using sessionStorage, with visibility fix for notificationsButton.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.08"); }
+    if (debug) { console.log("Starting lab notifications v2.09"); }
+
+    // Ensure notifications button is visible
+    ensureNotificationsButton();
 
     // Fetch notification data
     const uri = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LabNotifications/labNotifications-dev.json';
@@ -30,11 +33,12 @@ function labNotifications() {
         if (debug) { console.log("Notifications menu content div not found, aborting"); }
         return;
     }
+    if (debug) { console.log("Found modal-menu-content div"); }
 
     // Process each message
     messageObj.messages.forEach(message => {
         const { id, summary, details, queryString, startDate, endDate, type } = message;
-        if (debug) { console.log(`Processing notification: ${id}`); }
+        if (debug) { console.log(`Processing notification: ${id}, queryString: ${queryString}, bodyText: ${getBodyText()}`); }
 
         // Check if notification was already shown in this session
         const storageKey = `notification_${id}`;
@@ -89,6 +93,16 @@ function getBodyText() {
     return $('#labClient').html() || $('#previewWrapper').html() || "";
 }
 
+function ensureNotificationsButton() {
+    const $button = $('#notificationsButton');
+    if ($button.length > 0) {
+        $button.css('visibility', 'visible');
+        if (debug) { console.log("Set notifications button visibility to visible"); }
+    } else {
+        if (debug) { console.log("Notifications button not found"); }
+    }
+}
+
 function appendNotificationToMenu($contentDiv, id, content, date) {
     // Remove 'no notifications' message if present
     $contentDiv.find('.noNotifications').remove();
@@ -100,7 +114,7 @@ function appendNotificationToMenu($contentDiv, id, content, date) {
 
     const $notificationDiv = $('<div class="listedNotification"></div>');
     $notificationDiv.attr('data-id', id);
-    $notificationDiv.append(`<div class="listedNotificationDate">${date.toLocaleString()}</div>`);
+    $notificationDiv.append(`<div class="listedNotificationDate">${date.toLocaleString('en-US', { timeZoneName: 'short' })}</div>`);
     $notificationDiv.append(`<div class="listedNotificationBody">${content}</div>`);
     $contentDiv.append($notificationDiv);
     if (debug) { console.log(`Added notification ${id} to menu`); }
