@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.22
+ * Version: 2.23
  * Date: 9/5/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu placed under .tabs, with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, attempting to trigger existing modal animation system or falling back to manual toggle, ensuring no duplicates and handling legacy data.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu placed under .tabs, with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, using embedded showModalMenu and hideModalMenu for slide animation, ensuring no duplicates and handling legacy data.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.22"); }
+    if (debug) { console.log("Starting lab notifications v2.23"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -82,13 +82,6 @@ function labNotifications() {
             }
         }
     });
-
-    // Check if existing functions are accessible
-    if (debug && typeof window.showModalMenu === 'function' && typeof window.hideModalMenu === 'function') {
-        console.log("Existing showModalMenu and hideModalMenu functions are accessible");
-    } else if (debug) {
-        console.log("Existing showModalMenu or hideModalMenu functions are not accessible");
-    }
 }
 
 // Helper Functions
@@ -137,18 +130,10 @@ function ensureCustomAlertsButton() {
             const $menu = $('#custom-alerts-menu');
             const $mask = $('.modal-menu-mask');
             if ($menu.length > 0 && $mask.length > 0) {
-                // Attempt to trigger existing modal system
-                const $trigger = $('.modal-menu-button[data-target="custom-alerts-menu"]');
-                if ($trigger.length === 0) {
-                    $trigger = $('<a class="modal-menu-button" data-target="custom-alerts-menu" style="display: none;"></a>').appendTo($iconHolder);
-                }
-                $trigger.click(); // Simulate click to trigger existing handler
                 if ($menu.css('display') === 'none') {
-                    $menu.css('display', 'initial');
-                    $mask.css('display', 'block');
+                    showModalMenu('custom-alerts-menu');
                 } else {
-                    $menu.css('display', 'none');
-                    $mask.css('display', 'none');
+                    hideModalMenu('custom-alerts-menu');
                 }
                 if (debug) { console.log(`Toggled custom alerts menu and mask to ${$menu.css('display')}`); }
             }
@@ -178,16 +163,7 @@ function ensureCustomAlertsMenu() {
 
         // Add click event listener to close button
         $customAlertsMenu.find('.close-modal-menu-button').on("click", () => {
-            const $menu = $('#custom-alerts-menu');
-            const $mask = $('.modal-menu-mask');
-            // Attempt to trigger existing modal system close
-            const $trigger = $('.modal-menu-button[data-target="custom-alerts-menu"]');
-            if ($trigger.length > 0) {
-                $trigger.click(); // Simulate click to trigger existing handler
-            } else {
-                $menu.css('display', 'none');
-                $mask.css('display', 'none');
-            }
+            hideModalMenu('custom-alerts-menu');
             if (debug) { console.log("Closed custom alerts menu and mask"); }
         });
     }
@@ -236,6 +212,40 @@ function restoreSavedAlerts(customAlertsMenu) {
             }
         }
     });
+}
+
+function showModalMenu(targetId) {
+    let $modalMenu = $(`#${targetId}`);
+    let animationDuration = 320;
+    let $mask = $(".modal-menu-mask");
+    $mask.fadeIn(animationDuration);
+    let pageWidth = $("body").width();
+    let modalWidth = pageWidth - 32;
+    let isRtl = $("html").attr("dir") === "rtl";
+    let startCss = isRtl
+        ? { display: "initial", right: pageWidth + "px", "left": "inherit", width: modalWidth + "px" }
+        : { display: "initial", left: pageWidth + "px", "right": "inherit", width: modalWidth + "px" };
+    $modalMenu.css(startCss);
+    let animateCss = isRtl
+        ? { right: "16px" }
+        : { left: "16px" };
+    $modalMenu.animate(animateCss, animationDuration, function () {
+        $modalMenu.css({ width: "initial", left: "16px", right: "16px" });
+        $modalMenu.find(".close-modal-menu-button").focus();
+    });
+}
+
+function hideModalMenu(targetId) {
+    let $modalMenu = $(`#${targetId}`);
+    let animationDuration = 320;
+    $(".modal-menu-mask").fadeOut(animationDuration);
+    let pageWidth = $("body").width();
+    let modalWidth = pageWidth - 32;
+    $modalMenu.css({ display: "initial", left: "16px", "right": "inherit", width: modalWidth + "px" });
+    $modalMenu.animate({ left: pageWidth + "px" }, animationDuration, function () {
+        $modalMenu.css({ display: "none", width: "initial", left: "16px", right: "16px" });
+    });
+    $(`.modal-menu-button[data-target="${targetId}"]`).focus();
 }
 
 // Execute on document ready
