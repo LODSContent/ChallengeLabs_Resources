@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.13
+ * Version: 2.14
  * Date: 9/4/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with a corrected icon and toggle functionality, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with an icon using the lab-client-layout-v2 font (content: "\a016"), ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.13"); }
+    if (debug) { console.log("Starting lab notifications v2.14"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -112,19 +112,15 @@ function ensureCustomAlertsButton() {
             'display': 'inline-block',
             'width': '24px',
             'height': '24px',
-            'background-image': 'url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmIj48cGF0aCBkPSJNMTkgMTJoLTR2LTZjMC0xLjEwNy0uODkzLTItMi0ycy0yIC44OTMtMiAydi02aC00YzEuNjY3IDEuMzMzIDQtMy42NjcgNC01IDAtMS43MzMgMS4yNjctMyAzLTMzIDEuNzMzIDAgMyAxLjI2NyAzIDN6bS00IDZjMCAxLjEwNy44OTMgMiAyIDJoMnY2aDR2Mmg0di0yaC00di02YzAtMS4xMDctLjg5My0yLTItMmgtdjJoLTR6IiAvPjwvc3ZnPg==)',
-            'background-repeat': 'no-repeat',
-            'background-position': 'center',
-            'background-size': '16px',
-            'border-radius': '4px',
             'cursor': 'pointer'
         });
+        $customAlertsButton[0].setAttribute('data-icon', '\a016'); // Use lab-client-layout-v2 font character
         if ($helpButton.length > 0) {
             $customAlertsButton.insertBefore($helpButton);
         } else {
             $iconHolder.append($customAlertsButton);
         }
-        if (debug) { console.log("Created custom alerts button, computed style:", window.getComputedStyle($customAlertsButton[0]).cssText); }
+        if (debug) { console.log("Created custom alerts button"); }
 
         // Add click event listener to toggle custom alerts menu
         $customAlertsButton.on("click", () => {
