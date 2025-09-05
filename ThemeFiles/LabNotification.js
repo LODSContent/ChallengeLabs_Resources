@@ -1,20 +1,23 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.16
+ * Version: 2.17
  * Date: 9/5/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with CSS ::before for the icon, managing modal-menu-mask for background darkening, removing bodyText from log output to reduce noise, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts across page refreshes using localStorage with full content, ensuring no duplicates.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.16"); }
+    if (debug) { console.log("Starting lab notifications v2.17"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
 
     // Ensure custom alerts menu exists
     const customAlertsMenu = ensureCustomAlertsMenu();
+
+    // Restore previously saved alerts
+    restoreSavedAlerts(customAlertsMenu);
 
     // Fetch notification data
     const uri = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LabNotifications/labNotifications-dev.json';
@@ -43,9 +46,9 @@ function labNotifications() {
         const { id, summary, details, queryString, startDate, endDate, type } = message;
         if (debug) { console.log(`Processing notification: ${id}, queryString: ${queryString}`); }
 
-        // Check if notification was already shown in this session
+        // Check if notification was already shown
         const storageKey = `notification_${id}`;
-        if (sessionStorage.getItem(storageKey)) {
+        if (localStorage.getItem(storageKey)) {
             if (debug) { console.log(`Skipped notification: ${id} - already shown in this session`); }
             return;
         }
@@ -70,8 +73,9 @@ function labNotifications() {
             window.api.v1.sendLabNotification(innerHTML);
             // Add to custom alerts menu
             appendNotificationToMenu($contentDiv, id, innerHTML, now);
-            // Mark notification as shown in sessionStorage
-            sessionStorage.setItem(storageKey, 'shown');
+            // Save full alert content to localStorage
+            const alertData = { summary, details, date: now.toLocaleString('en-US', { timeZoneName: 'short' }) };
+            localStorage.setItem(storageKey, JSON.stringify(alertData));
         } else {
             if (debug) {
                 console.log(`Skipped notification: ${id} - ${exists ? 'already exists' : !isActive ? 'outside date range' : 'no content match'}`);
@@ -173,10 +177,28 @@ function appendNotificationToMenu($contentDiv, id, content, date) {
 
     const $notificationDiv = $('<div class="listedNotification"></div>');
     $notificationDiv.attr('data-id', id);
-    $notificationDiv.append(`<div class="listedNotificationDate">${date.toLocaleString('en-US', { timeZoneName: 'short' })}</div>`);
+    $notificationDiv.append(`<div class="listedNotificationDate">${date}</div>`);
     $notificationDiv.append(`<div class="listedNotificationBody">${content}</div>`);
     $contentDiv.append($notificationDiv);
     if (debug) { console.log(`Added notification ${id} to menu`); }
+}
+
+function restoreSavedAlerts(customAlertsMenu) {
+    const $contentDiv = $(customAlertsMenu).find('.modal-menu-content');
+    const savedAlerts = Object.keys(localStorage).filter(key => key.startsWith('notification_'));
+    if (debug) { console.log(`Restoring ${savedAlerts.length} saved alerts`); }
+    savedAlerts.forEach(key => {
+        const id = key.replace('notification_', '');
+        const savedData = JSON.parse(localStorage.getItem(key));
+        if (savedData && !$contentDiv.find(`[data-id="${id}"]`).length) {
+            const $notificationDiv = $('<div class="listedNotification"></div>');
+            $notificationDiv.attr('data-id', id);
+            $notificationDiv.append(`<div class="listedNotificationDate">${savedData.date}</div>`);
+            $notificationDiv.append(`<div class="listedNotificationBody">${savedData.summary}<hr><br><br>${savedData.details}</div>`);
+            $contentDiv.append($notificationDiv);
+            if (debug) { console.log(`Restored notification ${id} from localStorage`); }
+        }
+    });
 }
 
 // Execute on document ready
