@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.12
+ * Version: 2.13
  * Date: 9/4/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with a visible icon and border matching the header, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with a corrected icon and toggle functionality, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.12"); }
+    if (debug) { console.log("Starting lab notifications v2.13"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -112,12 +112,10 @@ function ensureCustomAlertsButton() {
             'display': 'inline-block',
             'width': '24px',
             'height': '24px',
-            'background-color': '#007bff', // Fallback color
             'background-image': 'url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmIj48cGF0aCBkPSJNMTkgMTJoLTR2LTZjMC0xLjEwNy0uODkzLTItMi0ycy0yIC44OTMtMiAydi02aC00YzEuNjY3IDEuMzMzIDQtMy42NjcgNC01IDAtMS43MzMgMS4yNjctMyAzLTMzIDEuNzMzIDAgMyAxLjI2NyAzIDN6bS00IDZjMCAxLjEwNy44OTMgMiAyIDJoMnY2aDR2Mmg0di0yaC00di02YzAtMS4xMDctLjg5My0yLTItMmgtdjJoLTR6IiAvPjwvc3ZnPg==)',
             'background-repeat': 'no-repeat',
             'background-position': 'center',
             'background-size': '16px',
-            'border': '1px solid #0056b3', // Fallback border for visibility
             'border-radius': '4px',
             'cursor': 'pointer'
         });
@@ -126,7 +124,17 @@ function ensureCustomAlertsButton() {
         } else {
             $iconHolder.append($customAlertsButton);
         }
-        if (debug) { console.log("Created custom alerts button with styles:", $customAlertsButton.attr('style')); }
+        if (debug) { console.log("Created custom alerts button, computed style:", window.getComputedStyle($customAlertsButton[0]).cssText); }
+
+        // Add click event listener to toggle custom alerts menu
+        $customAlertsButton.on("click", () => {
+            const $menu = $('#custom-alerts-menu');
+            if ($menu.length > 0) {
+                const currentDisplay = $menu.css('display');
+                $menu.css('display', currentDisplay === 'none' ? 'initial' : 'none');
+                if (debug) { console.log(`Toggled custom alerts menu to ${$menu.css('display')}`); }
+            }
+        });
     }
 }
 
@@ -140,14 +148,14 @@ function ensureCustomAlertsMenu() {
         $customAlertsMenu.append($titleBar);
         $customAlertsMenu.append('<div class="modal-menu-content"></div>');
         $customAlertsMenu.css({
-            'border': '2px solid', // Match header border
-            'border-top-color': 'transparent', // Avoid overlap with title bar
-            'border-bottom-color': '#007bff', // Match primary-color-background
+            'border': '2px solid',
+            'border-top-color': 'transparent',
+            'border-bottom-color': '#007bff',
             'border-left-color': '#007bff',
             'border-right-color': '#007bff'
         });
         $('body').append($customAlertsMenu);
-        if (debug) { console.log("Created custom alerts menu with border styles:", $customAlertsMenu.attr('style')); }
+        if (debug) { console.log("Created custom alerts menu"); }
 
         // Add click event listener to close button
         $customAlertsMenu.find('.close-modal-menu-button').on("click", () => {
