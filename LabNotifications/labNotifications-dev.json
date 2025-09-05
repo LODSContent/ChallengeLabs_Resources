@@ -92,9 +92,28 @@
 
       "endDate": ""
 
+      },
+
+      {
+
+      "id": "LeaderboardTesting",
+
+      "summary": "Leaderboard Notification",
+
+      "details": "This is a test notification for the custom alert system.",
+
+      "type": "alert",
+
+      "queryString": "Leaderboard Testing",
+
+      "startDate": "",
+
+      "endDate": ""
+
       }	  
 
   ]
 
 }
+
  
