@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.19
+ * Version: 2.22
  * Date: 9/5/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu placed under .tabs, with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, ensuring no duplicates and handling legacy data.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu placed under .tabs, with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, using existing showModalMenu and hideModalMenu functions if accessible, ensuring no duplicates and handling legacy data.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.19"); }
+    if (debug) { console.log("Starting lab notifications v2.22"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -82,6 +82,13 @@ function labNotifications() {
             }
         }
     });
+
+    // Check if existing functions are accessible
+    if (debug && typeof window.showModalMenu === 'function' && typeof window.hideModalMenu === 'function') {
+        console.log("Existing showModalMenu and hideModalMenu functions are accessible");
+    } else if (debug) {
+        console.log("Existing showModalMenu or hideModalMenu functions are not accessible");
+    }
 }
 
 // Helper Functions
@@ -125,14 +132,18 @@ function ensureCustomAlertsButton() {
         }
         if (debug) { console.log("Created custom alerts button"); }
 
-        // Add click event listener to toggle custom alerts menu and mask
+        // Add click event listener to toggle custom alerts menu and mask using existing functions if available
         $customAlertsButton.on("click", () => {
             const $menu = $('#custom-alerts-menu');
             const $mask = $('.modal-menu-mask');
             if ($menu.length > 0 && $mask.length > 0) {
-                const currentDisplay = $menu.css('display');
-                $menu.css('display', currentDisplay === 'none' ? 'initial' : 'none');
-                $mask.css('display', currentDisplay === 'none' ? 'block' : 'none'); // Toggle mask with menu
+                if (typeof window.showModalMenu === 'function') {
+                    showModalMenu('custom-alerts-menu');
+                } else {
+                    const currentDisplay = $menu.css('display');
+                    $menu.css('display', currentDisplay === 'none' ? 'initial' : 'none');
+                    $mask.css('display', currentDisplay === 'none' ? 'block' : 'none');
+                }
                 if (debug) { console.log(`Toggled custom alerts menu and mask to ${$menu.css('display')}`); }
             }
         });
@@ -161,8 +172,12 @@ function ensureCustomAlertsMenu() {
 
         // Add click event listener to close button
         $customAlertsMenu.find('.close-modal-menu-button').on("click", () => {
-            $customAlertsMenu.css('display', 'none');
-            $('.modal-menu-mask').css('display', 'none');
+            if (typeof window.hideModalMenu === 'function') {
+                hideModalMenu('custom-alerts-menu');
+            } else {
+                $customAlertsMenu.css('display', 'none');
+                $('.modal-menu-mask').css('display', 'none');
+            }
             if (debug) { console.log("Closed custom alerts menu and mask"); }
         });
     }
