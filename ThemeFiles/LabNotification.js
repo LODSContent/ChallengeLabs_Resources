@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.15
+ * Version: 2.16
  * Date: 9/5/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu, using CSS ::before for the icon, managing modal-menu-mask for background darkening, reducing log output noise, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with CSS ::before for the icon, managing modal-menu-mask for background darkening, removing bodyText from log output to reduce noise, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.15"); }
+    if (debug) { console.log("Starting lab notifications v2.16"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -41,7 +41,7 @@ function labNotifications() {
     // Process each message
     messageObj.messages.forEach(message => {
         const { id, summary, details, queryString, startDate, endDate, type } = message;
-        if (debug) { console.log(`Processing notification: ${id}, queryString: ${queryString}, bodyText: ${getBodyText().substring(0, 100)}...`); }
+        if (debug) { console.log(`Processing notification: ${id}, queryString: ${queryString}`); }
 
         // Check if notification was already shown in this session
         const storageKey = `notification_${id}`;
