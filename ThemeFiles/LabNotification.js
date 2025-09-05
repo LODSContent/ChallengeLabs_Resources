@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.14
- * Date: 9/4/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with an icon using the lab-client-layout-v2 font (content: "\a016"), ensuring no duplicates within a session using sessionStorage.
+ * Version: 2.15
+ * Date: 9/5/2025
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu, using CSS ::before for the icon, managing modal-menu-mask for background darkening, reducing log output noise, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.14"); }
+    if (debug) { console.log("Starting lab notifications v2.15"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -41,7 +41,7 @@ function labNotifications() {
     // Process each message
     messageObj.messages.forEach(message => {
         const { id, summary, details, queryString, startDate, endDate, type } = message;
-        if (debug) { console.log(`Processing notification: ${id}, queryString: ${queryString}, bodyText: ${getBodyText()}`); }
+        if (debug) { console.log(`Processing notification: ${id}, queryString: ${queryString}, bodyText: ${getBodyText().substring(0, 100)}...`); }
 
         // Check if notification was already shown in this session
         const storageKey = `notification_${id}`;
@@ -114,7 +114,6 @@ function ensureCustomAlertsButton() {
             'height': '24px',
             'cursor': 'pointer'
         });
-        $customAlertsButton[0].setAttribute('data-icon', '\a016'); // Use lab-client-layout-v2 font character
         if ($helpButton.length > 0) {
             $customAlertsButton.insertBefore($helpButton);
         } else {
@@ -122,13 +121,15 @@ function ensureCustomAlertsButton() {
         }
         if (debug) { console.log("Created custom alerts button"); }
 
-        // Add click event listener to toggle custom alerts menu
+        // Add click event listener to toggle custom alerts menu and mask
         $customAlertsButton.on("click", () => {
             const $menu = $('#custom-alerts-menu');
-            if ($menu.length > 0) {
+            const $mask = $('.modal-menu-mask');
+            if ($menu.length > 0 && $mask.length > 0) {
                 const currentDisplay = $menu.css('display');
                 $menu.css('display', currentDisplay === 'none' ? 'initial' : 'none');
-                if (debug) { console.log(`Toggled custom alerts menu to ${$menu.css('display')}`); }
+                $mask.css('display', currentDisplay === 'none' ? 'block' : 'none'); // Toggle mask with menu
+                if (debug) { console.log(`Toggled custom alerts menu and mask to ${$menu.css('display')}`); }
             }
         });
     }
@@ -143,20 +144,22 @@ function ensureCustomAlertsMenu() {
         $titleBar.append('<span><a class="close-modal-menu-button" tabindex="0" role="button" aria-label="Close" title="Close"></a></span>');
         $customAlertsMenu.append($titleBar);
         $customAlertsMenu.append('<div class="modal-menu-content"></div>');
-        $customAlertsMenu.css({
-            'border': '2px solid',
-            'border-top-color': 'transparent',
-            'border-bottom-color': '#007bff',
-            'border-left-color': '#007bff',
-            'border-right-color': '#007bff'
-        });
         $('body').append($customAlertsMenu);
         if (debug) { console.log("Created custom alerts menu"); }
+
+        // Ensure modal-menu-mask exists and is styled
+        let $mask = $('.modal-menu-mask');
+        if ($mask.length === 0) {
+            $mask = $('<div class="modal-menu-mask" style="display: none;"></div>');
+            $('body').append($mask);
+            if (debug) { console.log("Created modal-menu-mask"); }
+        }
 
         // Add click event listener to close button
         $customAlertsMenu.find('.close-modal-menu-button').on("click", () => {
             $customAlertsMenu.css('display', 'none');
-            if (debug) { console.log("Closed custom alerts menu"); }
+            $('.modal-menu-mask').css('display', 'none');
+            if (debug) { console.log("Closed custom alerts menu and mask"); }
         });
     }
     return $customAlertsMenu[0];
