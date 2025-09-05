@@ -3,7 +3,7 @@
  * Authors: Mark Morgan
  * Version: 2.22
  * Date: 9/5/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu placed under .tabs, with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, using existing showModalMenu and hideModalMenu functions if accessible, ensuring no duplicates and handling legacy data.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu placed under .tabs, with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, attempting to trigger existing modal animation system or falling back to manual toggle, ensuring no duplicates and handling legacy data.
  */
 
 // Begin lab Notification code
@@ -132,17 +132,23 @@ function ensureCustomAlertsButton() {
         }
         if (debug) { console.log("Created custom alerts button"); }
 
-        // Add click event listener to toggle custom alerts menu and mask using existing functions if available
+        // Add click event listener to toggle custom alerts menu and mask
         $customAlertsButton.on("click", () => {
             const $menu = $('#custom-alerts-menu');
             const $mask = $('.modal-menu-mask');
             if ($menu.length > 0 && $mask.length > 0) {
-                if (typeof window.showModalMenu === 'function') {
-                    showModalMenu('custom-alerts-menu');
+                // Attempt to trigger existing modal system
+                const $trigger = $('.modal-menu-button[data-target="custom-alerts-menu"]');
+                if ($trigger.length === 0) {
+                    $trigger = $('<a class="modal-menu-button" data-target="custom-alerts-menu" style="display: none;"></a>').appendTo($iconHolder);
+                }
+                $trigger.click(); // Simulate click to trigger existing handler
+                if ($menu.css('display') === 'none') {
+                    $menu.css('display', 'initial');
+                    $mask.css('display', 'block');
                 } else {
-                    const currentDisplay = $menu.css('display');
-                    $menu.css('display', currentDisplay === 'none' ? 'initial' : 'none');
-                    $mask.css('display', currentDisplay === 'none' ? 'block' : 'none');
+                    $menu.css('display', 'none');
+                    $mask.css('display', 'none');
                 }
                 if (debug) { console.log(`Toggled custom alerts menu and mask to ${$menu.css('display')}`); }
             }
@@ -172,11 +178,15 @@ function ensureCustomAlertsMenu() {
 
         // Add click event listener to close button
         $customAlertsMenu.find('.close-modal-menu-button').on("click", () => {
-            if (typeof window.hideModalMenu === 'function') {
-                hideModalMenu('custom-alerts-menu');
+            const $menu = $('#custom-alerts-menu');
+            const $mask = $('.modal-menu-mask');
+            // Attempt to trigger existing modal system close
+            const $trigger = $('.modal-menu-button[data-target="custom-alerts-menu"]');
+            if ($trigger.length > 0) {
+                $trigger.click(); // Simulate click to trigger existing handler
             } else {
-                $customAlertsMenu.css('display', 'none');
-                $('.modal-menu-mask').css('display', 'none');
+                $menu.css('display', 'none');
+                $mask.css('display', 'none');
             }
             if (debug) { console.log("Closed custom alerts menu and mask"); }
         });
