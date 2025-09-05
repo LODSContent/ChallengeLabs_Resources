@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.18
+ * Version: 2.19
  * Date: 9/5/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, ensuring no duplicates and handling legacy data.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu placed under .tabs, with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, ensuring no duplicates and handling legacy data.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.18"); }
+    if (debug) { console.log("Starting lab notifications v2.19"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -140,7 +140,7 @@ function ensureCustomAlertsButton() {
 }
 
 function ensureCustomAlertsMenu() {
-    let $customAlertsMenu = $('#custom-alerts-menu');
+    let $customAlertsMenu = $('.tabs #custom-alerts-menu');
     if ($customAlertsMenu.length === 0) {
         $customAlertsMenu = $('<div id="custom-alerts-menu" class="modal-menu page-background-color" role="dialog" aria-modal="true" aria-labelledby="custom-alerts-menu-title" style="display: none; left: 16px; right: 16px; width: initial;"></div>');
         const $titleBar = $('<div class="modal-menu-title-bar primary-color-background"></div>');
@@ -148,8 +148,8 @@ function ensureCustomAlertsMenu() {
         $titleBar.append('<span><a class="close-modal-menu-button" tabindex="0" role="button" aria-label="Close" title="Close"></a></span>');
         $customAlertsMenu.append($titleBar);
         $customAlertsMenu.append('<div class="modal-menu-content"></div>');
-        $('body').append($customAlertsMenu);
-        if (debug) { console.log("Created custom alerts menu"); }
+        $('.tabs').append($customAlertsMenu);
+        if (debug) { console.log("Created custom alerts menu under .tabs"); }
 
         // Ensure modal-menu-mask exists and is styled
         let $mask = $('.modal-menu-mask');
