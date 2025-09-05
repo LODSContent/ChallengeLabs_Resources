@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.17
+ * Version: 2.18
  * Date: 9/5/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts across page refreshes using localStorage with full content, ensuring no duplicates and handling legacy data format.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, ensuring no duplicates and handling legacy data.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.17"); }
+    if (debug) { console.log("Starting lab notifications v2.18"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -48,7 +48,7 @@ function labNotifications() {
 
         // Check if notification was already shown
         const storageKey = `notification_${id}`;
-        if (localStorage.getItem(storageKey)) {
+        if (sessionStorage.getItem(storageKey)) {
             if (debug) { console.log(`Skipped notification: ${id} - already shown in this session`); }
             return;
         }
@@ -73,9 +73,9 @@ function labNotifications() {
             window.api.v1.sendLabNotification(innerHTML);
             // Add to custom alerts menu
             appendNotificationToMenu($contentDiv, id, innerHTML, now);
-            // Save full alert content to localStorage
+            // Save full alert content to sessionStorage
             const alertData = { summary, details, date: now.toLocaleString('en-US', { timeZoneName: 'short' }) };
-            localStorage.setItem(storageKey, JSON.stringify(alertData));
+            sessionStorage.setItem(storageKey, JSON.stringify(alertData));
         } else {
             if (debug) {
                 console.log(`Skipped notification: ${id} - ${exists ? 'already exists' : !isActive ? 'outside date range' : 'no content match'}`);
@@ -185,11 +185,11 @@ function appendNotificationToMenu($contentDiv, id, content, date) {
 
 function restoreSavedAlerts(customAlertsMenu) {
     const $contentDiv = $(customAlertsMenu).find('.modal-menu-content');
-    const savedAlerts = Object.keys(localStorage).filter(key => key.startsWith('notification_'));
+    const savedAlerts = Object.keys(sessionStorage).filter(key => key.startsWith('notification_'));
     if (debug) { console.log(`Restoring ${savedAlerts.length} saved alerts`); }
     savedAlerts.forEach(key => {
         const id = key.replace('notification_', '');
-        const savedData = localStorage.getItem(key);
+        const savedData = sessionStorage.getItem(key);
         if (savedData) {
             try {
                 const data = JSON.parse(savedData);
@@ -199,13 +199,13 @@ function restoreSavedAlerts(customAlertsMenu) {
                     $notificationDiv.append(`<div class="listedNotificationDate">${data.date}</div>`);
                     $notificationDiv.append(`<div class="listedNotificationBody">${data.summary}<hr><br><br>${data.details}</div>`);
                     $contentDiv.append($notificationDiv);
-                    if (debug) { console.log(`Restored notification ${id} from localStorage`); }
+                    if (debug) { console.log(`Restored notification ${id} from sessionStorage`); }
                 }
             } catch (e) {
                 if (debug) { console.log(`Skipping invalid JSON for ${id}: ${e.message}, data: ${savedData}`); }
                 // Handle legacy "shown" string by removing it
                 if (savedData === 'shown') {
-                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
                     if (debug) { console.log(`Removed legacy 'shown' entry for ${id}`); }
                 }
             }
