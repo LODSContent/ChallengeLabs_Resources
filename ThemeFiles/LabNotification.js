@@ -3,7 +3,7 @@
  * Authors: Mark Morgan
  * Version: 2.17
  * Date: 9/5/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts across page refreshes using localStorage with full content, ensuring no duplicates.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts across page refreshes using localStorage with full content, ensuring no duplicates and handling legacy data format.
  */
 
 // Begin lab Notification code
@@ -189,14 +189,26 @@ function restoreSavedAlerts(customAlertsMenu) {
     if (debug) { console.log(`Restoring ${savedAlerts.length} saved alerts`); }
     savedAlerts.forEach(key => {
         const id = key.replace('notification_', '');
-        const savedData = JSON.parse(localStorage.getItem(key));
-        if (savedData && !$contentDiv.find(`[data-id="${id}"]`).length) {
-            const $notificationDiv = $('<div class="listedNotification"></div>');
-            $notificationDiv.attr('data-id', id);
-            $notificationDiv.append(`<div class="listedNotificationDate">${savedData.date}</div>`);
-            $notificationDiv.append(`<div class="listedNotificationBody">${savedData.summary}<hr><br><br>${savedData.details}</div>`);
-            $contentDiv.append($notificationDiv);
-            if (debug) { console.log(`Restored notification ${id} from localStorage`); }
+        const savedData = localStorage.getItem(key);
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                if (data && !$contentDiv.find(`[data-id="${id}"]`).length) {
+                    const $notificationDiv = $('<div class="listedNotification"></div>');
+                    $notificationDiv.attr('data-id', id);
+                    $notificationDiv.append(`<div class="listedNotificationDate">${data.date}</div>`);
+                    $notificationDiv.append(`<div class="listedNotificationBody">${data.summary}<hr><br><br>${data.details}</div>`);
+                    $contentDiv.append($notificationDiv);
+                    if (debug) { console.log(`Restored notification ${id} from localStorage`); }
+                }
+            } catch (e) {
+                if (debug) { console.log(`Skipping invalid JSON for ${id}: ${e.message}, data: ${savedData}`); }
+                // Handle legacy "shown" string by removing it
+                if (savedData === 'shown') {
+                    localStorage.removeItem(key);
+                    if (debug) { console.log(`Removed legacy 'shown' entry for ${id}`); }
+                }
+            }
         }
     });
 }
