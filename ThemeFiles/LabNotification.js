@@ -1,17 +1,20 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.09
+ * Version: 2.10
  * Date: 9/4/2025
- * Description: Displays lab notification popups using sendLabNotification API and merges them into the existing notifications menu's modal-menu-content, removing 'no notifications' message if present, ensuring no duplicates within a session using sessionStorage, with visibility fix for notificationsButton.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with a matching icon, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.09"); }
+    if (debug) { console.log("Starting lab notifications v2.10"); }
 
-    // Ensure notifications button is visible
-    ensureNotificationsButton();
+    // Ensure custom alerts button exists
+    ensureCustomAlertsButton();
+
+    // Ensure custom alerts menu exists
+    const customAlertsMenu = ensureCustomAlertsMenu();
 
     // Fetch notification data
     const uri = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LabNotifications/labNotifications-dev.json';
@@ -28,12 +31,12 @@ function labNotifications() {
         return;
     }
 
-    const $contentDiv = $('#notifications-menu .modal-menu-content');
+    const $contentDiv = $(customAlertsMenu).find('.modal-menu-content');
     if ($contentDiv.length === 0) {
-        if (debug) { console.log("Notifications menu content div not found, aborting"); }
+        if (debug) { console.log("Custom alerts menu content div not found, aborting"); }
         return;
     }
-    if (debug) { console.log("Found modal-menu-content div"); }
+    if (debug) { console.log("Found custom alerts menu content div"); }
 
     // Process each message
     messageObj.messages.forEach(message => {
@@ -65,7 +68,7 @@ function labNotifications() {
             if (debug) { console.log(`Displaying notification: ${id}`); }
             // Send notification to system
             window.api.v1.sendLabNotification(innerHTML);
-            // Add to notifications menu and remove 'no notifications' if present
+            // Add to custom alerts menu
             appendNotificationToMenu($contentDiv, id, innerHTML, now);
             // Mark notification as shown in sessionStorage
             sessionStorage.setItem(storageKey, 'shown');
@@ -93,20 +96,69 @@ function getBodyText() {
     return $('#labClient').html() || $('#previewWrapper').html() || "";
 }
 
-function ensureNotificationsButton() {
-    const $button = $('#notificationsButton');
-    if ($button.length > 0) {
-        $button.css('visibility', 'visible');
-        if (debug) { console.log("Set notifications button visibility to visible"); }
-    } else {
-        if (debug) { console.log("Notifications button not found"); }
+function ensureCustomAlertsButton() {
+    let $iconHolder = $('.icon-holder');
+    if ($iconHolder.length === 0) {
+        $iconHolder = $('<div class="icon-holder"></div>');
+        $('body').append($iconHolder);
+        if (debug) { console.log("Created icon-holder"); }
+    }
+
+    if ($('#customAlertsButton').length === 0) {
+        const $helpButton = $('.help-button');
+        const $customAlertsButton = $('<a tabindex="0" id="customAlertsButton" data-target="custom-alerts-menu" class="custom-alerts-button modal-menu-button icon primary-color-icon" role="button" aria-label="Custom Alerts" title="Custom Alerts"></a>');
+        $customAlertsButton.css({
+            'display': 'inline-block',
+            'width': '24px',
+            'height': '24px',
+            'background-color': '#007bff',
+            'background-image': 'url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmIj48cGF0aCBkPSJNMTkgMTJoLTR2LTZjMC0xLjEwNy0uODkzLTItMi0ycy0yIC44OTMtMiAydi02aC00YzEuNjY3IDEuMzMzIDQtMy42NjcgNC01IDAtMS43MzMgMS4yNjctMyAzLTMzIDEuNzMzIDAgMyAxLjI2NyAzIDN6bS00IDZjMCAxLjEwNy44OTMgMiAyIDJoMnY2aDR2Mmg0di0yaC00di02YzAtMS4xMDctLjg5My0yLTItMmgtdjJoLTR6IiAvPjwvc3ZnPg==)',
+            'background-repeat': 'no-repeat',
+            'background-position': 'center',
+            'background-size': '16px',
+            'border-radius': '4px',
+            'cursor': 'pointer'
+        });
+        if ($helpButton.length > 0) {
+            $customAlertsButton.insertBefore($helpButton);
+        } else {
+            $iconHolder.append($customAlertsButton);
+        }
+        if (debug) { console.log("Created custom alerts button"); }
+
+        // Add click event listener to toggle custom alerts menu
+        $customAlertsButton.on("click", () => {
+            const $menu = $('#custom-alerts-menu');
+            if ($menu.length > 0) {
+                $menu.css('display', $menu.css('display') === 'none' ? 'initial' : 'none');
+                if (debug) { console.log(`Toggled custom alerts menu to ${$menu.css('display')}`); }
+            }
+        });
     }
 }
 
-function appendNotificationToMenu($contentDiv, id, content, date) {
-    // Remove 'no notifications' message if present
-    $contentDiv.find('.noNotifications').remove();
+function ensureCustomAlertsMenu() {
+    let $customAlertsMenu = $('#custom-alerts-menu');
+    if ($customAlertsMenu.length === 0) {
+        $customAlertsMenu = $('<div id="custom-alerts-menu" class="modal-menu page-background-color" role="dialog" aria-modal="true" aria-labelledby="custom-alerts-menu-title" style="display: none; left: 16px; right: 16px; width: initial;"></div>');
+        const $titleBar = $('<div class="modal-menu-title-bar primary-color-background"></div>');
+        $titleBar.append('<h2 id="custom-alerts-menu-title" class="modal-menu-title">Custom Alerts</h2>');
+        $titleBar.append('<span><a class="close-modal-menu-button" tabindex="0" role="button" aria-label="Close" title="Close"></a></span>');
+        $customAlertsMenu.append($titleBar);
+        $customAlertsMenu.append('<div class="modal-menu-content"></div>');
+        $('body').append($customAlertsMenu);
+        if (debug) { console.log("Created custom alerts menu"); }
 
+        // Add click event listener to close button
+        $customAlertsMenu.find('.close-modal-menu-button').on("click", () => {
+            $customAlertsMenu.css('display', 'none');
+            if (debug) { console.log("Closed custom alerts menu"); }
+        });
+    }
+    return $customAlertsMenu[0];
+}
+
+function appendNotificationToMenu($contentDiv, id, content, date) {
     if ($contentDiv.find(`[data-id="${id}"]`).length > 0) {
         if (debug) { console.log(`Notification ${id} already exists in menu, skipping`); }
         return;
