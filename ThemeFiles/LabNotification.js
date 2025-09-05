@@ -1,14 +1,14 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.10
+ * Version: 2.11
  * Date: 9/4/2025
- * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with a matching icon, ensuring no duplicates within a session using sessionStorage.
+ * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu with a refined icon, improving text matching for notifications, ensuring no duplicates within a session using sessionStorage.
  */
 
 // Begin lab Notification code
 function labNotifications() {
-    if (debug) { console.log("Starting lab notifications v2.10"); }
+    if (debug) { console.log("Starting lab notifications v2.11"); }
 
     // Ensure custom alerts button exists
     ensureCustomAlertsButton();
@@ -93,7 +93,8 @@ function fetchNotifications(url) {
 }
 
 function getBodyText() {
-    return $('#labClient').html() || $('#previewWrapper').html() || "";
+    // Use text content instead of HTML to improve matching
+    return $('#labClient').text() || $('#previewWrapper').text() || "";
 }
 
 function ensureCustomAlertsButton() {
@@ -111,7 +112,6 @@ function ensureCustomAlertsButton() {
             'display': 'inline-block',
             'width': '24px',
             'height': '24px',
-            'background-color': '#007bff',
             'background-image': 'url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmIj48cGF0aCBkPSJNMTkgMTJoLTR2LTZjMC0xLjEwNy0uODkzLTItMi0ycy0yIC44OTMtMiAydi02aC00YzEuNjY3IDEuMzMzIDQtMy42NjcgNC01IDAtMS43MzMgMS4yNjctMyAzLTMzIDEuNzMzIDAgMyAxLjI2NyAzIDN6bS00IDZjMCAxLjEwNy44OTMgMiAyIDJoMnY2aDR2Mmg0di0yaC00di02YzAtMS4xMDctLjg5My0yLTItMmgtdjJoLTR6IiAvPjwvc3ZnPg==)',
             'background-repeat': 'no-repeat',
             'background-position': 'center',
