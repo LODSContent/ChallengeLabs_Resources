@@ -104,7 +104,7 @@
 
       "type": "alert",
 
-      "queryString": "",
+      "queryString": "Leaderboard Testing",
 
       "startDate": "",
 
@@ -116,6 +116,7 @@
 
 }
  
+
 
 
 
