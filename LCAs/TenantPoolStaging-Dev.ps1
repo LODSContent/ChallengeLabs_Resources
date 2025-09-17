@@ -66,7 +66,7 @@ if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 }
 if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
-if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret -gt 10) {
+if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
 	try {
  		$SecureSecret = $ScriptingAppSecret | ConvertTo-SecureString -AsPlainText -Force
 		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$SecureSecret)
