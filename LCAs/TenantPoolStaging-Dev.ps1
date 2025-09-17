@@ -66,18 +66,6 @@ if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 }
 if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
-if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
-	try {
- 		$SecureSecret = $ScriptingAppSecret | ConvertTo-SecureString -AsPlainText -Force
-		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$SecureSecret)
-		# Authenticate using Connect-AzAccount
-		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
-  		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to Tenant: $tenantName using AppId: $ScriptingAppId" }
-	} catch {
-		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to Tenant: $tenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
- 	}
-}
-
 $UserName = $UserName.trim(" ")
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
@@ -95,7 +83,9 @@ if (!$SkipCleanup) {
 	$params = @{
 	    TenantName = $TenantName
 	    Password = $Password
-     	    LabInstanceId = $LabInstanceId
+     	ScriptingAppId = $ScriptingAppId
+	  	ScriptingAppSecret = $ScriptingAppSecret
+	  	LabInstanceId = $LabInstanceId
 	    ScriptDebug = $ScriptDebug    
 	}
 	
@@ -113,6 +103,18 @@ if (!$SkipCleanup) {
 		if ($ScriptDebug) { Send-DebugMessage "Possible errors running cleanup for $TenantName" }
 	}
  }
+
+if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
+	try {
+ 		$SecureSecret = $ScriptingAppSecret | ConvertTo-SecureString -AsPlainText -Force
+		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$SecureSecret)
+		# Authenticate using Connect-AzAccount
+		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
+  		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to Tenant: $tenantName using AppId: $ScriptingAppId" }
+	} catch {
+		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to Tenant: $tenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
+ 	}
+}
 
 try {
 	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName as: $AppName in the TenantPoolStaging script." }
