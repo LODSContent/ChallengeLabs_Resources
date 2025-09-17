@@ -7,6 +7,8 @@
 param (
     $TenantName,
     $Password,
+    $ScriptingAppId,
+    $ScriptingAppSecret,
     $LabInstanceId,
     [switch]$ScriptDebug    
 )
@@ -42,6 +44,18 @@ if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 	$LabInstanceId = "NoID"
 }
 if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
+
+if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
+	try {
+ 		$SecureSecret = $ScriptingAppSecret | ConvertTo-SecureString -AsPlainText -Force
+		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$SecureSecret)
+		# Authenticate using Connect-AzAccount
+		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
+  		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to Tenant: $tenantName using AppId: $ScriptingAppId" }
+	} catch {
+		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to Tenant: $tenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
+ 	}
+}
 
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
