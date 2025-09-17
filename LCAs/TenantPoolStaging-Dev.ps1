@@ -73,7 +73,7 @@ if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret -gt 10) {
 		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
   		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to Tenant: $tenantName using AppId: $ScriptingAppId" }
 	} catch {
-		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to Tenant: $tenantName using AppId: $ScriptingAppId" }
+		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to Tenant: $tenantName using AppId: $ScriptingAppId with Secret: $ScriptingAppSecret due to error:`n $($_.Exception.Message)" }
  	}
 }
 
