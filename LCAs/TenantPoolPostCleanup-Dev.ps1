@@ -37,21 +37,10 @@ function Send-DebugMessage {
 
 # Check if Az.Accounts version 2.13.2 is installed and is the only version
 try {
-    $azAccountsModules = Get-Module -Name Az.Accounts -ListAvailable -ErrorAction Stop
     $targetVersion = "2.13.2"
-    $isTargetVersionInstalled = $azAccountsModules | Where-Object { $_.Version -eq $targetVersion }
-    $isOnlyVersion = ($azAccountsModules | Measure-Object).Count -eq 1 -and $isTargetVersionInstalled
-
-    if (-not $isTargetVersionInstalled -or -not $isOnlyVersion) {
-        if ($ScriptDebug) { Send-DebugMessage "Az.Accounts version $targetVersion is not installed or not the only version. Installing..." }
-        Uninstall-Module -Name Az.Accounts -AllVersions -Force -ErrorAction SilentlyContinue
-        Install-Module -Name Az.Accounts -RequiredVersion $targetVersion -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
-        if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
-    } else {
-        if ($ScriptDebug) { Send-DebugMessage "Az.Accounts version $targetVersion is already installed and is the only version" }
-    }
-    Import-Module Az.Accounts -RequiredVersion $targetVersion -Force -ErrorAction Stop
-    if ($ScriptDebug) { Send-DebugMessage "Successfully imported Az.Accounts version $targetVersion" }
+    Uninstall-Module -Name Az.Accounts -AllVersions -Force -ErrorAction SilentlyContinue
+    Install-Module -Name Az.Accounts -RequiredVersion $targetVersion -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
+    if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
 } catch {
     if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
 }
