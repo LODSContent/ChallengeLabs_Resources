@@ -68,8 +68,7 @@ if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
 if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret -gt 10) {
 	try {
-		#$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$ScriptingAppSecret)
-  		$cred = New-Object System.Management.Automation.PSCredential('c6189ec1-efda-413d-8b60-d814f37e9700','1gu8Q~fPxrlLFkqzeiF22UJAonOSRPTfPT9evb11')
+		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$ScriptingAppSecret)
 		# Authenticate using Connect-AzAccount
 		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
   		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to Tenant: $tenantName using AppId: $ScriptingAppId" }
