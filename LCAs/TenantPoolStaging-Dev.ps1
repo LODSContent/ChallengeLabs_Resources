@@ -66,9 +66,21 @@ if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 }
 if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
+if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret -gt 10) {
+	try {
+		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $ScriptingAppSecret)            
+		# Authenticate using Connect-AzAccount
+		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
+  		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to Tenant: $tenantName using AppId: $ScriptingAppId" }
+	} catch {
+		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to Tenant: $tenantName using AppId: $ScriptingAppId" }
+ 	}
+}
+
 $UserName = $UserName.trim(" ")
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
+$TenantShortName = $TenantName.Split(".")[0]
 
 $PoolUserName = $UserName
 $PoolPassword = $Password
@@ -87,7 +99,7 @@ if (!$SkipCleanup) {
 	}
 	
 	# URL of the script on GitHub
-	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup-Dev.ps1"
+	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup.ps1"
 	
 	# Fetch the script content using Invoke-WebRequest
 	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
@@ -770,6 +782,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
          Set-LabVariable -Name UserName -Value $TapUser
          Set-LabVariable -Name Password -Value $TapPassword
          Set-LabVariable -Name TenantName -Value $TenantName
+		 Set-LabVariable -Name TenantShortName -Value $TenantShortName
          Set-LabVariable -Name PoolUserName -Value $PoolUserName
          Set-LabVariable -Name PoolPassword -Value $PoolPassword
          Set-LabVariable -Name TAPLifetime -Value $Lifetime
