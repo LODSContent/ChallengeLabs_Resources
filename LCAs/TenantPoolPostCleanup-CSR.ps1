@@ -62,14 +62,14 @@ if ($ScriptDebug) { Send-DebugMessage "Received ScriptingAppId: $ScriptingAppId 
 
 if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
 	try {
- 		if ($ScriptDebug) { Send-DebugMessage "Attempting authentication to Tenant: $tenantName using AppId: $ScriptingAppId" }
+ 		if ($ScriptDebug) { Send-DebugMessage "Attempting Az authentication to Tenant: $tenantName using AppId: $ScriptingAppId" }
  		$SecureSecret = $ScriptingAppSecret | ConvertTo-SecureString -AsPlainText -Force
 		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$SecureSecret)
 		# Authenticate using Connect-AzAccount
 		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
-  		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to Tenant: $tenantName using AppId: $ScriptingAppId" }
+  		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated Az to Tenant: $tenantName using AppId: $ScriptingAppId" }
 	} catch {
-		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to Tenant: $tenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
+		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate Az to Tenant: $tenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
  	}
 }
 
