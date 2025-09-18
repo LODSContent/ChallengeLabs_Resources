@@ -102,7 +102,7 @@ if (!$SkipCleanup) {
 	if ($ScriptDebug) { Send-DebugMessage "Sending ScriptingAppId: $ScriptingAppId - and ScriptingAppSecret: $ScriptingAppSecret" }
  
 	# URL of the script on GitHub
-	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup.ps1"
+	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup-Dev.ps1"
 	
 	# Fetch the script content using Invoke-WebRequest
 	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
