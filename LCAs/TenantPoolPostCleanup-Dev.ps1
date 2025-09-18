@@ -56,6 +56,8 @@ if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 }
 if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
+if ($ScriptDebug) { Send-DebugMessage "Received ScriptingAppId: $ScriptingAppId - and ScriptingAppSecret: $ScriptingAppSecret" }
+
 if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
 	try {
  		if ($ScriptDebug) { Send-DebugMessage "Attempting authentication to Tenant: $tenantName using AppId: $ScriptingAppId" }
