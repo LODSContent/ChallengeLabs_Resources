@@ -91,7 +91,7 @@ try {
 	$AppName = $Context.AppName
 	if ($ScriptDebug) { Send-DebugMessage "Successfully connected MgGraph to: $TenantName using AppId: $ScriptingAppId" }
 } catch {
-   if ($ScriptDebug) { Send-DebugMessage "Failed to connect MgGraph to: $TenantName using AppId: $ScriptingAppId" }
+   if ($ScriptDebug) { Send-DebugMessage "Failed to connect MgGraph to: $TenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
    throw "Failed to connect MgGraph to: $TenantName using AppId: $ScriptingAppId"
 }
 
