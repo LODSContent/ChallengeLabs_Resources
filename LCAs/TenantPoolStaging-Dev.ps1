@@ -99,7 +99,7 @@ if (!$SkipCleanup) {
 	    ScriptDebug = $ScriptDebug    
 	}
 
-	if ($ScriptDebug) { Send-DebugMessage "Params are: $Params" }
+	if ($ScriptDebug) { Send-DebugMessage "Sending ScriptingAppId: $ScriptingAppId - and ScriptingAppSecret: $ScriptingAppSecret" }
  
 	# URL of the script on GitHub
 	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup.ps1"
