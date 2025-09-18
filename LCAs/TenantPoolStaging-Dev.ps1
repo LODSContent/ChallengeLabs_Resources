@@ -731,7 +731,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    # Clean and configure Trial Subscription if present
    if ($SubscriptionId) {
 		try {
-	 		if ($ScriptingAppId.Length -gt 10) {
+	 		if ($ScriptingAppId.Length -lt 10) {
 			    # Add a secret to the Service Principal
 				$secretBody = @{
 					"passwordCredential" = @{
