@@ -730,70 +730,71 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 
    # Clean and configure Trial Subscription if present
    if ($SubscriptionId) {
-	# Add a secret to the Service Principal
-	$secretBody = @{
-		"passwordCredential" = @{
-			"displayName" = "Script Secret"
-			"endDateTime" = (Get-Date).AddDays(1).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-		}
-	} | ConvertTo-Json -Depth 10
-	
-	try {
- 		$secret = Invoke-MgGraphRequest `
-			-Method POST `
-			-Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($sp.id)/addPassword" `
-			-Body $secretBody `
-			-ContentType "application/json"
-	 	$ScriptingAppSecret = $Secret.SecretText
-   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 30 seconds." }
-		Start-Sleep -seconds 30
-	
-		# Create a secure string for the client secret
-		$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
+		try {
+	 		if ($ScriptingAppId.Length -gt 10) {
+			    # Add a secret to the Service Principal
+				$secretBody = @{
+					"passwordCredential" = @{
+						"displayName" = "Script Secret"
+						"endDateTime" = (Get-Date).AddDays(1).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+					}
+				} | ConvertTo-Json -Depth 10
+		 		$secret = Invoke-MgGraphRequest `
+					-Method POST `
+					-Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($sp.id)/addPassword" `
+					-Body $secretBody `
+					-ContentType "application/json"
+			 	$ScriptingAppSecret = $Secret.SecretText
+		   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 30 seconds." }
+				Start-Sleep -seconds 30
+			
+				# Create a secure string for the client secret
+				$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
+				
+				# Create a PSCredential object
+				$credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
+				
+				# Authenticate with Azure
+				try {
+		  			Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $TenantName | Out-Null
+		     			if ($scriptDebug) { Send-DebugMessage "Successfully initiated Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
+				} catch {
+					if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
+		   			throw "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
+		  		}
+	  		}
 		
-		# Create a PSCredential object
-		$credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
-		
-		# Authenticate with Azure
-		try {
-  			Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $TenantName | Out-Null
-     			if ($scriptDebug) { Send-DebugMessage "Successfully initiated Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
-		} catch {
-			if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
-   			throw "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
-  		}
-  
-		# Set the context to the correct subscription
-		try {
-  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
-     			if ($scriptDebug) { Send-DebugMessage "Successfully used Set-AzContext with SubscriptionId: $SubscriptionId" }
-		} catch {
-			if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
-   			throw "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
-  		}
-    
-		# Remove and re-add Owner Role to the lab user
-		try {
-		    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
-	     	    if ($scriptDebug) { Send-DebugMessage "Removed existing Owner role for $TapUser." }
-		} catch {
-	 	    if ($scriptDebug) { Send-DebugMessage "Failed to remove existing Owner role for $TapUser. It may not exist." }
-		}
-		
-  		try {
-    		    New-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
-	  	    if ($scriptDebug) { Send-DebugMessage "Set the Owner role for $TapUser." }
-		} catch {
-		    if ($scriptDebug) { Send-DebugMessage "Failed to set the Owner role for $TapUser." }
-  		}
-		# Remove all Resource Groups
-		try {
-  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
-		    Get-AzResourceGroup | ForEach-Object {$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force}
-		} catch {}
- 	} catch {
-		if ($scriptDebug) { Send-DebugMessage "Failed to create additional secret and could not set the Owner role for $TapUser." }
- 	}
+			# Set the context to the correct subscription
+			try {
+	  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
+	     			if ($scriptDebug) { Send-DebugMessage "Successfully used Set-AzContext with SubscriptionId: $SubscriptionId" }
+			} catch {
+				if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
+	   			throw "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
+	  		}
+	    
+			# Remove and re-add Owner Role to the lab user
+			try {
+			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
+		     	    if ($scriptDebug) { Send-DebugMessage "Removed existing Owner role for $TapUser." }
+			} catch {
+		 	    if ($scriptDebug) { Send-DebugMessage "Failed to remove existing Owner role for $TapUser. It may not exist." }
+			}
+			
+	  		try {
+	    		    New-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
+		  	    if ($scriptDebug) { Send-DebugMessage "Set the Owner role for $TapUser." }
+			} catch {
+			    if ($scriptDebug) { Send-DebugMessage "Failed to set the Owner role for $TapUser." }
+	  		}
+			# Remove all Resource Groups
+			try {
+	  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
+			    Get-AzResourceGroup | ForEach-Object {$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force}
+			} catch {}
+	 	} catch {
+			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
+	 	}
    }
 
     # Update lab variables based on TAP success
