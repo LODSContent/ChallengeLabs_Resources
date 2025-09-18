@@ -16,6 +16,7 @@ param (
     $LabInstanceId,
     [switch]$SkipCleanup,
     [switch]$CreateLabUsers,
+	[switch]$CustomTarget,
     [switch]$ScriptDebug
 )
 
@@ -41,14 +42,16 @@ function Send-DebugMessage {
    #Write-Host $Message
 }
 
-# Check if Az.Accounts version 2.13.2 is installed and is the only version
-try {
-    $targetVersion = "2.13.2"
-    Uninstall-Module -Name Az.Accounts -AllVersions -Force -ErrorAction SilentlyContinue
-    Install-Module -Name Az.Accounts -RequiredVersion $targetVersion -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
-    if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
-} catch {
-    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
+# Install Az.Accounts version 2.13.2
+if ($CustomTarget) {
+	try {
+	    $targetVersion = "2.13.2"
+	    Uninstall-Module -Name Az.Accounts -AllVersions -Force -ErrorAction SilentlyContinue
+	    Install-Module -Name Az.Accounts -RequiredVersion $targetVersion -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
+	    if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
+	} catch {
+	    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
+	}
 }
 
 <#
@@ -96,6 +99,7 @@ if (!$SkipCleanup) {
      	ScriptingAppId = $ScriptingAppId
 	  	ScriptingAppSecret = $ScriptingAppSecret
 	  	LabInstanceId = $LabInstanceId
+		CustomTarget = $CustomTarget
 	    ScriptDebug = $ScriptDebug    
 	}
 
