@@ -58,6 +58,7 @@ if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
 if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
 	try {
+ 		if ($ScriptDebug) { Send-DebugMessage "Attempting authentication to Tenant: $tenantName using AppId: $ScriptingAppId" }
  		$SecureSecret = $ScriptingAppSecret | ConvertTo-SecureString -AsPlainText -Force
 		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$SecureSecret)
 		# Authenticate using Connect-AzAccount
