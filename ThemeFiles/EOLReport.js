@@ -12,7 +12,7 @@ document.querySelector("body").style.display = "none"; // Blank screen initially
 
 try {
     // Configuration and data retrieval
-    const autoTranslateStatus = getAutoTranslateStatus();
+    const autoTranslateStatus = getLabVariable('AutoTranslate');
     const labLanguageCode = getLabLanguageCode();
     const languageFileUrl = getLanguageFileUrl(autoTranslateStatus, labLanguageCode);
     if (debug) { console.log(`AutoTranslate: ${autoTranslateStatus}, Language Code: ${labLanguageCode}, URL: ${languageFileUrl}`); }
@@ -70,10 +70,6 @@ try {
 }
 
 // Helper Functions
-
-function getAutoTranslateStatus() {
-    return $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
-}
 
 function getLabLanguageCode() {
     return document.documentElement.lang || "en-US";
