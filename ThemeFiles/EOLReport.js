@@ -71,6 +71,15 @@ try {
 
 // Helper Functions
 
+// Retrieve a lab variable listed in Markdown as a case-insensitive variable name
+function getLabVariable(name) {
+    if (debug) { console.log(`Leaderboard: Retrieving lab variable - ${name}`); }
+    let checkName = name.toLowerCase();
+    let value = $('[data-name]').filter(function() { return $(this).attr('data-name').toLowerCase() == checkName }).val();
+    if (debug) { console.log(`Leaderboard: Retrieved value for ${name} - ${value}`); }
+    return value;
+}
+
 function getLabLanguageCode() {
     return document.documentElement.lang || "en-US";
 }
