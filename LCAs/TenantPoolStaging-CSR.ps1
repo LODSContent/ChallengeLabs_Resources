@@ -799,17 +799,21 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 
     # Update lab variables based on TAP success
     if ($TapPassword) {
-         Set-LabVariable -Name UserName -Value $TapUser
-         Set-LabVariable -Name Password -Value $TapPassword
-         Set-LabVariable -Name TenantName -Value $TenantName
-		 Set-LabVariable -Name TenantShortName -Value $TenantShortName
-         Set-LabVariable -Name PoolUserName -Value $PoolUserName
-         Set-LabVariable -Name PoolPassword -Value $PoolPassword
-         Set-LabVariable -Name TAPLifetime -Value $Lifetime
-         Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
-         Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
-         Set-LabVariable -Name CredentialPool -Value 'Yes'
-        if ($ScriptDebug) { Send-DebugMessage "TAP User setup complete" }
+         try {
+			 Set-LabVariable -Name UserName -Value $TapUser
+	         Set-LabVariable -Name Password -Value $TapPassword
+	         Set-LabVariable -Name TenantName -Value $TenantName
+			 Set-LabVariable -Name TenantShortName -Value $TenantShortName
+	         Set-LabVariable -Name PoolUserName -Value $PoolUserName
+	         Set-LabVariable -Name PoolPassword -Value $PoolPassword
+	         Set-LabVariable -Name TAPLifetime -Value $Lifetime
+	         Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
+	         Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
+	         Set-LabVariable -Name CredentialPool -Value 'Yes'
+        	if ($ScriptDebug) { Send-DebugMessage "TAP User setup complete" }
+		 } catch {
+			if ($ScriptDebug) { Send-DebugMessage "Error configuring lab variables - Error: $_" }
+   		 }
     } else {
          Set-LabVariable -Name UserName -Value $UserName
          Set-LabVariable -Name Password -Value $Password
