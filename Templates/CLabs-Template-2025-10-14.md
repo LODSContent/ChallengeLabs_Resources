@@ -3,11 +3,17 @@ AI instructions:
 
 Use the Markdown template below to format the structure of the lab instructions. 
 
-Use the Overview section from the template as the Introduction. Preserve the [challenge-title] and [overview] markers, but edit the content as appropriate. Do not add any content other than comments before the first !INSTRUCTIONS include and challenge-title entry. Do not add any header markers or introductory text to the first page other than what should be included with the challenge-title and overview markers.
+Use the Overview section from the template as the Introduction. Preserve the [challenge-title] and [overview] markers, but edit the content as appropriate. Do not add any content other than comments before the first !INSTRUCTIONS include and challenge-title entry. Do not add any markdown headers or introductory text to the first page other than what should be included with the challenge-title and overview markers.
 
 Make sure to preserve all !INSTRUCTIONS entries by formatting them with !INSTRUCTIONS immediately followed by an empty square bracket, followed by the content in parenthesis.
 
-The topics provided will each be a requirement. Within each requirement should be 3 or more tasks. Each individual task should be followed by a corresponding "Hint" as a "Show Guided" item that details the steps involved in a task and a corresponding "Knowledge" as a "Show Advanced" item with a link to vendor documentation related to the same task. If there are 3 tasks, there should be 3 Guided and Advanced items, one beneath each task. Do not label the Tasks as Tasks.
+The topics provided will each be a requirement. Within each requirement should be 3 or more tasks. The tasks should be brief statements of what needs to be done within the environment without provided the step-by-step details. You will need to provide details that the student would not know, like the names of items to be created, or quantities, sizes etc.
+
+Provide tables, images and codeblocks as needed for clarity in performing the task.
+
+Each individual task should be followed by a corresponding "Hint" as a "Show Guided" item that details the steps involved in a task and a corresponding "Knowledge" as a "Show Advanced" item with a link to vendor documentation related to the same task. If there are 3 tasks, there should be 3 Guided and Advanced items, one beneath each task. Do not label the Tasks as Tasks.
+
+Inside the tasks, the steps should be formatted as a markdown bulleted list. Add tables, images and codeblocks as needed for clarity.
 
 Below is the markdown template:
 
