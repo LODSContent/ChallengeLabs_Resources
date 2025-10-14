@@ -3,9 +3,9 @@ AI instructions:
 
 Use the Markdown template below to format the structure of the lab instructions. 
 
-Use the Overview section from the template as the Introduction. Preserve the [challenge-title] and [overview] markers, but edit the content as appropriate.
+Use the Overview section from the template as the Introduction. Preserve the [challenge-title] and [overview] markers, but edit the content as appropriate. Do not add any content other than comments before the first !INSTRUCTIONS include and challenge-title entry.
 
-Make sure to preserve all !INSTRUCTIONS[] includes exactly as they are formatted for each page. Do NOT make changes to them.
+Make sure to preserve all !INSTRUCTIONS entries by formatting them with !INSTRUCTIONS immediately followed by an empty square bracket, followed by the content in parenthesis.
 
 The topics provided will each be a requirement. Within each requirement should be 3 or more tasks. Each individual task should be followed by a corresponding "Hint" as a "Show Guided" item that details the steps involved in a task and a corresponding "Knowledge" as a "Show Advanced" item with a link to vendor documentation related to the same task. If there are 3 tasks, there should be 3 Guided and Advanced items, one beneath each task. Do not label the Tasks as Tasks.
 
