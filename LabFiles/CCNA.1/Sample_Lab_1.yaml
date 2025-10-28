@@ -678,5 +678,5 @@ lab:
     - Configure a dot1q trunk between one switch and a router that will handle the routing for the VLANs
     - Configure VLAN trunking on that router to act as a gateway between VLANs
     - Verify that connectivity exists between hosts in the lab on each VLAN, and that the connectivity goes through the router
-  title: Lab1
+  title: Lab
   version: 0.3.0
