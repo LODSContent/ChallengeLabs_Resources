@@ -393,24 +393,30 @@ class CMLClient:
     def findlab(self, lab_title=None):
         # Find a lab by title or return the first running/available lab
         # Args:
-        #   lab_title: Title of the lab to find (optional)
+        #   lab_title: Title of the lab to find (optional, case-insensitive, whitespace-tolerant)
         # Returns: Lab ID, or empty string if not found
         lab_ids = self.get_labs()
         if not lab_ids:
             logging.error("No labs found")
             print("Error: No labs found", file=sys.stderr)
             return ""
+
         if lab_title:
+            # Normalize the search title: strip and lowercase
+            search_title = lab_title.strip().lower()
             for lab_id in lab_ids:
                 details = self.get_lab_details(lab_id)
-                # FIXED: .lower() was on empty string
-                if details.get("lab_title", "").lower() == lab_title.lower():
+                # Safely get and normalize lab title
+                lab_name = details.get("lab_title", "").strip().lower()
+                if lab_name == search_title:
                     if self.debug:
-                        logging.info(f"Found lab with title '{lab_title}': {lab_id}")
+                        logging.info(f"Found lab with title '{lab_title}' (normalized: '{lab_name}'): {lab_id}")
                     return lab_id
-            logging.error(f"No lab found with title '{lab_title}'")
+            logging.error(f"No lab found with title '{lab_title}' (searched as '{search_title}')")
             print(f"Error: No lab found with title '{lab_title}'", file=sys.stderr)
             return ""
+
+        # No title provided: fallback to first STARTED or first lab
         lab_id = self.get_default_lab_id(lab_ids)
         if not lab_id:
             logging.error("No labs available")
