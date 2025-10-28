@@ -752,9 +752,7 @@ class CMLClient:
 
     def import_lab(self, source_url):
         # Unified import: download, convert, and upload to CML
-        # Supports .cml, .yaml, .yml, .zip
-        # Returns new lab ID or empty string on failure
-        # Auto-converts GitHub blob → raw URLs
+        # Now idempotent: if lab with same title exists, return existing ID
         if 'github.com' in source_url and '/blob/' in source_url:
             source_url = source_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
             if self.debug:
@@ -793,23 +791,34 @@ class CMLClient:
                 print("Error: File is not UTF-8", file=sys.stderr)
                 return ""
 
+            # Parse title from YAML or CML
+            lab_title = None
             if filename.endswith(('.yaml', '.yml')):
                 try:
                     data = yaml.safe_load(file_str)
+                    lab_title = data.get("lab", {}).get("title") or data.get("title")
                     lab_json = json.dumps(data, indent=2)
                 except yaml.YAMLError as e:
                     print(f"Error: Invalid YAML: {e}", file=sys.stderr)
                     return ""
             else:
                 lab_json = file_str
+                try:
+                    data = json.loads(lab_json)
+                    lab_title = data.get("lab", {}).get("title") or data.get("title")
+                except json.JSONDecodeError:
+                    pass  # fall back to import
 
-            try:
-                json.loads(lab_json)
-            except json.JSONDecodeError as e:
-                print(f"Error: Invalid JSON: {e}", file=sys.stderr)
-                return ""
+            # === IDEMPOTENCY: Check if lab with this title already exists ===
+            if lab_title:
+                existing_lab_id = self.findlab(lab_title)
+                if existing_lab_id:
+                    print(existing_lab_id)  # Return existing ID
+                    if self.debug:
+                        print(f"Lab already exists: '{lab_title}' → {existing_lab_id}", file=sys.stderr)
+                    return existing_lab_id
 
-            # Upload to CML
+            # === Upload new lab ===
             try:
                 self.ensure_jwt()
                 if self.debug:
@@ -826,14 +835,9 @@ class CMLClient:
                 response.raise_for_status()
                 result = response.json()
                 lab_id = result.get("id", "unknown")
-
-                # SUCCESS OUTPUT: ONLY the lab ID on stdout
                 print(lab_id)
-
-                # Optional human-readable message on stderr (for debug or logs)
                 if self.debug:
-                    print(f"Lab imported successfully: {lab_id}", file=sys.stderr)
-
+                    print(f"Lab imported: {lab_id}", file=sys.stderr)
                 return lab_id
 
             except requests.RequestException as e:
