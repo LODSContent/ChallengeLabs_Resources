@@ -531,9 +531,6 @@ class CMLClient:
             print(f"Error: Failed to stop lab {lab_id}: {e}", file=sys.stderr)
             return ""
 
-    def sanitize_lab_path(lab_title):
-        return lab_title.replace('.', '-').replace(' ', '_')
-
     def gettestbed(self, lab_id=None):
         # Get PyATS testbed YAML for a lab
         # Args:
@@ -559,21 +556,6 @@ class CMLClient:
             )
             response.raise_for_status()
             testbed_yaml = response.text
-            # === SANITIZE LAB TITLE IN CONSOLE PATHS ===
-            try:
-                data = yaml.safe_load(testbed_yaml)
-                lab_name = data.get('testbed', {}).get('name', '')
-                if lab_name:
-                    sanitized = sanitize_lab_path(lab_name)
-                    if sanitized != lab_name:
-                        for dev in data.get('devices', {}).values():
-                            conn = dev.get('connections', {}).get('a', {})
-                            if isinstance(conn, dict) and 'command' in conn:
-                                conn['command'] = conn['command'].replace(f'/{lab_name}/', f'/{sanitized}/')
-                        testbed_yaml = yaml.safe_dump(data)
-            except Exception as e:
-                if self.debug:
-                    logging.warning(f"Path sanitization failed: {e}")
             if not testbed_yaml or testbed_yaml in ["false", "null"] or "testbed:" not in testbed_yaml:
                 logging.error(f"Invalid testbed YAML for lab {lab_id}")
                 print(f"Error: Invalid testbed YAML for lab {lab_id}", file=sys.stderr)
