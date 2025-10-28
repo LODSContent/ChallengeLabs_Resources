@@ -1,9 +1,24 @@
 #!/bin/bash
 # =============================================================================
 # CML Tools Setup Script
-# Creates cml_env.sh and cmltools.py with full environment and Python logic
-# Uses # for all comments as requested
+# Creates cml_env.sh and cmltools.py with environment variables
+# Parameters:
+#   $1: CML_IP         (e.g., 192.168.1.10)
+#   $2: CML_USERNAME   (e.g., admin)
+#   $3: CML_PASSWORD   (e.g., secret)
+# Returns: true on success, false on failure
 # =============================================================================
+
+# Validate required parameters
+if [ $# -ne 3 ]; then
+  echo "Error: Exactly 3 parameters required: CML_IP, CML_USERNAME, CML_PASSWORD" >&2
+  echo false
+  return 1
+fi
+
+CML_IP="$1"
+CML_USERNAME="$2"
+CML_PASSWORD="$3"
 
 # Ensure labfiles directory exists
 mkdir -p "$HOME/labfiles" || { echo "Error: Failed to create $HOME/labfiles" >&2; echo false; return 1; }
@@ -16,17 +31,17 @@ export BASH_ENV="$HOME/labfiles/cml_env.sh"
 touch "$OUTPUT_FILE" || { echo "Error: Cannot write to $OUTPUT_FILE" >&2; echo false; return 1; }
 
 # Create or overwrite the output file with environment variables and functions
-cat << 'EOF' > "$OUTPUT_FILE" || { echo "Error: Failed to write to $OUTPUT_FILE" >&2; echo false; return 1; }
+cat << EOF > "$OUTPUT_FILE" || { echo "Error: Failed to write to $OUTPUT_FILE" >&2; echo false; return 1; }
 #!/bin/bash
 # Environment variables for CML and PyATS
+export BASE_DIRECTORY="$HOME/labfiles"
+export CML_IP="$CML_IP"
+export CML_ADDRESS="https://\${CML_IP}"
 export CML_USERNAME="$CML_USERNAME"
 export CML_PASSWORD="$CML_PASSWORD"
-export CML_IP="$CML_IP"
-export CML_ADDRESS="https://${CML_IP}"
-export BASE_DIRECTORY="$HOME/labfiles"
-export PYTHON_TOOLS_SCRIPT="${BASE_DIRECTORY}/cmltools.py"
-export PYTHON_ENV="${BASE_DIRECTORY}/.venv/bin/python"
-export PYTHON_PATH="${BASE_DIRECTORY}/.venv/bin/python"
+export PYTHON_TOOLS_SCRIPT="\${BASE_DIRECTORY}/cmltools.py"
+export PYTHON_ENV="\${BASE_DIRECTORY}/.venv/bin/python"
+export PYTHON_PATH="\${BASE_DIRECTORY}/.venv/bin/python"
 export SCRIPT_DEBUG="false"
 export RETRY_COUNT=30
 export RETRY_DELAY=10
