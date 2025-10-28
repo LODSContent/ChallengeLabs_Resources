@@ -10,13 +10,8 @@ The \[`cmltools.py`\]\(http://cmltools.py\) script is a command-line tool for in
 
 ### Prerequisites
 
-- **Python 3.11+**: Installed in a virtual environment \(e.g., `$HOME/labfiles/.venv`\).
-- **Dependencies**:
-
-    ```
-    source $HOME/labfiles/.venv/bin/activate
-    pip install requests pyyaml pyats[full]
-    ```
+- CML Host
+- pyATS server
 
 - **Environment Variables**: Set in `$HOME/labfiles/cml_env.sh` \(automatically sourced via `~/.bashrc`\):
     - `CML_ADDRESS`: URL of the CML server \(e.g., `https://192.168.1.10`\).
@@ -31,13 +26,9 @@ The \[`cmltools.py`\]\(http://cmltools.py\) script is a command-line tool for in
 
 ### Setup
 
-1. Run the setup script to generate `cml_env.sh` and `cmltools.py`:
+1. Add the script as an LCA to a Cisco lab with a PyATS server.
 
-    ```
-    ./setup_script.sh
-    ```
-
-2. Source the environment variables:
+2. Source the environment variables at the beginning of any Validation script:
 
     ```
     source $HOME/labfiles/cml_env.sh
