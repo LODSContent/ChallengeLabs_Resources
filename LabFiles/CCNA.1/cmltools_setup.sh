@@ -19,11 +19,11 @@ touch "$OUTPUT_FILE" || { echo "Error: Cannot write to $OUTPUT_FILE" >&2; echo f
 cat << 'EOF' > "$OUTPUT_FILE" || { echo "Error: Failed to write to $OUTPUT_FILE" >&2; echo false; return 1; }
 #!/bin/bash
 # Environment variables for CML and PyATS
-export BASE_DIRECTORY="$HOME/labfiles"
-export CML_IP="192.168.1.10"
+export CML_USERNAME="$CML_USERNAME"
+export CML_PASSWORD="$CML_PASSWORD"
+export CML_IP="$CML_IP"
 export CML_ADDRESS="https://${CML_IP}"
-export CML_USERNAME="@lab.VirtualMachine(CMLController).Endpoints(Dashboard).Username"
-export CML_PASSWORD="@lab.VirtualMachine(CMLController).Endpoints(Dashboard).Password"
+export BASE_DIRECTORY="$HOME/labfiles"
 export PYTHON_TOOLS_SCRIPT="${BASE_DIRECTORY}/cmltools.py"
 export PYTHON_ENV="${BASE_DIRECTORY}/.venv/bin/python"
 export PYTHON_PATH="${BASE_DIRECTORY}/.venv/bin/python"
