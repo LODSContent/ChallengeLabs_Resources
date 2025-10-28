@@ -59,16 +59,16 @@ log_debug() {
 # Arguments: Command-line arguments for cmltools.py
 # Returns: Output from cmltools.py; exits with 1 on failure
 cmltools() {
-  if [[ ! -f "$PYTHON_TOOLS_SCRIPT" ]]; then
-    echo "Error: Python script $PYTHON_TOOLS_SCRIPT not found" >&2
+  if [[ ! -f "\${BASE_DIRECTORY}/cmltools.py" ]]; then
+    echo "Error: Python script \${BASE_DIRECTORY}/cmltools.py not found" >&2
     return 1
   fi
-  if [[ -z "$PYTHON_PATH" ]]; then
+  if [[ -z "\${BASE_DIRECTORY}/.venv/bin/python" ]]; then
     echo "Error: PYTHON_PATH not set" >&2
     return 1
   fi
-  log_debug "Executing: $PYTHON_PATH $PYTHON_TOOLS_SCRIPT $@"
-  "$PYTHON_PATH" "$PYTHON_TOOLS_SCRIPT" "$@"
+  log_debug "Executing: \${BASE_DIRECTORY}/.venv/bin/python \${BASE_DIRECTORY}/cmltools.py $@"
+  "\${BASE_DIRECTORY}/.venv/bin/python" "\${BASE_DIRECTORY}/cmltools.py" "$@"
 }
 EOF
 
