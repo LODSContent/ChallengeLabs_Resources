@@ -759,15 +759,79 @@ class CMLClient:
             if self.debug:
                 logging.info(f"Loading testbed YAML for lab {lab_id}")
             testbed = load(testbed_yaml)
+
+            # Create case-insensitive device lookup
+            testbed_devices_lower = {name.lower(): name for name in testbed.devices.keys()}
+
             if self.debug:
-                logging.info(f"Testbed devices: {list(testbed.devices.keys())}")
+                logging.info(f"Testbed devices (case-insensitive map): {testbed_devices_lower}")
+
             all_results = []
             overall_result = True
             for device in device_info:
-                results, match_found = self.execute_commands_on_device(device, testbed)
-                all_results.extend(results)
-                if not match_found:
+                requested_name = device['device_name']
+                requested_lower = requested_name.lower()
+
+                # Case-insensitive lookup
+                actual_name = testbed_devices_lower.get(requested_lower)
+                if not actual_name:
+                    error_msg = f"Device '{requested_name}' not found in testbed (case-insensitive search)"
+                    logging.error(error_msg)
+                    if self.debug:
+                        all_results.append(error_msg)
+                    all_results.append(f"Incorrectly Configured - {requested_name} - connect")
                     overall_result = False
+                    continue
+
+                # Use the actual case-sensitive name from testbed
+                dev = testbed.devices[actual_name]
+                results = []
+                device_match = True
+
+                try:
+                    dev.connect()
+                except SubCommandFailure as e:
+                    error_msg = f"Failed to connect to {actual_name}: {e}"
+                    logging.error(error_msg)
+                    if self.debug:
+                        results.append(error_msg)
+                    results.append(f"Incorrectly Configured - {actual_name} - connect")
+                    device_match = False
+                else:
+                    for command_info in device['commands']:
+                        command = command_info['command']
+                        if self.debug:
+                            logging.info(f"Executing command: {command} on {actual_name}")
+                        try:
+                            data = dev.execute(command)
+                        except SubCommandFailure as e:
+                            error_msg = f"Command failed: {command} on {actual_name}: {e}"
+                            logging.error(error_msg)
+                            if self.debug:
+                                results.append(error_msg)
+                            results.append(f"Incorrectly Configured - {actual_name} - {command}")
+                            device_match = False
+                            continue
+
+                        if not command_info.get('validations'):
+                            results.append(f"Correctly Configured - {actual_name} - {command}")
+                            continue
+
+                        match_found = True
+                        for validation in command_info['validations']:
+                            pattern_match, validation_results = validate_pattern(validation, data, actual_name, command, self.debug)
+                            results.extend(validation_results)
+                            if not pattern_match:
+                                match_found = False
+                        status = "Correctly Configured" if match_found else "Incorrectly Configured"
+                        results.append(f"{status} - {actual_name} - {command}")
+                        if not match_found:
+                            device_match = False
+
+                all_results.extend(results)
+                if not device_match:
+                    overall_result = False
+
             return all_results, overall_result
         except Exception as e:
             error_msg = f"Test execution failed: {e}"
