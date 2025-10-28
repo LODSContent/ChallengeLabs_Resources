@@ -826,8 +826,16 @@ class CMLClient:
                 response.raise_for_status()
                 result = response.json()
                 lab_id = result.get("id", "unknown")
-                print(f"Lab imported successfully: {lab_id}")
+
+                # SUCCESS OUTPUT: ONLY the lab ID on stdout
+                print(lab_id)
+
+                # Optional human-readable message on stderr (for debug or logs)
+                if self.debug:
+                    print(f"Lab imported successfully: {lab_id}", file=sys.stderr)
+
                 return lab_id
+
             except requests.RequestException as e:
                 print(f"Error: Upload failed: {e}", file=sys.stderr)
                 if hasattr(e, 'response') and e.response is not None:
