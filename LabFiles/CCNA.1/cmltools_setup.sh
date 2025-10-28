@@ -438,11 +438,43 @@ class CMLClient:
                 logging.error("No lab ID provided and no default lab found")
                 print("Error: No lab ID provided and no default lab found", file=sys.stderr)
                 return ""
-        # Check if lab_id is a title and convert to ID
+
+        # Resolve title → UUID if needed
         if not self._is_valid_lab_id(lab_id):
             lab_id = self.findlab(lab_id)
             if not lab_id:
                 return ""
+
+        # ------------------------------------------------------------------
+        # FREE SKU ENFORCEMENT
+        # ------------------------------------------------------------------
+        sku = os.environ.get("CML_SKU", "").strip().lower()
+        if sku == "free":
+            # Stop every lab *except* the one we are about to start
+            all_lab_ids = self.get_labs()
+            for lid in all_lab_ids:
+                if lid == lab_id:
+                    continue                     # keep the target lab
+                cur_state = self.get_lab_state(lid)
+                if cur_state == "STARTED":
+                    if self.debug:
+                        logging.info(f"Free SKU: stopping other lab {lid}")
+                    try:
+                        requests.put(
+                            f"{self.cml_address}/api/v0/labs/{lid}/stop",
+                            headers={
+                                "accept": "application/json",
+                                "Authorization": f"Bearer {self.jwt}",
+                                "Content-Type": "application/json"
+                            },
+                            verify=False
+                        )
+                    except requests.RequestException as e:
+                        logging.error(f"Failed to stop lab {lid}: {e}")
+
+        # ------------------------------------------------------------------
+        # START THE REQUESTED LAB
+        # ------------------------------------------------------------------
         try:
             self.ensure_jwt()
             response = requests.put(
