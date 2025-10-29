@@ -147,6 +147,7 @@ import requests
 import urllib3
 from genie.testbed import load
 from unicon.core.errors import SubCommandFailure
+from pyats.topology import loader
 from zipfile import ZipFile
 from io import BytesIO
 
@@ -735,6 +736,9 @@ class CMLClient:
         return results, device_passed
 
     def validate(self, lab_id, device_info):
+        # Validate using gettestbed() + CML API + offline testbed loading
+        # Fully resilient, dynamic credentials, case-insensitive
+
         # Resolve lab_id
         if not lab_id:
             lab_id = self.findlab()
@@ -751,15 +755,25 @@ class CMLClient:
                 print(msg, file=sys.stderr)
                 return [msg], False
 
-        # Start lab
-        if self.get_lab_state(lab_id) != "STARTED":
+        # Ensure lab is started
+        state = self.get_lab_state(lab_id)
+        if state != "STARTED":
+            if self.debug:
+                logging.info(f"Lab {lab_id} is in state {state}, attempting to start")
             self.startlab(lab_id)
-            for _ in range(30):
-                time.sleep(10)
+            retries = int(os.environ.get("RETRY_COUNT", 30))
+            delay = int(os.environ.get("RETRY_DELAY", 10))
+            for _ in range(retries):
+                time.sleep(delay)
                 if self.get_lab_state(lab_id) == "STARTED":
                     break
+            else:
+                msg = f"Error: Lab {lab_id} failed to start after {retries} retries"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False
 
-        # Get testbed
+        # Get raw testbed YAML
         testbed_yaml = self.gettestbed(lab_id)
         if not testbed_yaml:
             msg = "Error: Failed to fetch testbed YAML"
@@ -767,39 +781,52 @@ class CMLClient:
             print(msg, file=sys.stderr)
             return [msg], False
 
+        # Parse testbed YAML
         try:
             testbed_data = yaml.safe_load(testbed_yaml)
-        except:
-            msg = "Error: Failed to parse testbed YAML"
+            if not testbed_data or 'devices' not in testbed_data:
+                raise ValueError("Invalid testbed structure")
+        except Exception as e:
+            msg = f"Error: Failed to parse testbed YAML: {e}"
             logging.error(msg)
             print(msg, file=sys.stderr)
             return [msg], False
 
-        # Device map
+        # Case-insensitive device map (exclude terminal_server)
         device_map = {
-            k.lower(): k for k in testbed_data['devices']
-            if k != 'terminal_server'
+            name.lower(): name for name in testbed_data['devices']
+            if name != 'terminal_server'
         }
 
-        # Build device_info
+        # Fetch real credentials from CML lab definition
+        lab_creds = self.get_lab_credentials(lab_id)
+
+        # Build default device_info if not provided
         if not device_info:
             device_info = []
             for name in device_map.values():
                 os_type = testbed_data['devices'][name].get('os', '').lower()
-                cmd = "show version" if os_type == 'ios' else "uname -a"
-                pattern = "Cisco IOS Software" if os_type == 'ios' else "Linux"
-                device_info.append({
-                    "device_name": name,
-                    "commands": [{
-                        "command": cmd,
-                        "validations": [{"pattern": pattern, "match_type": "wildcard"}]
-                    }]
-                })
+                if os_type == 'ios':
+                    device_info.append({
+                        "device_name": name,
+                        "commands": [{
+                            "command": "show version",
+                            "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]
+                        }]
+                    })
+                elif os_type == 'linux':
+                    device_info.append({
+                        "device_name": name,
+                        "commands": [{
+                            "command": "uname -a",
+                            "validations": [{"pattern": "Linux", "match_type": "wildcard"}]
+                        }]
+                    })
         else:
             try:
                 device_info = ast.literal_eval(device_info)
-            except:
-                msg = "Error: Invalid device_info"
+            except (ValueError, SyntaxError) as e:
+                msg = f"Error: Invalid device_info JSON: {e}"
                 logging.error(msg)
                 print(msg, file=sys.stderr)
                 return [msg], False
@@ -807,27 +834,36 @@ class CMLClient:
         all_results = []
         overall_result = True
 
+        # Process each device
         for device in device_info:
-            req = device['device_name'].lower()
-            actual = device_map.get(req)
-            if not actual:
-                msg = f"Incorrectly Configured - {device['device_name']} - not_in_testbed"
+            req_name = device['device_name']
+            req_lower = req_name.lower()
+            actual_name = device_map.get(req_lower)
+
+            if not actual_name:
+                msg = f"Incorrectly Configured - {req_name} - not_in_testbed"
                 all_results.append(msg)
+                logging.error(msg)
                 overall_result = False
                 continue
 
-            # Minimal testbed
+            # Build minimal testbed: only this device + terminal_server
             minimal = {
                 'devices': {
-                    actual: testbed_data['devices'][actual],
+                    actual_name: testbed_data['devices'][actual_name],
                     'terminal_server': testbed_data['devices']['terminal_server']
-                }
+                },
+                'testbed': {'name': f"validate-{lab_id}"}
             }
+
             try:
-                testbed = load(yaml.safe_dump(minimal))
-                # === APPLY REAL CREDENTIALS FROM LAB API ===
-                lab_creds = self.get_lab_credentials(lab_id)
-                if actual_name in lab_creds and actual_name in testbed.devices:
+                # OFFLINE TESTBED LOAD — NO CONNECTION
+                from pyats.topology import loader
+                testbed = loader.Testbed()
+                loader.load(yaml.safe_load(yaml.safe_dump(minimal)), testbed=testbed)
+
+                # Apply real credentials from lab definition
+                if actual_name in lab_creds:
                     real = lab_creds[actual_name]
                     testbed.devices[actual_name].credentials = {
                         'default': {
@@ -835,17 +871,29 @@ class CMLClient:
                             'password': real['password']
                         }
                     }
-                
+                    if self.debug:
+                        logging.info(f"Applied real creds to {actual_name}: {real['username']}/***")
+
+                # Apply terminal_server credentials (if needed)
+                if 'terminal_server' in testbed.devices:
+                    testbed.devices['terminal_server'].credentials = {
+                        'default': {
+                            'username': self.username,
+                            'password': self.password
+                        }
+                    }
+
             except Exception as e:
-                msg = f"Incorrectly Configured - {device['device_name']} - testbed_load_failed"
+                msg = f"Incorrectly Configured - {req_name} - testbed_load_failed"
                 all_results.append(msg)
-                logging.error(f"Load failed: {e}")
+                logging.error(f"Testbed load failed for {actual_name}: {e}")
                 overall_result = False
                 continue
 
-            res, passed = self.execute_commands_on_device(device, testbed, actual)
-            all_results.extend(res)
-            if not passed:
+            # Execute validation
+            dev_results, dev_passed = self.execute_commands_on_device(device, testbed, actual_name)
+            all_results.extend(dev_results)
+            if not dev_passed:
                 overall_result = False
 
         return all_results, overall_result
