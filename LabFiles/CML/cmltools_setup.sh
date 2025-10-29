@@ -635,25 +635,28 @@ class CMLClient:
             print(f"Error: Failed to parse testbed YAML for device_info: {e}", file=sys.stderr)
             return []
 
-    def execute_commands_on_device(self, device, testbed):
+    def execute_commands_on_device(self, device, testbed, actual_name):
         """
         Execute commands on a device and validate output.
         Resilient: continues to next device on any failure.
+        Args:
+            device: Device info with name and commands to validate
+            testbed: PyATS testbed object
+            actual_name: Resolved case-correct testbed device name
         Returns: (list of status messages, bool: True only if all passed)
         """
-        dev_name = device['device_name']
         results = []
-        device_passed = True  # Track per-device result
+        device_passed = True
 
         # ------------------------------------------------------------------
-        # 1. Find device in testbed
+        # 1. Find device in testbed (using actual_name)
         # ------------------------------------------------------------------
-        dev = testbed.devices.get(dev_name)
+        dev = testbed.devices.get(actual_name)
         if not dev:
-            msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
+            msg = f"Incorrectly Configured - {device['device_name']} - not_in_testbed"
             results.append(msg)
-            logging.error(f"Device {dev_name} not found in testbed")
-            return results, False  # False for this device
+            logging.error(f"Device {actual_name} not found in testbed")
+            return results, False
 
         # ------------------------------------------------------------------
         # 2. Connect (with ENTER for IOSv)
@@ -669,12 +672,12 @@ class CMLClient:
             init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
             dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
             if self.debug:
-                logging.info(f"Connected to {dev_name}")
+                logging.info(f"Connected to {actual_name}")
         except SubCommandFailure as e:
-            msg = f"Incorrectly Configured - {dev_name} - connect_failed"
+            msg = f"Incorrectly Configured - {device['device_name']} - connect_failed"
             results.append(msg)
-            logging.error(f"Connect failed for {dev_name}: {e}")
-            return results, False  # False for this device
+            logging.error(f"Connect failed for {actual_name}: {e}")
+            return results, False
 
         # ------------------------------------------------------------------
         # 3. Execute each command
@@ -682,34 +685,34 @@ class CMLClient:
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
             if self.debug:
-                logging.info(f"Executing on {dev_name}: {cmd}")
+                logging.info(f"Executing on {actual_name}: {cmd}")
 
             try:
                 output = dev.execute(cmd)
             except SubCommandFailure as e:
-                msg = f"Incorrectly Configured - {dev_name} - {cmd}"
+                msg = f"Incorrectly Configured - {device['device_name']} - {cmd}"
                 results.append(msg)
-                logging.error(f"Command failed on {dev_name}: {cmd} → {e}")
+                logging.error(f"Command failed on {actual_name}: {cmd} → {e}")
                 device_passed = False
-                continue  # Go to next command
+                continue
 
             # ------------------------------------------------------------------
             # 4. Validate output (if validations exist)
             # ------------------------------------------------------------------
             validations = cmd_info.get('validations')
             if not validations:
-                results.append(f"Correctly Configured - {dev_name} - {cmd}")
+                results.append(f"Correctly Configured - {device['device_name']} - {cmd}")
                 continue
 
             cmd_passed = True
             for val in validations:
-                match, debug_msgs = validate_pattern(val, output, dev_name, cmd, self.debug)
+                match, debug_msgs = validate_pattern(val, output, device['device_name'], cmd, self.debug)
                 results.extend(debug_msgs)
                 if not match:
                     cmd_passed = False
 
             status = "Correctly Configured" if cmd_passed else "Incorrectly Configured"
-            results.append(f"{status} - {dev_name} - {cmd}")
+            results.append(f"{status} - {device['device_name']} - {cmd}")
             if not cmd_passed:
                 device_passed = False
 
