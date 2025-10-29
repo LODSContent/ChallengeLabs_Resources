@@ -2,6 +2,7 @@
 # =============================================================================
 # CML Tools Setup Script
 # Creates cml_env.sh and cmltools.py with environment variables
+# Will be downloaded and executed automatically on the pyATS VM from a Lifecycle Action
 # Parameters:
 #   $1: CML_IP         (e.g., 192.168.1.10)
 #   $2: CML_USERNAME   (e.g., admin)
