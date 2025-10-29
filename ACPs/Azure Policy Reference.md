@@ -2,19 +2,17 @@
 
 ## Resource Group id Examples
 
->
-<details class="purpose">
-  <summary>Purpose: Restrict resource placement using dynamic or static Resource Group IDs</summary>
-  <div>
-    These policies are foundational fragments used in combination with others. They define allowed Resource Group patterns using either:
-    <ul>
-      <li>Dynamic naming via <code>corp-data</code> + tags <code>LODManaged</code> and <code>LabInstance</code></li>
-      <li>Static name <code>rg1</code></li>
-      <li>Multiple allowed RG patterns (RG1, tagged variants)</li>
-    </ul>
-  </div>
-</details>
->
+><details class="purpose">
+>  <summary>Purpose: Restrict resource placement using dynamic or static Resource Group IDs</summary>
+>  <div>
+>    These policies are foundational fragments used in combination with others. They define allowed Resource Group patterns using either:
+>    <ul>
+>      <li>Dynamic naming via <code>corp-data</code> + tags <code>LODManaged</code> and <code>LabInstance</code></li>
+>      <li>Static name <code>rg1</code></li>
+>      <li>Multiple allowed RG patterns (RG1, tagged variants)</li>
+>    </ul>
+>  </div>
+></details>
 
 ```json
 {
