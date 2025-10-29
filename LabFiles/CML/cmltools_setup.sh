@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# CML Tools Setup Script v1.10292025.0010
+# CML Tools Setup Script
 # Creates cml_env.sh and cmltools.py with environment variables
 # Parameters:
 #   $1: CML_IP         (e.g., 192.168.1.10)
@@ -105,8 +105,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.10292025.0039
-# For lab management, import, and validation
+# CML Tools for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
 #
@@ -148,9 +147,6 @@ import requests
 import urllib3
 from genie.testbed import load
 from unicon.core.errors import SubCommandFailure
-from pyats.topology import loader
-from pyats.topology import Device, Testbed
-from pyats.topology.connection import Connection
 from zipfile import ZipFile
 from io import BytesIO
 
@@ -631,39 +627,6 @@ class CMLClient:
             logging.error(f"Failed to parse testbed YAML for device_info: {e}")
             return []
 
-    def get_lab_credentials(self, lab_id):
-        try:
-            self.ensure_jwt()
-            response = requests.get(
-                f"{self.cml_address}/api/v0/labs/{lab_id}",
-                headers={"Authorization": f"Bearer {self.jwt}"},
-                verify=False
-            )
-            response.raise_for_status()
-            lab_data = response.json()
-
-            creds = {}
-            for node in lab_data.get('nodes', []):
-                label = node.get('label')
-                if not label:
-                    continue
-                username = 'cisco'
-                password = 'cisco'
-                for cfg in node.get('configuration', []):
-                    if cfg.get('name') == 'node.cfg':
-                        content = cfg.get('content', '')
-                        for line in content.splitlines():
-                            if line.strip().startswith('USERNAME='):
-                                username = line.split('=', 1)[1].strip().strip('"\'')
-                            elif line.strip().startswith('PASSWORD='):
-                                password = line.split('=', 1)[1].strip().strip('"\'')
-                        break
-                creds[label] = {'username': username, 'password': password}
-            return creds
-        except Exception as e:
-            logging.error(f"Failed to fetch lab credentials: {e}")
-            return {}
-
     def execute_commands_on_device(self, device, testbed, actual_name):
         results = []
         device_passed = True
@@ -729,9 +692,6 @@ class CMLClient:
         return results, device_passed
 
     def validate(self, lab_id, device_info):
-        # Validate using gettestbed() + manual testbed construction
-        # No load(), dynamic credentials, resilient, case-insensitive
-
         # Resolve lab_id
         if not lab_id:
             lab_id = self.findlab()
@@ -748,25 +708,15 @@ class CMLClient:
                 print(msg, file=sys.stderr)
                 return [msg], False
 
-        # Ensure lab is started
-        state = self.get_lab_state(lab_id)
-        if state != "STARTED":
-            if self.debug:
-                logging.info(f"Lab {lab_id} is in state {state}, attempting to start")
+        # Start lab
+        if self.get_lab_state(lab_id) != "STARTED":
             self.startlab(lab_id)
-            retries = int(os.environ.get("RETRY_COUNT", 30))
-            delay = int(os.environ.get("RETRY_DELAY", 10))
-            for _ in range(retries):
-                time.sleep(delay)
+            for _ in range(30):
+                time.sleep(10)
                 if self.get_lab_state(lab_id) == "STARTED":
                     break
-            else:
-                msg = f"Error: Lab {lab_id} failed to start after {retries} retries"
-                logging.error(msg)
-                print(msg, file=sys.stderr)
-                return [msg], False
 
-        # Get raw testbed YAML
+        # Get testbed
         testbed_yaml = self.gettestbed(lab_id)
         if not testbed_yaml:
             msg = "Error: Failed to fetch testbed YAML"
@@ -774,41 +724,34 @@ class CMLClient:
             print(msg, file=sys.stderr)
             return [msg], False
 
-        # Parse testbed YAML
         try:
-            full_testbed_data = yaml.safe_load(testbed_yaml)
-            if not full_testbed_data or 'devices' not in full_testbed_data:
-                raise ValueError("Invalid testbed structure")
-        except Exception as e:
-            msg = f"Error: Failed to parse testbed YAML: {e}"
+            testbed_data = yaml.safe_load(testbed_yaml)
+        except:
+            msg = "Error: Failed to parse testbed YAML"
             logging.error(msg)
             print(msg, file=sys.stderr)
             return [msg], False
 
-        # Case-insensitive device map
+        # Device map
         device_map = {
-            name.lower(): name for name in full_testbed_data['devices']
-            if name != 'terminal_server'
+            k.lower(): k for k in testbed_data['devices']
+            if k != 'terminal_server'
         }
-
-        # Fetch real credentials
-        lab_creds = self.get_lab_credentials(lab_id)
 
         # Build device_info
         if not device_info:
             device_info = []
             for name in device_map.values():
-                os_type = full_testbed_data['devices'][name].get('os', '').lower()
-                if os_type == 'ios':
-                    device_info.append({
-                        "device_name": name,
-                        "commands": [{"command": "show version", "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]}]
-                    })
-                elif os_type == 'linux':
-                    device_info.append({
-                        "device_name": name,
-                        "commands": [{"command": "uname -a", "validations": [{"pattern": "Linux", "match_type": "wildcard"}]}]
-                    })
+                os_type = testbed_data['devices'][name].get('os', '').lower()
+                cmd = "show version" if os_type == 'ios' else "uname -a"
+                pattern = "Cisco IOS Software" if os_type == 'ios' else "Linux"
+                device_info.append({
+                    "device_name": name,
+                    "commands": [{
+                        "command": cmd,
+                        "validations": [{"pattern": pattern, "match_type": "wildcard"}]
+                    }]
+                })
         else:
             try:
                 device_info = ast.literal_eval(device_info)
@@ -821,87 +764,34 @@ class CMLClient:
         all_results = []
         overall_result = True
 
-        # Import required classes
-        from pyats.topology import Device, Testbed
-        from pyats.topology.connection import Connection
-
         for device in device_info:
-            req_name = device['device_name']
-            req_lower = req_name.lower()
-            actual_name = device_map.get(req_lower)
-
-            if not actual_name:
-                msg = f"Incorrectly Configured - {req_name} - not_in_testbed"
+            req = device['device_name'].lower()
+            actual = device_map.get(req)
+            if not actual:
+                msg = f"Incorrectly Configured - {device['device_name']} - not_in_testbed"
                 all_results.append(msg)
-                logging.error(msg)
                 overall_result = False
                 continue
 
-            try:
-                # === BUILD MINIMAL TESTBED ===
-                testbed = Testbed(name=f"validate-{lab_id}")
-
-                # Device
-                dev_data = full_testbed_data['devices'][actual_name]
-                dev = Device(name=actual_name)
-                dev.os = dev_data.get('os')
-                dev.type = dev_data.get('type')
-                dev.platform = dev_data.get('platform')
-
-                # Connection 'a'
-                conn_data = dev_data.get('connections', {}).get('a', {})
-                if conn_data:
-                    conn = Connection(
-                        alias='a',
-                        protocol=conn_data.get('protocol'),
-                        command=conn_data.get('command'),
-                        proxy=conn_data.get('proxy', 'terminal_server')
-                    )
-                    dev.connections[conn.alias] = conn
-
-                # Apply real credentials
-                if actual_name in lab_creds:
-                    real = lab_creds[actual_name]
-                    dev.credentials = {'default': real}
-                else:
-                    dev.credentials = dev_data.get('credentials', {})
-
-                testbed.add_device(dev)
-
-                # Terminal Server
-                ts_data = full_testbed_data['devices']['terminal_server']
-                ts = Device(name='terminal_server')
-                ts.os = ts_data.get('os')
-
-                ts_conn_data = ts_data.get('connections', {}).get('cli', {})
-                if ts_conn_data:
-                    ts_conn = Connection(
-                        alias='cli',
-                        protocol=ts_conn_data.get('protocol'),
-                        ip=ts_conn_data.get('ip'),
-                        port=ts_conn_data.get('port')
-                    )
-                    ts.connections[ts_conn.alias] = ts_conn
-
-                ts.credentials = {
-                    'default': {
-                        'username': self.username,
-                        'password': self.password
-                    }
+            # Minimal testbed
+            minimal = {
+                'devices': {
+                    actual: testbed_data['devices'][actual],
+                    'terminal_server': testbed_data['devices']['terminal_server']
                 }
-                testbed.add_device(ts)
-
+            }
+            try:
+                testbed = load(yaml.safe_dump(minimal))
             except Exception as e:
-                msg = f"Incorrectly Configured - {req_name} - testbed_build_failed"
+                msg = f"Incorrectly Configured - {device['device_name']} - testbed_load_failed"
                 all_results.append(msg)
-                logging.error(f"Failed to build testbed: {e}")
+                logging.error(f"Load failed: {e}")
                 overall_result = False
                 continue
 
-            # Execute
-            dev_results, dev_passed = self.execute_commands_on_device(device, testbed, actual_name)
-            all_results.extend(dev_results)
-            if not dev_passed:
+            res, passed = self.execute_commands_on_device(device, testbed, actual)
+            all_results.extend(res)
+            if not passed:
                 overall_result = False
 
         return all_results, overall_result
