@@ -732,7 +732,7 @@ class CMLClient:
 
         return results, device_passed
 
-    def validate(self, lab_id, device_info):
+    def validate(self, lab_id, device_info=None):
         # Resolve lab_id
         if not lab_id:
             lab_id = self.findlab()
@@ -748,15 +748,15 @@ class CMLClient:
                 logging.error(msg)
                 print(msg, file=sys.stderr)
                 return [msg], False
-
-        # Start lab
+    
+        # Start lab if needed
         if self.get_lab_state(lab_id) != "STARTED":
             self.startlab(lab_id)
             for _ in range(30):
                 time.sleep(10)
                 if self.get_lab_state(lab_id) == "STARTED":
                     break
-
+    
         # Get testbed
         testbed_yaml = self.gettestbed(lab_id)
         if not testbed_yaml:
@@ -764,29 +764,38 @@ class CMLClient:
             logging.error(msg)
             print(msg, file=sys.stderr)
             return [msg], False
-
+    
+        # ---- NEW: Apply device_info credentials (optional) ----
+        if device_info:
+            try:
+                device_info_list = ast.literal_eval(device_info)
+                if isinstance(device_info_list, list):
+                    testbed_yaml = self.apply_device_info_credentials(testbed_yaml, device_info_list)
+            except Exception as e:
+                logging.warning(f"Failed to parse device_info for credentials: {e}")
+    
         try:
             testbed_data = yaml.safe_load(testbed_yaml)
-        except:
+        except Exception as e:
             msg = "Error: Failed to parse testbed YAML"
             logging.error(msg)
             print(msg, file=sys.stderr)
             return [msg], False
-
-        # Device map
+    
+        # Device map from testbed
         device_map = {
             k.lower(): k for k in testbed_data['devices']
             if k != 'terminal_server'
         }
-
-        # Build device_info
+    
+        # Build device_info list
         if not device_info:
-            device_info = []
+            device_info_list = []
             for name in device_map.values():
                 os_type = testbed_data['devices'][name].get('os', '').lower()
                 cmd = "show version" if os_type == 'ios' else "uname -a"
                 pattern = "Cisco IOS Software" if os_type == 'ios' else "Linux"
-                device_info.append({
+                device_info_list.append({
                     "device_name": name,
                     "commands": [{
                         "command": cmd,
@@ -795,17 +804,17 @@ class CMLClient:
                 })
         else:
             try:
-                device_info = ast.literal_eval(device_info)
-            except:
+                device_info_list = ast.literal_eval(device_info)
+            except Exception as e:
                 msg = "Error: Invalid device_info"
                 logging.error(msg)
                 print(msg, file=sys.stderr)
                 return [msg], False
-
+    
         all_results = []
         overall_result = True
-
-        for device in device_info:
+    
+        for device in device_info_list:
             req = device['device_name'].lower()
             actual = device_map.get(req)
             if not actual:
@@ -813,7 +822,7 @@ class CMLClient:
                 all_results.append(msg)
                 overall_result = False
                 continue
-
+    
             # Minimal testbed
             minimal = {
                 'devices': {
@@ -829,12 +838,12 @@ class CMLClient:
                 logging.error(f"Load failed: {e}")
                 overall_result = False
                 continue
-
+    
             res, passed = self.execute_commands_on_device(device, testbed, actual)
             all_results.extend(res)
             if not passed:
                 overall_result = False
-
+    
         return all_results, overall_result
 
     def _is_valid_lab_id(self, lab_id):
