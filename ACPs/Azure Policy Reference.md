@@ -2,6 +2,7 @@
 
 ## Resource Group id Examples
 
+>
 <details class="purpose">
   <summary>Purpose: Restrict resource placement using dynamic or static Resource Group IDs</summary>
   <div>
@@ -13,6 +14,7 @@
     </ul>
   </div>
 </details>
+>
 
 ```json
 {
