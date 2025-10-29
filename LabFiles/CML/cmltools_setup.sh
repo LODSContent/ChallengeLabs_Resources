@@ -149,6 +149,8 @@ import urllib3
 from genie.testbed import load
 from unicon.core.errors import SubCommandFailure
 from pyats.topology import loader
+from pyats.topology import Device, Testbed
+from pyats.topology.connection import Connection
 from zipfile import ZipFile
 from io import BytesIO
 
