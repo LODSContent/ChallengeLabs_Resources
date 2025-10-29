@@ -636,84 +636,117 @@ class CMLClient:
             return []
 
     def execute_commands_on_device(self, device, testbed):
-        # Execute commands on a device and validate their output
-        # Args:
-        #   device: Device info with name and commands to validate
-        #   testbed: PyATS testbed object
-        # Returns: Tuple (list of status messages, bool indicating if all validations passed)
-        dev = testbed.devices.get(device['device_name'])
+        """
+        Execute commands on a device and validate output.
+        Resilient: continues to next device on any failure.
+        Returns: (list of status messages, bool: True only if all passed)
+        """
+        dev_name = device['device_name']
         results = []
-        overall_match = True
+        device_passed = True  # Track per-device result
 
+        # ------------------------------------------------------------------
+        # 1. Find device in testbed
+        # ------------------------------------------------------------------
+        dev = testbed.devices.get(dev_name)
         if not dev:
-            error_msg = f"Device {device['device_name']} not found in testbed"
-            logging.error(error_msg)
-            if self.debug:
-                results.append(error_msg)
-            results.append(f"Incorrectly Configured - {device['device_name']} - connect")
-            return results, False
+            msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
+            results.append(msg)
+            logging.error(f"Device {dev_name} not found in testbed")
+            return results, False  # False for this device
 
+        # ------------------------------------------------------------------
+        # 2. Connect (with ENTER for IOSv)
+        # ------------------------------------------------------------------
         try:
-            dev.connect()
+            connect_kwargs = {
+                'mit': True,
+                'hostkey_verify': False,
+                'allow_agent': False,
+                'look_for_keys': False,
+                'timeout': 60
+            }
+            init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
+            dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
+            if self.debug:
+                logging.info(f"Connected to {dev_name}")
         except SubCommandFailure as e:
-            error_msg = f"Failed to connect to {device['device_name']}: {e}"
-            logging.error(error_msg)
-            if self.debug:
-                results.append(error_msg)
-            results.append(f"Incorrectly Configured - {device['device_name']} - connect")
-            return results, False
+            msg = f"Incorrectly Configured - {dev_name} - connect_failed"
+            results.append(msg)
+            logging.error(f"Connect failed for {dev_name}: {e}")
+            return results, False  # False for this device
 
-        for command_info in device['commands']:
-            command = command_info['command']
+        # ------------------------------------------------------------------
+        # 3. Execute each command
+        # ------------------------------------------------------------------
+        for cmd_info in device['commands']:
+            cmd = cmd_info['command']
             if self.debug:
-                logging.info(f"Executing command: {command} on {device['device_name']}")
+                logging.info(f"Executing on {dev_name}: {cmd}")
+
             try:
-                data = dev.execute(command)
+                output = dev.execute(cmd)
             except SubCommandFailure as e:
-                error_msg = f"Command failed: {command} on {device['device_name']}: {e}"
-                logging.error(error_msg)
-                if self.debug:
-                    results.append(error_msg)
-                results.append(f"Incorrectly Configured - {device['device_name']} - {command}")
-                overall_match = False
+                msg = f"Incorrectly Configured - {dev_name} - {cmd}"
+                results.append(msg)
+                logging.error(f"Command failed on {dev_name}: {cmd} → {e}")
+                device_passed = False
+                continue  # Go to next command
+
+            # ------------------------------------------------------------------
+            # 4. Validate output (if validations exist)
+            # ------------------------------------------------------------------
+            validations = cmd_info.get('validations')
+            if not validations:
+                results.append(f"Correctly Configured - {dev_name} - {cmd}")
                 continue
 
-            if not command_info.get('validations'):
-                results.append(f"Correctly Configured - {device['device_name']} - {command}")
-                continue
+            cmd_passed = True
+            for val in validations:
+                match, debug_msgs = validate_pattern(val, output, dev_name, cmd, self.debug)
+                results.extend(debug_msgs)
+                if not match:
+                    cmd_passed = False
 
-            match_found = True
-            for validation in command_info['validations']:
-                pattern_match, validation_results = validate_pattern(validation, data, device['device_name'], command, self.debug)
-                results.extend(validation_results)
-                if not pattern_match:
-                    match_found = False
+            status = "Correctly Configured" if cmd_passed else "Incorrectly Configured"
+            results.append(f"{status} - {dev_name} - {cmd}")
+            if not cmd_passed:
+                device_passed = False
 
-            status = "Correctly Configured" if match_found else "Incorrectly Configured"
-            results.append(f"{status} - {device['device_name']} - {command}")
-            if not match_found:
-                overall_match = False
+        # ------------------------------------------------------------------
+        # 5. Disconnect
+        # ------------------------------------------------------------------
+        try:
+            dev.disconnect()
+        except Exception:
+            pass
 
-    def validate(self, lab_id, device_info):
+        return results, device_passed
+
+     def validate(self, lab_id, device_info):
         # Validate device configurations using PyATS
-        # If device_info is empty, builds a default device_info from testbed YAML
-        # for linux and ios devices
-        # Ensures the lab is started before validation
+        # If device_info is empty, builds default from testbed YAML
+        # Ensures lab is started, then validates each device
         # Args:
         #   lab_id: UUID or title of the lab (optional)
-        #   device_info: JSON string of device info, or empty for default (optional)
-        # Returns: Tuple (list of status messages, bool indicating if all validations passed)
+        #   device_info: JSON string of device info, or empty for default
+        # Returns: Tuple (list of status messages, bool indicating if all passed)
+
         # Resolve lab_id
         if not lab_id:
             lab_id = self.findlab()
             if not lab_id:
-                logging.error("No lab ID provided and no default lab found")
-                print("Error: No lab ID provided and no default lab found", file=sys.stderr)
-                return ["Error: No lab ID provided and no default lab found"], False
+                msg = "Error: No lab ID provided and no default lab found"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False
         if not self._is_valid_lab_id(lab_id):
             lab_id = self.findlab(lab_id)
             if not lab_id:
-                return ["Error: No lab found"], False
+                msg = "Error: No lab found"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False
 
         # Ensure lab is started
         state = self.get_lab_state(lab_id)
@@ -731,27 +764,35 @@ class CMLClient:
                 state = self.get_lab_state(lab_id)
                 attempt += 1
             if state != "STARTED":
-                logging.error(f"Lab {lab_id} failed to start after {retries} retries")
-                print(f"Error: Lab {lab_id} failed to start after {retries} retries", file=sys.stderr)
-                return [f"Error: Lab {lab_id} failed to start after {retries} retries"], False
+                msg = f"Error: Lab {lab_id} failed to start after {retries} retries"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False
 
         # Get testbed YAML
         testbed_yaml = self.gettestbed(lab_id)
         if not testbed_yaml:
-            return ["Error: Failed to fetch testbed YAML"], False
+            msg = "Error: Failed to fetch testbed YAML"
+            logging.error(msg)
+            print(msg, file=sys.stderr)
+            return [msg], False
 
         # Build device_info if not provided
         if not device_info:
             device_info = self.build_default_device_info(testbed_yaml)
             if not device_info:
-                return ["Error: Failed to build device_info from testbed YAML"], False
+                msg = "Error: Failed to build device_info from testbed YAML"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False
         else:
             try:
                 device_info = ast.literal_eval(device_info)
             except (ValueError, SyntaxError) as e:
-                logging.error(f"Invalid device_info JSON: {e}")
-                print(f"Error: Invalid device_info JSON: {e}", file=sys.stderr)
-                return ["Error: Invalid device_info JSON"], False
+                msg = f"Error: Invalid device_info JSON: {e}"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False
 
         try:
             if self.debug:
@@ -760,81 +801,41 @@ class CMLClient:
 
             # Create case-insensitive device lookup
             testbed_devices_lower = {name.lower(): name for name in testbed.devices.keys()}
-
             if self.debug:
-                logging.info(f"Testbed devices (case-insensitive map): {testbed_devices_lower}")
+                logging.info(f"Testbed devices (case-insensitive): {testbed_devices_lower}")
 
             all_results = []
             overall_result = True
+
+            # ------------------------------------------------------------------
+            # PROCESS EACH DEVICE
+            # ------------------------------------------------------------------
             for device in device_info:
                 requested_name = device['device_name']
                 requested_lower = requested_name.lower()
-
-                # Case-insensitive lookup
                 actual_name = testbed_devices_lower.get(requested_lower)
+
+                # Device not in testbed
                 if not actual_name:
-                    error_msg = f"Device '{requested_name}' not found in testbed (case-insensitive search)"
-                    logging.error(error_msg)
-                    if self.debug:
-                        all_results.append(error_msg)
-                    all_results.append(f"Incorrectly Configured - {requested_name} - connect")
+                    msg = f"Incorrectly Configured - {requested_name} - not_in_testbed"
+                    all_results.append(msg)
+                    logging.error(msg)
                     overall_result = False
                     continue
 
-                # Use the actual case-sensitive name from testbed
+                # Use actual testbed name
                 dev = testbed.devices[actual_name]
-                results = []
-                device_match = True
-
-                try:
-                    dev.connect()
-                except SubCommandFailure as e:
-                    error_msg = f"Failed to connect to {actual_name}: {e}"
-                    logging.error(error_msg)
-                    if self.debug:
-                        results.append(error_msg)
-                    results.append(f"Incorrectly Configured - {actual_name} - connect")
-                    device_match = False
-                else:
-                    for command_info in device['commands']:
-                        command = command_info['command']
-                        if self.debug:
-                            logging.info(f"Executing command: {command} on {actual_name}")
-                        try:
-                            data = dev.execute(command)
-                        except SubCommandFailure as e:
-                            error_msg = f"Command failed: {command} on {actual_name}: {e}"
-                            logging.error(error_msg)
-                            if self.debug:
-                                results.append(error_msg)
-                            results.append(f"Incorrectly Configured - {actual_name} - {command}")
-                            device_match = False
-                            continue
-
-                        if not command_info.get('validations'):
-                            results.append(f"Correctly Configured - {actual_name} - {command}")
-                            continue
-
-                        match_found = True
-                        for validation in command_info['validations']:
-                            pattern_match, validation_results = validate_pattern(validation, data, actual_name, command, self.debug)
-                            results.extend(validation_results)
-                            if not pattern_match:
-                                match_found = False
-                        status = "Correctly Configured" if match_found else "Incorrectly Configured"
-                        results.append(f"{status} - {actual_name} - {command}")
-                        if not match_found:
-                            device_match = False
-
-                all_results.extend(results)
-                if not device_match:
+                dev_results, dev_passed = self.execute_commands_on_device(device, testbed)
+                all_results.extend(dev_results)
+                if not dev_passed:
                     overall_result = False
 
             return all_results, overall_result
+
         except Exception as e:
-            error_msg = f"Test execution failed: {e}"
-            logging.error(error_msg)
-            print(f"Error: Test execution failed: {e}", file=sys.stderr)
+            msg = f"Test execution failed: {e}"
+            logging.error(msg)
+            print(msg, file=sys.stderr)
             return [f"Incorrectly Configured - unknown - testbed_load"], False
 
     def _is_valid_lab_id(self, lab_id):
