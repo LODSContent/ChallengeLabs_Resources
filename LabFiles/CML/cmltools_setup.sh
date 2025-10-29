@@ -105,7 +105,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251029.0051
+# CML Tools v1.20251029.0151
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -592,6 +592,46 @@ class CMLClient:
         except yaml.YAMLError as e:
             logging.error(f"Failed to update testbed YAML: {e}")
             print(f"Error: Failed to update testbed YAML: {e}", file=sys.stderr)
+            return testbed_yaml
+
+    def apply_device_info_credentials(self, testbed_yaml, device_info_list):
+        """
+        Apply optional username/password from device_info to the testbed.
+        Only touches devices that have a 'credentials' block.
+        """
+        try:
+            data = yaml.safe_load(testbed_yaml)
+            if not data or 'devices' not in data:
+                return testbed_yaml
+    
+            # Build map: device_name (lower) → credentials dict
+            cred_map = {}
+            for dev in device_info_list:
+                name = dev.get('device_name')
+                creds = dev.get('credentials')
+                if name and creds and isinstance(creds, dict):
+                    cred_map[name.lower()] = {
+                        'username': creds.get('username', 'cisco'),
+                        'password': creds.get('password', 'cisco')
+                    }
+    
+            if not cred_map:
+                return testbed_yaml  # No overrides
+    
+            for dev_name, dev in data['devices'].items():
+                override = cred_map.get(dev_name.lower())
+                if override:
+                    creds = dev.setdefault('credentials', {}).setdefault('default', {})
+                    creds['username'] = override['username']
+                    creds['password'] = override['password']
+                    if self.debug:
+                        logging.info(f"Applied device_info credentials to {dev_name}: "
+                                     f"{override['username']}/{override['password'][:3]}***")
+    
+            return yaml.safe_dump(data)
+    
+        except Exception as e:
+            logging.error(f"Failed to apply device_info credentials: {e}")
             return testbed_yaml
 
     def build_default_device_info(self, testbed_yaml):
