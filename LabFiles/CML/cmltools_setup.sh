@@ -594,22 +594,15 @@ class CMLClient:
             return testbed_yaml
 
     def build_default_device_info(self, testbed_yaml):
-        # Build device_info from testbed YAML for linux and ios devices
-        # Excludes terminal_server and includes 'show version' for ios devices,
-        # 'uname -a' for linux devices, with corresponding validation patterns
-        # Args:
-        #   testbed_yaml: YAML string of the testbed
-        # Returns: List of device_info dictionaries, or empty list on failure
         try:
             data = yaml.safe_load(testbed_yaml)
             if not data or 'devices' not in data:
                 logging.error("Invalid testbed YAML structure")
-                print("Error: Invalid testbed YAML structure", file=sys.stderr)
                 return []
             device_info = []
             for device_name, device_data in data['devices'].items():
                 if device_name == "terminal_server":
-                    continue  # Skip terminal_server
+                    continue
                 os_type = device_data.get('os')
                 if os_type == "ios":
                     device_info.append({
@@ -628,11 +621,10 @@ class CMLClient:
                         }]
                     })
             if self.debug:
-                logging.info(f"Built default device_info: {json.dumps(device_info, indent=2)}")
+                logging.info(f"Built default device_info: {len(device_info)} devices")
             return device_info
         except yaml.YAMLError as e:
             logging.error(f"Failed to parse testbed YAML for device_info: {e}")
-            print(f"Error: Failed to parse testbed YAML for device_info: {e}", file=sys.stderr)
             return []
 
     def execute_commands_on_device(self, device, testbed, actual_name):
@@ -799,7 +791,24 @@ class CMLClient:
         try:
             if self.debug:
                 logging.info(f"Loading testbed YAML for lab {lab_id}")
-            testbed = load(testbed_yaml)
+            from genie.testbed import Testbed
+            from pyats.topology import loader
+
+            try:
+                # Parse testbed YAML without connecting
+                testbed_dict = yaml.safe_load(testbed_yaml)
+                testbed = Testbed()
+                loader.load(testbed_dict, testbed=testbed)
+                if self.debug:
+                    logging.info("Testbed parsed in offline mode (no connection)")
+            except Exception as e:
+                msg = f"Failed to parse testbed YAML: {e}"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                # Fallback: mark all devices as unavailable
+                for device in device_info:
+                    all_results.append(f"Incorrectly Configured - {device['device_name']} - testbed_parse_failed")
+                return all_results, False
 
             # Case-insensitive device lookup
             testbed_devices_lower = {name.lower(): name for name in testbed.devices.keys()}
