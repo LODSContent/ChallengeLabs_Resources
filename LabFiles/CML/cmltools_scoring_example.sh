@@ -5,12 +5,15 @@
 # Version: 2025.10.28 - Container.v6.0
 
 # ==== LAB-SPECIFIC VALUES ====
-LAB_ID="Lab"
+LAB_ID="CCNA.1-LAB2"
 
+# match_type can be wildcard,regex or exact
+# device names are case-insensitive
+# credentials are only required if not using the cisco/cisco default
 device_info=$(cat << 'EOF'
 [
     {
-        "device_name": "sw1",
+        "device_name": "switch1",
         "commands": [
             {
                 "command": "show version",
@@ -24,13 +27,17 @@ device_info=$(cat << 'EOF'
         ]
     },
     {
-        "device_name": "rtr",
+        "device_name": "HOST1",
+        "credentials": {
+            "username": "admin",
+            "password": "cisco"
+        },
         "commands": [
             {
-                "command": "show version",
+                "command": "uname -a",
                 "validations": [
                     {
-                        "pattern": "Cisco IOS Software",
+                        "pattern": "*Linux*",
                         "match_type": "wildcard"
                     }
                 ]
