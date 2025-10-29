@@ -720,8 +720,8 @@ class CMLClient:
 
     def validate(self, lab_id, device_info):
         # Validate device configurations using PyATS
-        # Resilient: continues on any failure, reports all
-        # Returns: (list of status messages, bool: True only if all passed)
+        # Uses gettestbed() + yaml to avoid PyATS connection attempts
+        # Fully resilient, case-insensitive, no external deps
 
         # Resolve lab_id
         if not lab_id:
@@ -749,8 +749,6 @@ class CMLClient:
             delay = int(os.environ.get("RETRY_DELAY", 10))
             attempt = 1
             while state != "STARTED" and attempt <= retries:
-                if self.debug:
-                    logging.info(f"Attempt {attempt}/{retries}: Waiting for lab {lab_id} to start")
                 time.sleep(delay)
                 state = self.get_lab_state(lab_id)
                 attempt += 1
@@ -760,7 +758,7 @@ class CMLClient:
                 print(msg, file=sys.stderr)
                 return [msg], False
 
-        # Get testbed YAML
+        # Get testbed YAML (raw string)
         testbed_yaml = self.gettestbed(lab_id)
         if not testbed_yaml:
             msg = "Error: Failed to fetch testbed YAML"
@@ -768,14 +766,49 @@ class CMLClient:
             print(msg, file=sys.stderr)
             return [msg], False
 
-        # Build device_info if not provided
-        if not device_info:
-            device_info = self.build_default_device_info(testbed_yaml)
-            if not device_info:
-                msg = "Error: Failed to build device_info from testbed YAML"
+        # Parse testbed YAML manually
+        try:
+            testbed_data = yaml.safe_load(testbed_yaml)
+            if not testbed_data or 'devices' not in testbed_data:
+                msg = "Error: Invalid testbed YAML structure"
                 logging.error(msg)
                 print(msg, file=sys.stderr)
                 return [msg], False
+        except yaml.YAMLError as e:
+            msg = f"Error: Failed to parse testbed YAML: {e}"
+            logging.error(msg)
+            print(msg, file=sys.stderr)
+            return [msg], False
+
+        # Build case-insensitive device map: lowercase → original name
+        testbed_devices_lower = {
+            name.lower(): name for name in testbed_data['devices'].keys()
+            if name != 'terminal_server'
+        }
+        if self.debug:
+            logging.info(f"Available devices: {list(testbed_devices_lower.keys())}")
+
+        # Build device_info if not provided
+        if not device_info:
+            device_info = []
+            for dev_name in testbed_devices_lower.values():
+                os_type = testbed_data['devices'][dev_name].get('os', '').lower()
+                if os_type == 'ios':
+                    device_info.append({
+                        "device_name": dev_name,
+                        "commands": [{
+                            "command": "show version",
+                            "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]
+                        }]
+                    })
+                elif os_type == 'linux':
+                    device_info.append({
+                        "device_name": dev_name,
+                        "commands": [{
+                            "command": "uname -a",
+                            "validations": [{"pattern": "Linux", "match_type": "wildcard"}]
+                        }]
+                    })
         else:
             try:
                 device_info = ast.literal_eval(device_info)
@@ -788,63 +821,41 @@ class CMLClient:
         all_results = []
         overall_result = True
 
-        try:
-            if self.debug:
-                logging.info(f"Loading testbed YAML for lab {lab_id}")
-            from genie.testbed import Testbed
-            from pyats.topology import loader
+        # Process each device
+        for device in device_info:
+            requested_name = device['device_name']
+            requested_lower = requested_name.lower()
+            actual_name = testbed_devices_lower.get(requested_lower)
+
+            if not actual_name:
+                msg = f"Incorrectly Configured - {requested_name} - not_in_testbed"
+                all_results.append(msg)
+                logging.error(msg)
+                overall_result = False
+                continue
+
+            # Build minimal testbed for this device only
+            single_testbed_yaml = yaml.safe_dump({
+                'devices': {
+                    actual_name: testbed_data['devices'][actual_name],
+                    'terminal_server': testbed_data['devices']['terminal_server']
+                },
+                'testbed': {'name': f"validation-{lab_id}"}
+            })
 
             try:
-                # Parse testbed YAML without connecting
-                testbed_dict = yaml.safe_load(testbed_yaml)
-                testbed = Testbed()
-                loader.load(testbed_dict, testbed=testbed)
-                if self.debug:
-                    logging.info("Testbed parsed in offline mode (no connection)")
+                from genie.testbed import load
+                testbed = load(single_testbed_yaml)
             except Exception as e:
-                msg = f"Failed to parse testbed YAML: {e}"
-                logging.error(msg)
-                print(msg, file=sys.stderr)
-                # Fallback: mark all devices as unavailable
-                for device in device_info:
-                    all_results.append(f"Incorrectly Configured - {device['device_name']} - testbed_parse_failed")
-                return all_results, False
-
-            # Case-insensitive device lookup
-            testbed_devices_lower = {name.lower(): name for name in testbed.devices.keys()}
-            if self.debug:
-                logging.info(f"Testbed devices: {testbed_devices_lower}")
-
-            # Process each device
-            for device in device_info:
-                requested_name = device['device_name']
-                requested_lower = requested_name.lower()
-                actual_name = testbed_devices_lower.get(requested_lower)
-
-                if not actual_name:
-                    msg = f"Incorrectly Configured - {requested_name} - not_in_testbed"
-                    all_results.append(msg)
-                    logging.error(msg)
-                    overall_result = False
-                    continue
-
-                # Use actual testbed name for execution
-                dev_results, dev_passed = self.execute_commands_on_device(device, testbed, actual_name)
-                all_results.extend(dev_results)
-                if not dev_passed:
-                    overall_result = False
-
-        except Exception as e:
-            # RESILIENT: Even if testbed load fails, try to run on provided device_info
-            msg = f"Testbed load failed: {e}. Attempting to run on provided device_info only."
-            logging.warning(msg)
-            print(msg, file=sys.stderr)
-
-            # Fallback: try to run on device_info without testbed
-            for device in device_info:
-                requested_name = device['device_name']
-                msg = f"Incorrectly Configured - {requested_name} - testbed_unavailable"
+                msg = f"Incorrectly Configured - {requested_name} - testbed_load_failed"
                 all_results.append(msg)
+                logging.error(f"Failed to load single testbed for {actual_name}: {e}")
+                overall_result = False
+                continue
+
+            dev_results, dev_passed = self.execute_commands_on_device(device, testbed, actual_name)
+            all_results.extend(dev_results)
+            if not dev_passed:
                 overall_result = False
 
         return all_results, overall_result
