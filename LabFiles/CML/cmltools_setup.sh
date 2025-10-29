@@ -654,14 +654,22 @@ class CMLClient:
             return results, False
 
         try:
-            dev.connect()
+            connect_kwargs = {
+                'mit': True,
+                'hostkey_verify': False,
+                'allow_agent': False,
+                'look_for_keys': False,
+                'timeout': 60
+            }
+            dev.connect(init_exec_commands=['\r'], **connect_kwargs)
         except SubCommandFailure as e:
-            error_msg = f"Failed to connect to {device['device_name']}: {e}"
+            error_msg = f"Failed to connect to {actual_name}: {e}"
             logging.error(error_msg)
             if self.debug:
                 results.append(error_msg)
-            results.append(f"Incorrectly Configured - {device['device_name']} - connect")
-            return results, False
+            results.append(f"Incorrectly Configured - {actual_name} - connect")
+            device_match = False
+            continue
 
         for command_info in device['commands']:
             command = command_info['command']
