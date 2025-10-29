@@ -105,7 +105,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251029.0140
+# CML Tools v1.20251029.0051
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -533,20 +533,21 @@ class CMLClient:
             return ""
 
     def gettestbed(self, lab_id=None):
-        """Get PyATS testbed YAML for a lab – with credentials taken from the lab config."""
+        # Get PyATS testbed YAML for a lab
+        # Args:
+        #   lab_id: UUID or title of the lab (optional)
+        # Returns: Testbed YAML (str), or empty string on failure
         if not lab_id:
             lab_id = self.findlab()
             if not lab_id:
                 logging.error("No lab ID provided and no default lab found")
                 print("Error: No lab ID provided and no default lab found", file=sys.stderr)
                 return ""
-    
-        # Resolve title → UUID
+        # Check if lab_id is a title and convert to ID
         if not self._is_valid_lab_id(lab_id):
             lab_id = self.findlab(lab_id)
             if not lab_id:
                 return ""
-    
         try:
             self.ensure_jwt()
             response = requests.get(
@@ -556,147 +557,41 @@ class CMLClient:
             )
             response.raise_for_status()
             testbed_yaml = response.text
-    
             if not testbed_yaml or testbed_yaml in ["false", "null"] or "testbed:" not in testbed_yaml:
                 logging.error(f"Invalid testbed YAML for lab {lab_id}")
                 print(f"Error: Invalid testbed YAML for lab {lab_id}", file=sys.stderr)
                 return ""
-    
-            # ------------------------------------------------------------------
-            # NEW: pull the full lab topology and inject the real credentials
-            # ------------------------------------------------------------------
-            lab_details = self.get_lab_details(lab_id)
-            if lab_details:
-                testbed_yaml = self.update_testbed_credentials(testbed_yaml, lab_details)
-            else:
-                logging.warning("Could not fetch lab details – using default credentials")
-    
+            # Update terminal server credentials
+            testbed_yaml = self.update_testbed_device_credentials(testbed_yaml, "terminal_server", self.username, self.password)
             if self.debug:
-                logging.info(f"Returning testbed for lab {lab_id} (credentials injected)")
-    
+                logging.info(f"Retrieved testbed YAML for lab {lab_id}: {testbed_yaml[:100]}...")
             return testbed_yaml
-    
         except requests.RequestException as e:
             logging.error(f"Failed to fetch testbed YAML for lab {lab_id}: {e}")
             print(f"Error: Failed to fetch testbed YAML for lab {lab_id}: {e}", file=sys.stderr)
             return ""
 
-    def extract_node_credentials(self, node):
-        """Pull USERNAME / PASSWORD from a node's configuration[].content."""
-        username = password = None
-        cfg_list = node.get('configuration', [])
-        if not isinstance(cfg_list, list):
-            cfg_list = [cfg_list] if cfg_list else []
-    
-        for cfg in cfg_list:
-            content = cfg.get('content', '') if isinstance(cfg, dict) else str(cfg)
-            if not content:
-                continue
-    
-            # ---- shell-script style: USERNAME=admin   PASSWORD=cisco ----
-            u_match = re.search(r'USERNAME\s*=\s*["\']?([^"\s\'=]+)["\']?', content, re.I)
-            p_match = re.search(r'PASSWORD\s*=\s*["\']?([^"\s\'=]+)["\']?', content, re.I)
-            if u_match:
-                username = u_match.group(1).strip()
-            if p_match:
-                password = p_match.group(1).strip()
-    
-            # ---- optional cloud-init fallback ----
-            if not username and '#cloud-config' in content.lower():
-                try:
-                    data = yaml.safe_load(content)
-                    if isinstance(data, dict) and data.get('users'):
-                        u = data['users'][0]
-                        username = u.get('name') or u.get('login')
-                        password = u.get('passwd') or u.get('password')
-                except yaml.YAMLError:
-                    pass
-    
-            if username and password:
-                break
-    
-        # Only return a value when we really found something different
-        if username == 'cisco' and password == 'cisco':
-            return None, None
-    
-        if self.debug:
-            lbl = node.get('label') or node.get('id')
-            logging.info(f"Extracted creds for {lbl}: {username}/{password[:3]}***")
-        return username or 'cisco', password or 'cisco'
-    
-    
-    def update_testbed_credentials(self, testbed_yaml, lab_details):
-        """Inject extracted USERNAME/PASSWORD into every Linux device using smart matching."""
+    def update_testbed_device_credentials(self, testbed_yaml, device_name, username, password):
+        # Update device credentials in a testbed YAML
+        # Args:
+        #   testbed_yaml: YAML string of the testbed
+        #   device_name: Device to update (e.g., terminal_server)
+        #   username: Username to set
+        #   password: Password to set
+        # Returns: Updated YAML string, or original YAML on failure
         try:
             data = yaml.safe_load(testbed_yaml)
-            if not data or 'devices' not in data:
+            if not data or 'devices' not in data or device_name not in data['devices']:
+                logging.error(f"Invalid testbed YAML structure for device {device_name}")
+                print(f"Error: Invalid testbed YAML structure for device {device_name}", file=sys.stderr)
                 return testbed_yaml
-    
-            # ------------------------------------------------------------------
-            # Build node map: normalized label → node
-            # Also: IP → node (for fallback)
-            # ------------------------------------------------------------------
-            node_by_label = {}
-            node_by_ip = {}
-            for n in lab_details.get('topology', {}).get('nodes', []):
-                label = n.get('label') or n.get('id', '')
-                # Normalize label: lower, strip, collapse whitespace, remove -_
-                norm = re.sub(r'[-_\s]+', '', label.lower())
-                node_by_label[norm] = n
-    
-                # Extract IP if present in node config (common for Linux)
-                config_list = n.get('configuration', [])
-                if not isinstance(config_list, list):
-                    config_list = [config_list] if config_list else []
-                for cfg in config_list:
-                    content = cfg.get('content', '') if isinstance(cfg, dict) else str(cfg)
-                    ip_match = re.search(r'\b(\d+\.\d+\.\d+\.\d+)\b', content)
-                    if ip_match:
-                        node_by_ip[ip_match.group(1)] = n
-    
-            for dev_name, dev in data['devices'].items():
-                # ----- terminal_server -----
-                if dev_name == 'terminal_server':
-                    creds = dev.setdefault('credentials', {}).setdefault('default', {})
-                    creds['username'] = self.username
-                    creds['password'] = self.password
-                    continue
-    
-                if dev.get('os') != 'linux':
-                    continue
-    
-                # ----- Try label match -----
-                norm_dev = re.sub(r'[-_\s]+', '', dev_name.lower())
-                node = node_by_label.get(norm_dev)
-    
-                # ----- Fallback: IP match from testbed connections -----
-                if not node:
-                    cli_conn = dev.get('connections', {}).get('cli', {})
-                    ip = cli_conn.get('ip')
-                    if ip:
-                        node = node_by_ip.get(str(ip))
-    
-                if not node:
-                    if self.debug:
-                        logging.warning(f"Could not map device '{dev_name}' to any topology node (tried label='{norm_dev}', ip={ip})")
-                    continue
-    
-                u, p = self.extract_node_credentials(node)
-                if u and p:
-                    creds = dev.setdefault('credentials', {}).setdefault('default', {})
-                    creds['username'] = u
-                    creds['password'] = p
-                    if self.debug:
-                        node_label = node.get('label') or node.get('id')
-                        logging.info(f"Injected creds for {dev_name} ← node '{node_label}': {u}/{p[:3]}***")
-                else:
-                    if self.debug:
-                        logging.info(f"No custom creds for {dev_name} (using default cisco/cisco)")
-    
-            return yaml.safe_dump(data)
-    
-        except Exception as e:
-            logging.error(f"Failed to update testbed credentials: {e}")
+            data['devices'][device_name]['credentials']['default']['username'] = username
+            data['devices'][device_name]['credentials']['default']['password'] = password
+            updated_yaml = yaml.safe_dump(data)
+            return updated_yaml
+        except yaml.YAMLError as e:
+            logging.error(f"Failed to update testbed YAML: {e}")
+            print(f"Error: Failed to update testbed YAML: {e}", file=sys.stderr)
             return testbed_yaml
 
     def build_default_device_info(self, testbed_yaml):
