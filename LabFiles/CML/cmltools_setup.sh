@@ -728,12 +728,8 @@ class CMLClient:
 
     def validate(self, lab_id, device_info):
         # Validate device configurations using PyATS
-        # If device_info is empty, builds default from testbed YAML
-        # Ensures lab is started, then validates each device
-        # Args:
-        #   lab_id: UUID or title of the lab (optional)
-        #   device_info: JSON string of device info, or empty for default
-        # Returns: Tuple (list of status messages, bool indicating if all passed)
+        # Resilient: continues on any failure, reports all
+        # Returns: (list of status messages, bool: True only if all passed)
 
         # Resolve lab_id
         if not lab_id:
@@ -762,7 +758,7 @@ class CMLClient:
             attempt = 1
             while state != "STARTED" and attempt <= retries:
                 if self.debug:
-                    logging.info(f"Attempt {attempt}/{retries}: Waiting for lab {lab_id} to start (current state: {state})")
+                    logging.info(f"Attempt {attempt}/{retries}: Waiting for lab {lab_id} to start")
                 time.sleep(delay)
                 state = self.get_lab_state(lab_id)
                 attempt += 1
@@ -797,28 +793,25 @@ class CMLClient:
                 print(msg, file=sys.stderr)
                 return [msg], False
 
+        all_results = []
+        overall_result = True
+
         try:
             if self.debug:
                 logging.info(f"Loading testbed YAML for lab {lab_id}")
             testbed = load(testbed_yaml)
 
-            # Create case-insensitive device lookup
+            # Case-insensitive device lookup
             testbed_devices_lower = {name.lower(): name for name in testbed.devices.keys()}
             if self.debug:
-                logging.info(f"Testbed devices (case-insensitive): {testbed_devices_lower}")
+                logging.info(f"Testbed devices: {testbed_devices_lower}")
 
-            all_results = []
-            overall_result = True
-
-            # ------------------------------------------------------------------
-            # PROCESS EACH DEVICE
-            # ------------------------------------------------------------------
+            # Process each device
             for device in device_info:
                 requested_name = device['device_name']
                 requested_lower = requested_name.lower()
                 actual_name = testbed_devices_lower.get(requested_lower)
 
-                # Device not in testbed
                 if not actual_name:
                     msg = f"Incorrectly Configured - {requested_name} - not_in_testbed"
                     all_results.append(msg)
@@ -826,20 +819,26 @@ class CMLClient:
                     overall_result = False
                     continue
 
-                # Use actual testbed name
-                dev = testbed.devices[actual_name]
+                # Use actual testbed name for execution
                 dev_results, dev_passed = self.execute_commands_on_device(device, testbed, actual_name)
                 all_results.extend(dev_results)
                 if not dev_passed:
                     overall_result = False
 
-            return all_results, overall_result
-
         except Exception as e:
-            msg = f"Test execution failed: {e}"
-            logging.error(msg)
+            # RESILIENT: Even if testbed load fails, try to run on provided device_info
+            msg = f"Testbed load failed: {e}. Attempting to run on provided device_info only."
+            logging.warning(msg)
             print(msg, file=sys.stderr)
-            return [f"Incorrectly Configured - unknown - testbed_load"], False
+
+            # Fallback: try to run on device_info without testbed
+            for device in device_info:
+                requested_name = device['device_name']
+                msg = f"Incorrectly Configured - {requested_name} - testbed_unavailable"
+                all_results.append(msg)
+                overall_result = False
+
+        return all_results, overall_result
 
     def _is_valid_lab_id(self, lab_id):
         # Check if a lab_id matches the UUID format
