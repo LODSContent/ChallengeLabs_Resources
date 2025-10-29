@@ -1,6 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # CML Lab Import Script - Silent, Sourced-Safe, Outputs ONLY true/false
+# This will run as a Lifecycle Action on the pyATS VM
 # =============================================================================
 
 # Source environment
