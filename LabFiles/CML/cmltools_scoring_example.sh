@@ -1,6 +1,7 @@
 #!/bin/bash
 # Title: Device Configuration Validation (Container-Safe)
 # Description: Validates CML lab devices - safe for textbox injection
+# This will run as a Lab Activity for validation purposes in a running lab
 # Target: PyATS scoring VM
 # Version: 2025.10.28 - Container.v6.0
 
