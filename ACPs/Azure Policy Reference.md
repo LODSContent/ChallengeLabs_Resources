@@ -1,21 +1,5 @@
 # Skillable Compliant Azure ACP Reference
 
-<style>
-details.purpose > summary {
-  cursor: pointer;
-  font-weight: bold;
-  margin-bottom: 0.5em;
-}
-details.purpose[open] > summary {
-  margin-bottom: 0.3em;
-}
-details.purpose > div {
-  margin-left: 1.5em;
-  font-size: 0.9em;
-  color: #444;
-}
-</style>
-
 ## Resource Group id Examples
 
 <details class="purpose">
