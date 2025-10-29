@@ -653,28 +653,43 @@ class CMLClient:
             results.append(f"Incorrectly Configured - {device['device_name']} - connect")
             return results, False
 
+        # ------------------------------------------------------------------
+        # CONNECT – send ENTER for IOSv consoles that are “asleep”
+        # ------------------------------------------------------------------
         try:
             connect_kwargs = {
-                'mit': True,
-                'hostkey_verify': False,
+                'mit': True,                # ignore missing known_hosts
+                'hostkey_verify': False,    # skip host-key verification
                 'allow_agent': False,
                 'look_for_keys': False,
                 'timeout': 60
             }
-            dev.connect(init_exec_commands=['\r'], **connect_kwargs)
+
+            # IOSv in CML shows no prompt until you hit ENTER.
+            # Only send \r for IOS devices – Linux nodes already send a prompt.
+            init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
+
+            dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
+
+            if self.debug:
+                logging.info(f"Connected to {device['device_name']} (sent ENTER if IOS)")
+
         except SubCommandFailure as e:
-            error_msg = f"Failed to connect to {actual_name}: {e}"
+            error_msg = f"Failed to connect to {device['device_name']}: {e}"
             logging.error(error_msg)
             if self.debug:
                 results.append(error_msg)
-            results.append(f"Incorrectly Configured - {actual_name} - connect")
-            device_match = False
-            continue
+            results.append(f"Incorrectly Configured - {device['device_name']} - connect")
+            return results, False
 
+        # ------------------------------------------------------------------
+        # EXECUTE EACH COMMAND
+        # ------------------------------------------------------------------
         for command_info in device['commands']:
             command = command_info['command']
             if self.debug:
                 logging.info(f"Executing command: {command} on {device['device_name']}")
+
             try:
                 data = dev.execute(command)
             except SubCommandFailure as e:
@@ -686,13 +701,18 @@ class CMLClient:
                 overall_match = False
                 continue
 
+            # ------------------------------------------------------------------
+            # VALIDATIONS (if any)
+            # ------------------------------------------------------------------
             if not command_info.get('validations'):
                 results.append(f"Correctly Configured - {device['device_name']} - {command}")
                 continue
 
             match_found = True
             for validation in command_info['validations']:
-                pattern_match, validation_results = validate_pattern(validation, data, device['device_name'], command, self.debug)
+                pattern_match, validation_results = validate_pattern(
+                    validation, data, device['device_name'], command, self.debug
+                )
                 results.extend(validation_results)
                 if not pattern_match:
                     match_found = False
@@ -701,6 +721,12 @@ class CMLClient:
             results.append(f"{status} - {device['device_name']} - {command}")
             if not match_found:
                 overall_match = False
+
+        # Disconnect cleanly (optional – Unicon does it on context exit)
+        try:
+            dev.disconnect()
+        except Exception:
+            pass
 
         return results, overall_match
 
