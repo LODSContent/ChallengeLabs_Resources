@@ -105,7 +105,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251029.0051
+# CML Tools v1.20251029.0119
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -379,6 +379,55 @@ class CMLClient:
             print(f"Error: Failed to get details for lab {lab_id}: {e}", file=sys.stderr)
             return {}
 
+    def extract_node_credentials(self, node):
+        """Extract username/password from a node's configuration content.
+        Args:
+            node: Dict from lab_details['topology']['nodes']
+        Returns:
+            Tuple (username, password) if different from 'cisco', else (None, None)
+        """
+        username = password = None
+        config_list = node.get('configuration', [])
+        if not isinstance(config_list, list):
+            config_list = [config_list] if config_list else []  # Handle flattened
+    
+        for config in config_list:
+            content = config.get('content', '') if isinstance(config, dict) else str(config)
+            if not content:
+                continue
+    
+            # Primary: Shell script vars (your sample format)
+            u_pattern = r'USERNAME\s*=\s*["\']?([^"\s\'=]+)["\']?'
+            p_pattern = r'PASSWORD\s*=\s*["\']?([^"\s\'=]+)["\']?'
+            u_match = re.search(u_pattern, content, re.I)
+            p_match = re.search(p_pattern, content, re.I)
+            if u_match:
+                username = u_match.group(1).strip()
+            if p_match:
+                password = p_match.group(1).strip()
+    
+            # Secondary: Cloud-init YAML (if content looks like YAML)
+            if not username and 'cloud-config' in content.lower():
+                try:
+                    data = yaml.safe_load(content)
+                    users = data.get('users', []) if isinstance(data, dict) else []
+                    if users:
+                        first_user = users[0]
+                        username = first_user.get('name') or first_user.get('login')
+                        password = first_user.get('passwd') or first_user.get('password')
+                except yaml.YAMLError:
+                    pass  # Fall back to defaults
+    
+            if username and password:
+                break  # Found; no need for more configs
+    
+        # Only override if different from defaults
+        if username == 'cisco' and password == 'cisco':
+            return None, None
+        if self.debug:
+            logging.info(f"Extracted creds for node {node.get('label', node.get('id'))}: {username}/{password[:3]}***")
+        return username or 'cisco', password or 'cisco'
+
     def get_default_lab_id(self, lab_ids):
         # Find the first started lab or first available lab
         # Args:
@@ -536,7 +585,7 @@ class CMLClient:
         # Get PyATS testbed YAML for a lab
         # Args:
         #   lab_id: UUID or title of the lab (optional)
-        # Returns: Testbed YAML (str), or empty string on failure
+        # Returns: Testbed YAML (str) with updated credentials, or empty string on failure
         if not lab_id:
             lab_id = self.findlab()
             if not lab_id:
@@ -548,6 +597,7 @@ class CMLClient:
             lab_id = self.findlab(lab_id)
             if not lab_id:
                 return ""
+        
         try:
             self.ensure_jwt()
             response = requests.get(
@@ -561,38 +611,65 @@ class CMLClient:
                 logging.error(f"Invalid testbed YAML for lab {lab_id}")
                 print(f"Error: Invalid testbed YAML for lab {lab_id}", file=sys.stderr)
                 return ""
-            # Update terminal server credentials
-            testbed_yaml = self.update_testbed_device_credentials(testbed_yaml, "terminal_server", self.username, self.password)
+            
             if self.debug:
-                logging.info(f"Retrieved testbed YAML for lab {lab_id}: {testbed_yaml[:100]}...")
+                logging.info(f"Fetched raw testbed YAML for lab {lab_id}")
+    
+            # === Fetch lab details to extract node credentials ===
+            lab_details = self.get_lab_details(lab_id)
+            if not lab_details:
+                logging.warning("Failed to fetch lab details; using default credentials")
+            else:
+                testbed_yaml = self.update_testbed_credentials(testbed_yaml, lab_details)
+    
+            if self.debug:
+                logging.info(f"Returning updated testbed YAML for lab {lab_id}")
             return testbed_yaml
+    
         except requests.RequestException as e:
             logging.error(f"Failed to fetch testbed YAML for lab {lab_id}: {e}")
             print(f"Error: Failed to fetch testbed YAML for lab {lab_id}: {e}", file=sys.stderr)
             return ""
 
-    def update_testbed_device_credentials(self, testbed_yaml, device_name, username, password):
-        # Update device credentials in a testbed YAML
-        # Args:
-        #   testbed_yaml: YAML string of the testbed
-        #   device_name: Device to update (e.g., terminal_server)
-        #   username: Username to set
-        #   password: Password to set
-        # Returns: Updated YAML string, or original YAML on failure
+    def update_testbed_credentials(self, testbed_yaml, lab_details):
+        """Update credentials for all non-terminal_server devices from lab config."""
         try:
             data = yaml.safe_load(testbed_yaml)
-            if not data or 'devices' not in data or device_name not in data['devices']:
-                logging.error(f"Invalid testbed YAML structure for device {device_name}")
-                print(f"Error: Invalid testbed YAML structure for device {device_name}", file=sys.stderr)
+            if not data or 'devices' not in data:
                 return testbed_yaml
-            data['devices'][device_name]['credentials']['default']['username'] = username
-            data['devices'][device_name]['credentials']['default']['password'] = password
-            updated_yaml = yaml.safe_dump(data)
-            return updated_yaml
-        except yaml.YAMLError as e:
-            logging.error(f"Failed to update testbed YAML: {e}")
-            print(f"Error: Failed to update testbed YAML: {e}", file=sys.stderr)
-            return testbed_yaml
+    
+            nodes = {node.get('label', node.get('id', '')).lower(): node for node in lab_details.get('topology', {}).get('nodes', [])}
+    
+            for dev_name, dev_data in data['devices'].items():
+                if dev_name == 'terminal_server':
+                    # Existing: CML creds
+                    creds = dev_data.setdefault('credentials', {}).setdefault('default', {})
+                    creds['username'] = self.username
+                    creds['password'] = self.password
+                    continue
+    
+                if dev_data.get('os') != 'linux':  # Skip non-Linux
+                    continue
+    
+                dev_lower = dev_name.lower()
+                node = nodes.get(dev_lower)
+                if not node:
+                    if self.debug:
+                        logging.warning(f"No matching node for device {dev_name} (tried {dev_lower})")
+                    continue
+    
+                u, p = self.extract_node_credentials(node)
+                if u:
+                    creds = dev_data.setdefault('credentials', {}).setdefault('default', {})
+                    creds['username'] = u
+                    creds['password'] = p
+                    if self.debug:
+                        logging.info(f"Updated creds for {dev_name} from lab config")
+    
+            return yaml.safe_dump(data)
+        except Exception as e:
+            logging.error(f"Failed to update testbed credentials: {e}")
+            return testbed_yaml  # Fallback
 
     def build_default_device_info(self, testbed_yaml):
         try:
