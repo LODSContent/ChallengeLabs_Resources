@@ -626,24 +626,29 @@ class CMLClient:
     
     
     def update_testbed_credentials(self, testbed_yaml, lab_details):
-        """Inject extracted credentials into every Linux device in the testbed."""
+        """Inject extracted USERNAME/PASSWORD into every Linux device."""
         try:
             data = yaml.safe_load(testbed_yaml)
             if not data or 'devices' not in data:
                 return testbed_yaml
     
-            # map label (lower-case) → full node dict
-            nodes = {n.get('label', n.get('id', '')).lower(): n
-                     for n in lab_details.get('topology', {}).get('nodes', [])}
+            # ------------------------------------------------------------------
+            # Build a map: device name (lower) → node dict from lab topology
+            # ------------------------------------------------------------------
+            nodes = {}
+            for n in lab_details.get('topology', {}).get('nodes', []):
+                label = n.get('label') or n.get('id', '')
+                nodes[label.lower()] = n
     
             for dev_name, dev in data['devices'].items():
-                # terminal-server always uses the CML login
+                # ----- terminal_server always uses the CML login -----
                 if dev_name == 'terminal_server':
                     creds = dev.setdefault('credentials', {}).setdefault('default', {})
                     creds['username'] = self.username
                     creds['password'] = self.password
                     continue
     
+                # ----- only Linux hosts -----
                 if dev.get('os') != 'linux':
                     continue
     
@@ -655,12 +660,12 @@ class CMLClient:
     
                 u, p = self.extract_node_credentials(node)
                 if u and p:
+                    # <-- THIS IS THE CRITICAL FIX -->
                     creds = dev.setdefault('credentials', {}).setdefault('default', {})
                     creds['username'] = u
                     creds['password'] = p
                     if self.debug:
                         logging.info(f"Injected creds for {dev_name}: {u}/{p[:3]}***")
-    
             return yaml.safe_dump(data)
     
         except Exception as e:
