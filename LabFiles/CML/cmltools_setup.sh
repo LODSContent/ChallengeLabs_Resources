@@ -105,7 +105,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251029.0135
+# CML Tools v1.20251029.0140
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -626,46 +626,73 @@ class CMLClient:
     
     
     def update_testbed_credentials(self, testbed_yaml, lab_details):
-        """Inject extracted USERNAME/PASSWORD into every Linux device."""
+        """Inject extracted USERNAME/PASSWORD into every Linux device using smart matching."""
         try:
             data = yaml.safe_load(testbed_yaml)
             if not data or 'devices' not in data:
                 return testbed_yaml
     
             # ------------------------------------------------------------------
-            # Build a map: device name (lower) → node dict from lab topology
+            # Build node map: normalized label → node
+            # Also: IP → node (for fallback)
             # ------------------------------------------------------------------
-            nodes = {}
+            node_by_label = {}
+            node_by_ip = {}
             for n in lab_details.get('topology', {}).get('nodes', []):
                 label = n.get('label') or n.get('id', '')
-                nodes[label.lower()] = n
+                # Normalize label: lower, strip, collapse whitespace, remove -_
+                norm = re.sub(r'[-_\s]+', '', label.lower())
+                node_by_label[norm] = n
+    
+                # Extract IP if present in node config (common for Linux)
+                config_list = n.get('configuration', [])
+                if not isinstance(config_list, list):
+                    config_list = [config_list] if config_list else []
+                for cfg in config_list:
+                    content = cfg.get('content', '') if isinstance(cfg, dict) else str(cfg)
+                    ip_match = re.search(r'\b(\d+\.\d+\.\d+\.\d+)\b', content)
+                    if ip_match:
+                        node_by_ip[ip_match.group(1)] = n
     
             for dev_name, dev in data['devices'].items():
-                # ----- terminal_server always uses the CML login -----
+                # ----- terminal_server -----
                 if dev_name == 'terminal_server':
                     creds = dev.setdefault('credentials', {}).setdefault('default', {})
                     creds['username'] = self.username
                     creds['password'] = self.password
                     continue
     
-                # ----- only Linux hosts -----
                 if dev.get('os') != 'linux':
                     continue
     
-                node = nodes.get(dev_name.lower())
+                # ----- Try label match -----
+                norm_dev = re.sub(r'[-_\s]+', '', dev_name.lower())
+                node = node_by_label.get(norm_dev)
+    
+                # ----- Fallback: IP match from testbed connections -----
+                if not node:
+                    cli_conn = dev.get('connections', {}).get('cli', {})
+                    ip = cli_conn.get('ip')
+                    if ip:
+                        node = node_by_ip.get(str(ip))
+    
                 if not node:
                     if self.debug:
-                        logging.warning(f"No topology node for device '{dev_name}'")
+                        logging.warning(f"Could not map device '{dev_name}' to any topology node (tried label='{norm_dev}', ip={ip})")
                     continue
     
                 u, p = self.extract_node_credentials(node)
                 if u and p:
-                    # <-- THIS IS THE CRITICAL FIX -->
                     creds = dev.setdefault('credentials', {}).setdefault('default', {})
                     creds['username'] = u
                     creds['password'] = p
                     if self.debug:
-                        logging.info(f"Injected creds for {dev_name}: {u}/{p[:3]}***")
+                        node_label = node.get('label') or node.get('id')
+                        logging.info(f"Injected creds for {dev_name} ← node '{node_label}': {u}/{p[:3]}***")
+                else:
+                    if self.debug:
+                        logging.info(f"No custom creds for {dev_name} (using default cisco/cisco)")
+    
             return yaml.safe_dump(data)
     
         except Exception as e:
