@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# CML Tools Setup Script
+# CML Tools Setup Script v1.10292025.0010
 # Creates cml_env.sh and cmltools.py with environment variables
 # Parameters:
 #   $1: CML_IP         (e.g., 192.168.1.10)
