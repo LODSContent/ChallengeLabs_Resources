@@ -1,26 +1,28 @@
+# Skillable Approved - Azure Policy Reference
+
 ## Resource Group id Examples
 
 > **Purpose**: These are policy fragments used to restrict resource placement by Resource Group ID. They support dynamic naming (using `corp-data` + tags `LODManaged` and `LabInstance`), static names (`rg1`), or multiple allowed patterns (RG1 with or without tags). Use in combination with other policies.
 
-^^^json
+```json
 {
     "field": "id",
     "contains": "[concat('/resourceGroups/corp-data',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
 }
-^^^
+```
 
 > *Note*: `//using dynamically generated RG name`
 
-^^^json
+```json
 {
     "field": "id",
     "contains": "/resourceGroups/rg1/"
 }
-^^^
+```
 
 > *Note*: `// using a static RG name`
 
-^^^json
+```json
 {
     "anyOf": [
         {
@@ -37,7 +39,7 @@
         }
     ]
 }
-^^^
+```
 
 > *Note*: `// Allowing CSS and CSR variations in the same ACP. This should be used whenever possible.`
 
@@ -45,23 +47,23 @@
 
 > **Purpose**: Ensures resources are deployed in the same region as their Resource Group (`[resourceGroup().location]`) and never in the invalid `global` region. Optionally allows `eastus2` as an alternate approved region to prevent deployment drift and enforce regional compliance.
 
-^^^json
+```json
 {
     "field": "location",
     "In": [
         "[resourceGroup().location]"
     ]
 }
-^^^
+```
 
-^^^json
+```json
 {
     "field": "location",
     "notEquals": "global"
 }
-^^^
+```
 
-^^^json
+```json
 {
     "field": "location",
     "In": [
@@ -69,14 +71,14 @@
         "[resourceGroup().location]"
     ]
 }
-^^^
+```
 
-^^^json
+```json
 {
     "field": "location",
     "notEquals": "global"
 }
-^^^
+```
 
 > *Note*: `// location based upon the location of the current resource group`  
 > *Note*: `// Allowing alternate locations`
@@ -85,7 +87,7 @@
 
 > **Purpose**: Allows only approved Azure Container Apps and Managed Environments with strict naming (`ca{LabInstance}`, `env{LabInstance}`), placement in allowed Resource Groups, and same-region deployment. Supporting resources (Storage, EventHub, EventGrid, Network) are permitted.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -179,13 +181,13 @@
         "effect": "Deny"
     }
 }
-^^^
+```
 
 ## Microsoft.CognitiveServices
 
 > **Purpose**: Restricts Cognitive Services to only Immersive Reader and Text Translation kinds with specific names (`hexelo-immersive{LabInstance}`, `TranslationService{LabInstance}`) and allowed SKUs (S, S0, S1, F0). Supporting infrastructure is permitted.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -244,11 +246,11 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 > **Purpose**: Allows only one Azure Cognitive Search service named `search-realestate{LabInstance}` on the `basic` SKU. Supporting resources allowed.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -296,11 +298,11 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 > **Purpose**: Permits only a specific AML workspace (`HexeloAML-workspace{LabInstance}`) and compute instance (`hexelo-aai-mls{LabInstance}`), plus required supporting services: Storage, Key Vault, Log Analytics, App Insights.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -368,11 +370,11 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 > **Purpose**: Allows Document Intelligence services (Text Analytics, Form Recognizer, Computer Vision) under a single name `Hexelo-Doc-Intel{LabInstance}` and SKUs S, S0, S1, F0. Storage support included.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -435,11 +437,11 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 > **Purpose**: Allows specific Computer Vision instances and their deployments with names like `AITan-`, `ExtractiveSummarization`, or `ComputerVision` + `labInstance`. SKUs S and F0.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -500,11 +502,11 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 > **Purpose**: Permits Vision-related Cognitive Services (`VisionResource`, `ComputerVision`) + `labInstance` with SKUs S, F0, S1, S0. Includes deployments and Storage.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -564,11 +566,11 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 > **Purpose**: Allows OpenAI (`OpenAI{LabInstance}`, S0) and Azure Cognitive Search (`azuresearch{LabInstance}`, basic) with storage support.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -636,13 +638,13 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 ## Microsoft.Automation
 
 > **Purpose**: Allows Automation Accounts with names `autoacct` or `lab{LODManaged}{LabInstance}-autoacct`, Basic SKU, no capacity, in allowed RGs and region.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -692,11 +694,11 @@
         }
     ]
 }
-^^^
+```
 
 > **Purpose**: Permits specific runbooks (`runbook1`, tutorial scripts) of types Python, PowerShell, GraphPowerShell in approved Automation Accounts.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -737,11 +739,11 @@
         }
     ]
 }
-^^^
+```
 
 > **Purpose**: Allows ASR recovery Automation Accounts named `remoterec-*-asr-automationaccount` in RG1 or RG2, Basic SKU, in `eastus`, `westus2`, or RG region.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -794,7 +796,7 @@
         }
     ]
 }
-^^^
+```
 
 > *Note*: `------------------------------------`
 
@@ -802,7 +804,7 @@
 
 > **Purpose**: Allows only approved VM SKUs (B-series, D-series) and names (`VM1`, `VM2`, `VM1-{LabInstance}`) in allowed RGs and same region. Supporting resources permitted.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -878,13 +880,13 @@
         "effect": "Deny"
     }
 }
-^^^
+```
 
 ## Microsoft.Compute/virtualMachineScaleSets
 
 > **Purpose**: Allows VMSS and member VMs with specific names, SKUs, scale limits (≤4), and supporting infrastructure (Network, Disks, Autoscale, Extensions, Storage).
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -1064,13 +1066,13 @@
         "effect": "Deny"
     }
 }
-^^^
+```
 
 ## Microsoft.ContainerInstance/containerGroups
 
 > **Purpose**: Allows only one ACI container group named `ca{LabInstance}` using image `aci-helloworld:latest`, 1.5 GB memory, 1 CPU, no GPU, in allowed RG and region.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -1154,13 +1156,13 @@
         "effect": "Deny"
     }
 }
-^^^
+```
 
 ## Microsoft.ContainerRegistry
 
 > **Purpose**: Allows Premium Azure Container Registry with names starting `crpyritlab*` in allowed RGs and same region.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -1201,13 +1203,13 @@
         }
     ]
 }
-^^^
+```
 
 ## Microsoft.DataFactory
 
 > **Purpose**: Allows complete ADF solution: factory, managed integration runtime (≤8 cores), linked services (Azure SQL, HTTP), SQL server, and S0 database (≤10 DTU).
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -1362,13 +1364,13 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 ## Microsoft.DBforMySQL
 
 > **Purpose**: Allows MySQL Flexible Server named `mysql{LabInstance}` with burstable tier and approved SKUs (B-series, D-series).
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -1442,13 +1444,13 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 ## Microsoft.DocumentDB
 
 > **Purpose**: Allows Cosmos DB account named `cdb{LabInstance}` in allowed RG and same region.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -1485,13 +1487,13 @@
         }
     ]
 }
-^^^
+```
 
 ## Microsoft.EventGrid/topics
 
 > **Purpose**: Allows Event Grid Topic `egt{LabInstance}` with Standard SKU and capacity ≤20.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -1538,13 +1540,13 @@
         }
     ]
 }
-^^^
+```
 
 ## Microsoft.EventGrid/systemTopics
 
 > **Purpose**: Allows System Topics with name `egt{LabInstance}` in matching region.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -1583,13 +1585,13 @@
         }
     ]
 }
-^^^
+```
 
 ## Microsoft.EventHub
 
 > **Purpose**: Allows Event Hubs Namespace `ehn{LabInstance}` with Standard tier and capacity ≤20.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -1640,13 +1642,13 @@
         }
     ]
 }
-^^^
+```
 
 ## Microsoft.OperationalInsights
 
 > **Purpose**: Allows Log Analytics workspace with name containing `hexeloamlworks` and default SKU.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -1689,13 +1691,13 @@
         }
     ]
 }
-^^^
+```
 
 ## Microsoft.Search
 
 > **Purpose**: Allows Azure Cognitive Search service `srch{LabInstance}` on `basic` SKU in same region.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -1722,13 +1724,13 @@
         }
     ]
 }
-^^^
+```
 
 ## Microsoft.Sql/servers
 
 > **Purpose**: Allows SQL servers (`sql{LabInstance}`, `geo{LabInstance}`) and databases (`SalesDB`, `master`) with S0 Standard tier (≤1 DTU) in `westus` or RG region.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -1848,7 +1850,7 @@
         "effect": "Deny"
     }
 }
-^^^
+```
 
 > *Note*: The “master” database “name” property must always be present in addition to whatever DB name the student will be creating.  
 > *Note*: To get the current list of Microsoft.Sql/servers/databases Sku Data, run the following command:  
@@ -1858,7 +1860,7 @@
 
 > **Purpose**: Allows SQL VM named `SQLVM1` with Developer edition in allowed RG and region.
 
-^^^json
+```json
 {
     "allOf": [
         {
@@ -1903,13 +1905,13 @@
         }
     ]
 }
-^^^
+```
 
 ## Microsoft.Synapse
 
 > **Purpose**: Allows full Synapse solution: SQL server, DW databases, workspace, small Spark pool (≤10 nodes), and supporting Data Factory, Storage, EventHub, EventGrid, Network.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -2053,13 +2055,13 @@
         "effect": "Deny"
     }
 }
-^^^
+```
 
 ## Microsoft.Web - Function App
 
 > **Purpose**: Allows Function App `fa-{LabInstance}` with Y1 plan, APIM (Basic/Developer/Consumption), and storage. Both `functionapp` and empty `kind` must be present.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -2224,7 +2226,7 @@
         "effect": "Deny"
     }
 }
-^^^
+```
 
 > *Note*: When a “function app” is being created, the “kind” - “functionapp” AND the blank value must be present.
 
@@ -2232,7 +2234,7 @@
 
 > **Purpose**: Allows App Service Plan for Function Apps (Y1, dynamic scaling). Used with Function App policies.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -2397,7 +2399,7 @@
         "effect": "Deny"
     }
 }
-^^^
+```
 
 > *Note*: From Azure: “If the value of the kind property is null, empty, or not on this list, the portal treats the resource as Web App.”
 
@@ -2405,7 +2407,7 @@
 
 > **Purpose**: Allows Function App site `fa-{LabInstance}` and its S1 Dynamic App Service Plan `dataASP`.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -2530,7 +2532,7 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 > *Note*: Notes: the empty quotes "" in field: kind are necessary.
 
@@ -2538,7 +2540,7 @@
 
 > **Purpose**: Allows B1/S1 App Service Plan named `asp-AIApp{LabInstance}` for AI apps (e.g., OpenAI Chat Playground). Do not use `id` field when deployed from OpenAI.
 
-^^^json
+```json
 {
     "if": {
         "not": {
@@ -2599,7 +2601,7 @@
         "effect": "deny"
     }
 }
-^^^
+```
 
 > *Note*: Note: this is for when creating a web app through the Chat Playground in an OpenAI service.  
 > *Note*: Note: Do not include the field: id when Microsoft.web/serverfarms is deployed as a web app from an OpenAI service (chat playground).
