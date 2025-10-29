@@ -828,7 +828,7 @@ class CMLClient:
 
                 # Use actual testbed name
                 dev = testbed.devices[actual_name]
-                dev_results, dev_passed = self.execute_commands_on_device(device, testbed)
+                dev_results, dev_passed = self.execute_commands_on_device(device, testbed, actual_name)
                 all_results.extend(dev_results)
                 if not dev_passed:
                     overall_result = False
