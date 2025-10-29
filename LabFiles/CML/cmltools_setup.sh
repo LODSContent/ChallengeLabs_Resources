@@ -630,10 +630,6 @@ class CMLClient:
             return []
 
     def get_lab_credentials(self, lab_id):
-        """
-        Fetch real device credentials from CML lab definition.
-        Returns: dict {device_name: {'username': ..., 'password': ...}}
-        """
         try:
             self.ensure_jwt()
             response = requests.get(
@@ -647,11 +643,11 @@ class CMLClient:
             creds = {}
             for node in lab_data.get('nodes', []):
                 label = node.get('label')
-                config_files = node.get('configuration', [])
+                if not label:
+                    continue
                 username = 'cisco'
                 password = 'cisco'
-
-                for cfg in config_files:
+                for cfg in node.get('configuration', []):
                     if cfg.get('name') == 'node.cfg':
                         content = cfg.get('content', '')
                         for line in content.splitlines():
@@ -660,14 +656,8 @@ class CMLClient:
                             elif line.strip().startswith('PASSWORD='):
                                 password = line.split('=', 1)[1].strip().strip('"\'')
                         break
-
-                if label:
-                    creds[label] = {'username': username, 'password': password}
-
-            if self.debug:
-                logging.info(f"Discovered credentials: {creds}")
+                creds[label] = {'username': username, 'password': password}
             return creds
-
         except Exception as e:
             logging.error(f"Failed to fetch lab credentials: {e}")
             return {}
