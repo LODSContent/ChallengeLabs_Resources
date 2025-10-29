@@ -105,7 +105,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.10292025.0022
+# CML Tools v1.10292025.0039
 # For lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -785,16 +785,16 @@ class CMLClient:
             print(msg, file=sys.stderr)
             return [msg], False
 
-        # Case-insensitive device map (exclude terminal_server)
+        # Case-insensitive device map
         device_map = {
             name.lower(): name for name in full_testbed_data['devices']
             if name != 'terminal_server'
         }
 
-        # Fetch real credentials from CML lab definition
+        # Fetch real credentials
         lab_creds = self.get_lab_credentials(lab_id)
 
-        # Build default device_info if not provided
+        # Build device_info
         if not device_info:
             device_info = []
             for name in device_map.values():
@@ -802,24 +802,18 @@ class CMLClient:
                 if os_type == 'ios':
                     device_info.append({
                         "device_name": name,
-                        "commands": [{
-                            "command": "show version",
-                            "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]
-                        }]
+                        "commands": [{"command": "show version", "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]}]
                     })
                 elif os_type == 'linux':
                     device_info.append({
                         "device_name": name,
-                        "commands": [{
-                            "command": "uname -a",
-                            "validations": [{"pattern": "Linux", "match_type": "wildcard"}]
-                        }]
+                        "commands": [{"command": "uname -a", "validations": [{"pattern": "Linux", "match_type": "wildcard"}]}]
                     })
         else:
             try:
                 device_info = ast.literal_eval(device_info)
-            except (ValueError, SyntaxError) as e:
-                msg = f"Error: Invalid device_info JSON: {e}"
+            except:
+                msg = "Error: Invalid device_info"
                 logging.error(msg)
                 print(msg, file=sys.stderr)
                 return [msg], False
@@ -828,7 +822,8 @@ class CMLClient:
         overall_result = True
 
         # Import required classes
-        from pyats.topology import Device, Testbed, Connection
+        from pyats.topology import Device, Testbed
+        from pyats.topology.connection import Connection
 
         for device in device_info:
             req_name = device['device_name']
@@ -899,11 +894,11 @@ class CMLClient:
             except Exception as e:
                 msg = f"Incorrectly Configured - {req_name} - testbed_build_failed"
                 all_results.append(msg)
-                logging.error(f"Failed to build testbed for {actual_name}: {e}")
+                logging.error(f"Failed to build testbed: {e}")
                 overall_result = False
                 continue
 
-            # === EXECUTE VALIDATION ===
+            # Execute
             dev_results, dev_passed = self.execute_commands_on_device(device, testbed, actual_name)
             all_results.extend(dev_results)
             if not dev_passed:
