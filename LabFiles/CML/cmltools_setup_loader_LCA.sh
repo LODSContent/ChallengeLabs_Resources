@@ -1,6 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # Download and Execute cmltools_setup.sh with Parameters
+# This code will be set up as a Lifecycle Action to run on the pyATS VM
 # Source: https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CML/cmltools_setup.sh
 # Parameters:
 #   CML_IP, CML_USERNAME, CML_PASSWORD
