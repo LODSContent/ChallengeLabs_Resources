@@ -723,7 +723,7 @@ class CMLClient:
 
         return results, device_passed
 
-     def validate(self, lab_id, device_info):
+    def validate(self, lab_id, device_info):
         # Validate device configurations using PyATS
         # If device_info is empty, builds default from testbed YAML
         # Ensures lab is started, then validates each device
