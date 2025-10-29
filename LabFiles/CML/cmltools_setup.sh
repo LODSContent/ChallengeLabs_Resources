@@ -627,6 +627,49 @@ class CMLClient:
             logging.error(f"Failed to parse testbed YAML for device_info: {e}")
             return []
 
+    def get_lab_credentials(self, lab_id):
+        """
+        Fetch real device credentials from CML lab definition.
+        Returns: dict {device_name: {'username': ..., 'password': ...}}
+        """
+        try:
+            self.ensure_jwt()
+            response = requests.get(
+                f"{self.cml_address}/api/v0/labs/{lab_id}",
+                headers={"Authorization": f"Bearer {self.jwt}"},
+                verify=False
+            )
+            response.raise_for_status()
+            lab_data = response.json()
+
+            creds = {}
+            for node in lab_data.get('nodes', []):
+                label = node.get('label')
+                config_files = node.get('configuration', [])
+                username = 'cisco'
+                password = 'cisco'
+
+                for cfg in config_files:
+                    if cfg.get('name') == 'node.cfg':
+                        content = cfg.get('content', '')
+                        for line in content.splitlines():
+                            if line.strip().startswith('USERNAME='):
+                                username = line.split('=', 1)[1].strip().strip('"\'')
+                            elif line.strip().startswith('PASSWORD='):
+                                password = line.split('=', 1)[1].strip().strip('"\'')
+                        break
+
+                if label:
+                    creds[label] = {'username': username, 'password': password}
+
+            if self.debug:
+                logging.info(f"Discovered credentials: {creds}")
+            return creds
+
+        except Exception as e:
+            logging.error(f"Failed to fetch lab credentials: {e}")
+            return {}
+
     def execute_commands_on_device(self, device, testbed, actual_name):
         results = []
         device_passed = True
@@ -782,6 +825,17 @@ class CMLClient:
             }
             try:
                 testbed = load(yaml.safe_dump(minimal))
+                # === APPLY REAL CREDENTIALS FROM LAB API ===
+                lab_creds = self.get_lab_credentials(lab_id)
+                if actual_name in lab_creds and actual_name in testbed.devices:
+                    real = lab_creds[actual_name]
+                    testbed.devices[actual_name].credentials = {
+                        'default': {
+                            'username': real['username'],
+                            'password': real['password']
+                        }
+                    }
+                
             except Exception as e:
                 msg = f"Incorrectly Configured - {device['device_name']} - testbed_load_failed"
                 all_results.append(msg)
