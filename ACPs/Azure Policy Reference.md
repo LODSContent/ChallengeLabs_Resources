@@ -89,7 +89,7 @@
 
 ## Microsoft.App/containerApps
 
-```
+```json
 {
     "if": {
         "not": {
