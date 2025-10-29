@@ -1,6 +1,3 @@
-Got it — you want the entire Markdown content to stay inside a single code block so it doesn't render as formatted HTML. Here's the full content wrapped in a fenced code block using triple backticks and specifying `markdown` for clarity:
-
-````markdown
 # CML Tools & Validation Manual
 
 **Version:** 1.20251029.0151  
