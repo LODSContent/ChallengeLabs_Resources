@@ -36,6 +36,7 @@ Runs on VM boot:
 
 **Result**: `cmltools` command is available in shell.
 
+[cmltools Loader LCA `cmltools_setup_loader_LCA.sh`](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CML/cmltools_setup_loader_LCA.sh)
 ---
 
 ### 2. **Lifecycle Action: Lab Import**
@@ -50,6 +51,7 @@ cmltools importlab -source "https://github.com/..."
 - **Idempotent**: reuses existing lab by title
 - Returns lab UUID
 
+[CML lab import LCA `cmltools_lab_loader_LCA.sh`](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CML/cmltools_lab_loader_LCA.sh)
 ---
 
 ### 3. **Validation Script**
@@ -65,6 +67,7 @@ cmltools validate -labid "LAB_ID" -deviceinfo "$device_info"
 - Prints `Correctly/Incorrectly Configured` lines
 - Final line: `True` or `False`
 
+[Lab Activity example `cmltools_scoring_example.sh`](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CML/cmltools_scoring_example.sh)
 ---
 
 ## `cmltools` Commands
