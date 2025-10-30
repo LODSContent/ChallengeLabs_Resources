@@ -1,325 +1,281 @@
-# CML Tools Manual
+# CML Tools – Complete User Manual  
+## `cmltools.py` + Lab Validation Environment  
 
-## Purpose
-
-The \[`cmltools.py`\]\(http://cmltools.py\) script is a command-line tool for interacting with Cisco Modeling Labs \(CML\) to manage labs and validate network device configurations using PyATS. It provides a unified interface for tasks such as authenticating with the CML server, managing labs \(starting, stopping, retrieving details\), fetching testbed configurations, and validating device outputs against expected patterns. The script is designed to be run in a Linux environment, typically within a PyATS scoring VM, and supports both positional and named arguments with case-insensitive command and parameter names.
-
----
-
-## Installation and Setup
-
-### Prerequisites
-
-- CML Host
-- pyATS server
-
-- **Environment Variables**: Set in `$HOME/labfiles/cml_env.sh` \(automatically sourced via `~/.bashrc`\):
-    - `CML_ADDRESS`: URL of the CML server \(e.g., `https://192.168.1.10`\).
-    - `CML_IP`: IP address of the CML server \(e.g., `192.168.1.10`\).
-    - `CML_USERNAME`: Username for CML authentication.
-    - `CML_PASSWORD`: Password for CML authentication.
-    - `SCRIPT_DEBUG`: Set to `true` for debug logging \(default: `false`\).
-    - `RETRY_COUNT`: Number of retries for lab state checks \(default: `30`\).
-    - `RETRY_DELAY`: Delay between retries in seconds \(default: `10`\).
-    - `PYTHON_PATH`: Path to Python executable \(e.g., `$HOME/labfiles/.venv/bin/python`\).
-    - `PYTHON_TOOLS_SCRIPT`: Path to `cmltools.py` \(e.g., `$HOME/labfiles/cmltools.py`\).
-
-### Setup
-
-1. Add the script as an LCA to a Cisco lab with a PyATS server.
-
-2. Source the environment variables at the beginning of any Validation script:
-
-    ```
-    source $HOME/labfiles/cml_env.sh
-    ```
-
-3. Ensure dependencies are installed \(see above\).
+This manual describes the **full workflow** for using `cmltools` in **Cisco Modeling Labs (CML)** lab environments. It covers **setup**, **commands**, **validation**, and the **`device_info` JSON format** with **real-world examples**.
 
 ---
 
-## Usage
+## Overview
 
-The script supports two invocation styles:
+`cmltools` is a **Python-based CLI tool** that runs on a **PyATS scoring VM** inside CML labs. It:
 
-- **Positional Arguments**:
+- Imports labs from GitHub
+- Starts/stops labs
+- Generates PyATS testbeds
+- Validates device configuration via **custom or auto-generated** checks
+- Supports **optional credential overrides**
+- Returns `true`/`false` for **scoring**
 
-    ```
-    cmltools [COMMAND] [LABID] [--deviceinfo DEVICEINFO] [--debug]
-    ```
-
-- **Named Arguments**:
-
-    ```
-    cmltools [-command COMMAND] [-labid LABID] [--deviceinfo DEVICEINFO] [--debug]
-    ```
-
-- **Command and Parameter Case**: All commands \(e.g., `validate`, `VALIDATE`\) and parameter names \(e.g., `-command`, `-COMMAND`, `-LabID`, `-DeviceInfo`\) are case-insensitive.
-- **Output**: Results are printed to stdout, errors to stderr. Debug logs \(if `--debug` or `SCRIPT_DEBUG=true`\) go to `/home/labuser/labfiles/script_log.txt` and console.
+All scripts are **container-safe**, **idempotent**, and **debuggable**.
 
 ---
 
-## Commands and Parameters
+## Environment Setup
 
-- **authenticate**: Authenticate with CML server and return JWT token.
-    - Parameters: None.
-    - Output: JWT token \(string\) or empty string.
+### 1. **Lifecycle Action: `cmltools_setup.sh`**
 
-- **findlab**: Find a lab by title or return first running/available lab.
-    - Parameters: \[LABID\] \(optional, UUID or title\).
-    - Output: Lab ID \(UUID\) or empty string.
+Runs on VM boot:
+- Downloads `cmltools_setup.sh` from GitHub
+- Executes it with `CML_IP`, `CML_USERNAME`, `CML_PASSWORD`
+- Creates:
+  - `~/labfiles/cml_env.sh` (env vars + `cmltools()` wrapper)
+  - `~/labfiles/cmltools.py` (main tool)
+- Appends `source ~/labfiles/cml_env.sh` to `~/.bashrc`
 
-- **getlabs**: Get a list of all lab IDs.
-    - Parameters: None.
-    - Output: JSON array of lab IDs.
-
-- **getdetails**: Get detailed information about a lab.
-    - Parameters: LABID \(required, UUID or title\).
-    - Output: JSON object with lab details.
-
-- **getstate**: Get the state of a lab \(e.g., "STARTED"\).
-    - Parameters: \[LABID\] \(optional, UUID or title\).
-    - Output: Lab state \(string\) or empty string.
-
-- **startlab**: Start a lab.
-    - Parameters: \[LABID\] \(optional, UUID or title\).
-    - Output: Lab ID on success, empty string on failure.
-
-- **stoplab**: Stop a lab.
-    - Parameters: \[LABID\] \(optional, UUID or title\).
-    - Output: Lab ID on success, empty string on failure.
-
-- **gettestbed**: Get PyATS testbed YAML for a lab.
-    - Parameters: \[LABID\] \(optional, UUID or title\).
-    - Output: YAML string or empty string.
-
-- **validate**: Validate device configurations using PyATS.
-    - Parameters: \[LABID\] \(optional, UUID or title\), \[--deviceinfo DEVICEINFO\] \(optional, JSON string\).
-    - Output: Validation results \(lines\) + True/False.
-
-### Parameters
-
-- **COMMAND**: The command to execute \(e.g., validate, getlabs\). Case-insensitive.
-- **LABID**: Lab UUID or title. If omitted, defaults to the first running lab or first available lab. Required for getdetails.
-- `--deviceinfo DEVICEINFO`: JSON string specifying devices and commands for validate. Optional; if empty or omitted, uses testbed YAML to validate linux and ios devices.
-- `--debug`: Enable debug logging to console and file. Can also be enabled by setting `SCRIPT_DEBUG=true`.
+**Result**: `cmltools` command is available in shell.
 
 ---
 
-## Examples
+### 2. **Lifecycle Action: Lab Import**
 
-1. **Authenticate**:
+```bash
+cmltools importlab -source "https://github.com/..."
+```
 
-    ```
-    cmltools authenticate
-    cmltools -command AUTHENTICATE
-    ```
-    Output: <JWT token> or Error: Failed to authenticate with CML
-
-2. **Find a Lab**:
-
-    ```
-    cmltools findlab MyLab
-    cmltools -command findlab -labid MyLab
-    ```
-    Output: <lab_id> or Error: No lab found with title 'MyLab'
-
-3. **Get Labs**:
-
-    ```
-    cmltools getlabs
-    ```
-    Output: ["lab1", "lab2"] or Error: Failed to get labs
-
-4. **Get Details**:
-
-    ```
-    cmltools getdetails lab1
-    cmltools -command GETDETAILS -LABID lab1
-    ```
-    Output: {"lab_title": "MyLab", ...} or Error: Invalid details response for lab lab1
-
-5. **Get State**:
-
-    ```
-    cmltools getstate lab1
-    cmltools getstate # Uses default lab
-    ```
-    Output: STARTED or Error: No lab found
-
-6. **Start a Lab**:
-
-    ```
-    cmltools startlab MyLab
-    cmltools -command STARTLAB -labid MyLab
-    ```
-    Output: <lab_id> or Error: Failed to start lab <lab_id>
-
-7. **Stop a Lab**:
-
-    ```
-    cmltools stoplab lab1
-    ```
-    Output: <lab_id> or Error: Failed to stop lab <lab_id>
-
-8. **Get Testbed**:
-
-    ```
-    cmltools gettestbed MyLab
-    ```
-    Output: YAML string or Error: Invalid testbed YAML for lab <lab_id>
-
-9. **Validate with Provided device_info**:
-
-    ```
-    device_info='[{"device_name": "sw01", "commands": [{"command": "show version", "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]}]}]'
-    cmltools validate MyLab --deviceinfo "$device_info"
-    cmltools -command VALIDATE -labid MyLab -DEVICEINFO "$device_info"
-    ```
-    Output:
-    Correctly Configured - sw01 - show version
-    True
-
-10. **Validate with Empty device_info**:
-
-    ```
-    cmltools validate MyLab
-    cmltools -command validate -labid MyLab -deviceinfo ""
-    ```
-    Output \(for a testbed with netadmin \(linux\), outside-host \(linux\), rtr01 \(ios\), sw01 \(ios\)\):
-    Correctly Configured - netadmin - uname -a
-    Correctly Configured - outside-host - uname -a
-    Correctly Configured - rtr01 - show version
-    Correctly Configured - sw01 - show version
-    True
-
-11. **Debug Logging**:
-
-    ```
-    export SCRIPT_DEBUG=true
-    cmltools validate MyLab --debug
-    ```
-    Output: Validation results plus debug logs to /home/labuser/labfiles/script_log.txt and console.
+- Downloads `.yaml`, `.cml`, or `.zip`
+- Converts GitHub blob to raw URL
+- Imports into CML
+- **Idempotent**: reuses existing lab by title
+- Returns lab UUID
 
 ---
 
-## Writing Validation Scripts with device_info
+### 3. **Validation Script**
 
-The validate command uses a device_info JSON string to specify devices, commands, and validation patterns. If omitted or empty, it automatically generates a device_info structure from the testbed YAML, validating linux devices with uname -a and ios devices with show version.
+```bash
+cmltools validate -labid "LAB_ID" -deviceinfo "$device_info"
+```
 
-### device_info Structure
+- Starts lab if stopped
+- Fetches PyATS testbed
+- Applies optional credential overrides from `device_info`
+- Runs commands and validates output
+- Prints `Correctly/Incorrectly Configured` lines
+- Final line: `True` or `False`
 
-The device_info is a JSON array of device objects, each containing:
+---
 
-- device_name: The name of the device \(e.g., sw01, rtr01\).
-- commands: A list of command objects, each with:
-    - command: The command to execute \(e.g., show version\).
-    - validations \(optional\): A list of validation objects, each with:
-        - pattern: The pattern to match in the command output \(e.g., Cisco IOS Software\).
-        - match_type: Either wildcard \(supports \* and ?\) or regex \(default: wildcard\).
+## `cmltools` Commands
 
-#### Variations of device_info
+| Command | Args | Description |
+|--------|------|-----------|
+| `authenticate` | — | Get JWT token |
+| `findlab` | [title] | Find lab by title or first running |
+| `getlabs` | — | List all labs |
+| `getdetails` | labid | Full lab JSON |
+| `getstate` | labid | Lab state |
+| `startlab` | labid | Start lab |
+| `stoplab` | labid | Stop lab |
+| `gettestbed` | labid | PyATS YAML |
+| `validate` | labid, --deviceinfo | **Scoring** |
+| `importlab` | -source URL | Import lab |
 
-1. **Single Device, Single Command with Validation**:
+Use `--debug` for verbose logs.
 
-    ```
-    device_info='[{"device_name": "sw01", "commands": [{"command": "show version", "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]}]}]'
-    ```
-    Validates that sw01 outputs "Cisco IOS Software" for show version.
+---
 
-2. **Multiple Devices, Multiple Commands**:
+## `device_info` JSON Format
 
-    ```
-    device_info='[
+A **list** of device validation objects.
+
+### Core Fields
+
+| Field | Required | Type | Default | Notes |
+|------|----------|------|--------|-------|
+| `device_name` | Yes | string | — | Exact name from testbed |
+| `credentials` | No | object | Testbed defaults | Optional override |
+| `commands` | Yes | array | — | List of commands |
+| `command` | Yes | string | — | CLI command |
+| `validations` | Yes | array | — | Output checks |
+
+---
+
+### `validations` – Flexible Syntax
+
+**Option 1: Simple String List** (Recommended)
+
+```json
+"validations": [
+  "*Linux*",
+  "*x86_64*"
+]
+```
+
+→ Each string is **wildcard**  
+→ `match_type` **optional**, defaults to `wildcard`
+
+**Option 2: Dict with Explicit `match_type`**
+
+```json
+"validations": [
+  { "pattern": "^Linux.*x86_64", "match_type": "regex" },
+  { "pattern": "HOST1", "match_type": "exact" }
+]
+```
+
+---
+
+## `match_type` Options
+
+| Type | Behavior | Example |
+|------|---------|--------|
+| `wildcard` | `*` = any, `?` = one | `"*Linux*"` |
+| `regex` | Full regex | `"^Linux.*x86_64"` |
+| `exact` | Literal | `"HOST1"` |
+
+> **Default**: `wildcard`
+
+---
+
+## `device_info` Examples
+
+### 1. **Basic IOS Switch**
+
+```json
+[
+  {
+    "device_name": "SWITCH1",
+    "commands": [
       {
-        "device_name": "rtr01",
-        "commands": [
-          {"command": "show version", "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]},
-          {"command": "show ip interface brief", "validations": [{"pattern": "Ethernet0/0.*up.*up", "match_type": "regex"}]}
+        "command": "show version",
+        "validations": [
+          "Cisco IOS Software"
+        ]
+      }
+    ]
+  }
+]
+```
+
+---
+
+### 2. **Linux Host with Custom Creds**
+
+```json
+[
+  {
+    "device_name": "HOST1",
+    "credentials": {
+      "username": "admin",
+      "password": "cisco"
+    },
+    "commands": [
+      {
+        "command": "uname -a",
+        "validations": [
+          "*Linux*"
+        ]
+      }
+    ]
+  }
+]
+```
+
+---
+
+### 3. **EtherChannel (Your Style)**
+
+```json
+[
+  {
+    "device_name": "CORE1",
+    "commands": [
+      {
+        "command": "show etherchannel summary",
+        "validations": [
+          r"12\s+Po12\(SU\)\s+-\s+Gi0/2\(P\)\s+Gi0/3\(P\)",
+          r"23\s+Po23\(SU\)\s+LACP\s+Gi1/0\(P\)\s+Gi1/1\(P\)"
+        ]
+      }
+    ]
+  }
+]
+```
+
+---
+
+### 4. **Multi-Device, Multi-Command**
+
+```json
+[
+  {
+    "device_name": "R1",
+    "commands": [
+      {
+        "command": "show ip interface brief",
+        "validations": [
+          "GigabitEthernet0/0*up*up"
         ]
       },
       {
-        "device_name": "netadmin",
-        "commands": [{"command": "uname -a", "validations": [{"pattern": "Linux", "match_type": "wildcard"}]}]
+        "command": "show version",
+        "validations": [
+          { "pattern": "^Cisco IOS XE.*17\\.", "match_type": "regex" }
+        ]
       }
-    ]'
-    ```
-    Validates multiple commands on rtr01 and one on netadmin.
-
-3. **Command Without Validation**:
-
-    ```
-    device_info='[{"device_name": "sw01", "commands": [{"command": "show version"}]}]'
-    ```
-    Executes show version on sw01 without validation, always returning "Correctly Configured".
-
-4. **Empty device_info**:
-
-    ```
-    device_info=''
-    cmltools validate MyLab --deviceinfo "$device_info"
-    ```
-    Automatically generates device_info from the testbed YAML, e.g.:
-
-    ```
-    [
-      {"device_name": "netadmin", "commands": [{"command": "uname -a", "validations": [{"pattern": "Linux", "match_type": "wildcard"}]}]},
-      {"device_name": "outside-host", "commands": [{"command": "uname -a", "validations": [{"pattern": "Linux", "match_type": "wildcard"}]}]},
-      {"device_name": "rtr01", "commands": [{"command": "show version", "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]}]},
-      {"device_name": "sw01", "commands": [{"command": "show version", "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]}]}
     ]
-    ```
+  },
+  {
+    "device_name": "HOST2",
+    "credentials": {
+      "username": "root",
+      "password": "secret123"
+    },
+    "commands": [
+      {
+        "command": "df -h",
+        "validations": [
+          "/dev/sda1*ext4"
+        ]
+      }
+    ]
+  }
+]
+```
 
 ---
 
-## Tips for Writing device_info
+### 5. **Auto Mode (No `device_info`)**
 
-- **JSON Syntax**: Ensure valid JSON \(use single quotes in Bash to avoid escaping issues\).
-- **Pattern Matching**:
-    - Use wildcard for simple patterns \(e.g., Cisco\*Software matches any string containing "Cisco" and "Software"\).
-    - Use regex for complex patterns \(e.g., Ethernet0/0.\*up.\*up matches an interface status\).
-- **Device Names**: Must match names in the testbed YAML \(case-sensitive\).
-- **Validation Optional**: Omit validations for commands that don’t require output checking.
-- **Debugging**: Use --debug or SCRIPT_DEBUG=true to log the generated device_info and validation details.
+```bash
+cmltools validate -labid Lab2
+```
 
----
-
-## Troubleshooting
-
-- **Environment Variables Missing**:
-
-    ```
-    Error: CML_USERNAME and CML_PASSWORD must be set
-    ```
-    Ensure CML_USERNAME and CML_PASSWORD are set in cml_env.sh or the environment.
-
-- **Invalid device_info JSON**:
-
-    ```
-    Error: Invalid device_info JSON
-    ```
-    Check JSON syntax \(e.g., use single quotes, validate with echo "$device_info" | jq .\).
-
-- **Lab Not Found**:
-
-    ```
-    Error: No lab found with title 'MyLab'
-    ```
-    Verify the lab title or UUID using cmltools getlabs.
-
-- **Lab Not Started**:
-
-    ```
-    Error: Lab <lab_id> failed to start after 30 retries
-    ```
-    Check CML server status or increase RETRY_COUNT/RETRY_DELAY.
+→ Auto-generates:
+- IOS: `show version` → `"Cisco IOS Software"`
+- Linux: `uname -a` → `"Linux"`
 
 ---
 
-## Notes
+## Best Practices
 
-- **Logging**: Debug logs are written to /home/labuser/labfiles/script_log.txt when --debug or SCRIPT_DEBUG=true is set.
-- **Security**: The script uses verify=False for HTTPS requests, matching the original curl -k behavior. For production, consider enabling certificate verification.
-- **Extensibility**: The script can be extended with additional commands or custom validation patterns by modifying CMLClient methods.
+| Do | Don't |
+|----|-------|
+| Use **string list** for 95% of cases | Overuse `regex` |
+| Use **exact** `device_name` | Guess names |
+| Test with `--debug` | Run blind |
+| Use `r"...` in bash for backslashes | Escape manually |
 
 ---
+
+## Debug Tips
+
+```bash
+# See testbed
+cmltools gettestbed Lab2 --debug > testbed.yaml
+
+# See validation
+cmltools validate -labid Lab2 -deviceinfo "$device_info" --debug
+```
+
+Look for:
