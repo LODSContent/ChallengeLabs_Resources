@@ -108,7 +108,7 @@ fi
   - `Lab` (generic, one lab only)
   - `Lab1`, `Lab2` (for multi-lab)
 
-> **Best Practice**: Use **Skillable Lab ID** as title  
+> **Best Practice**: Use **LAB** as title (Allows easier copy/paste of validation code. Just need to focus on device_info.) 
 > **Avoid**: Duplicates → import skipped
 
 ---
