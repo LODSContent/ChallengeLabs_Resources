@@ -82,6 +82,299 @@ cmltools validate -labid "LAB_ID" -deviceinfo "$device_info"
 
 Use `--debug` for verbose logs.
 
+### `cmltools` Commands – Detailed Reference
+
+Below is a **complete, expanded reference** for every `cmltools` command, including:
+- **Purpose**
+- **Syntax**
+- **Arguments**
+- **Return values**
+- **Examples**
+- **Debug tips**
+
+All commands support `--debug` for verbose logging.
+
+---
+
+#### `authenticate`
+
+```bash
+cmltools authenticate
+```
+
+**Purpose**:  
+Authenticate with CML and return the **JWT token** (used internally by all other commands).
+
+**Returns**:  
+- JWT token string on success  
+- Empty string on failure
+
+**Use Case**:  
+Rarely needed manually — used by other commands via `ensure_jwt()`.
+
+**Example**:
+```bash
+cmltools authenticate
+# eyJhbGciOiJIUzI1NiIs...
+```
+
+---
+
+#### `findlab` [title]
+
+```bash
+cmltools findlab [title]
+```
+
+**Purpose**:  
+Find a lab by **title** or return the **first running lab**.
+
+**Arguments**:
+- `title` (optional): exact or partial lab title
+
+**Returns**:
+- Lab UUID if found
+- Empty string if not
+
+**Behavior**:
+- If no title: returns first **running** lab
+- If title: case-insensitive partial match
+- Falls back to first **available** lab if no running
+
+**Examples**:
+```bash
+# Find by title
+cmltools findlab "CCNA Lab"
+
+# Find first running
+cmltools findlab
+```
+
+---
+
+#### `getlabs`
+
+```bash
+cmltools getlabs
+```
+
+**Purpose**:  
+List **all labs** in CML with ID, title, and state.
+
+**Returns**:  
+Pretty-printed JSON array
+
+**Example**:
+```bash
+cmltools getlabs
+```
+```json
+[
+  {
+    "id": "b70cc0d4-...",
+    "lab_title": "Lab2",
+    "state": "STARTED"
+  }
+]
+```
+
+---
+
+#### `getdetails` <labid>
+
+```bash
+cmltools getdetails <labid>
+```
+
+**Purpose**:  
+Fetch **full lab topology** including nodes, configs, and connections.
+
+**Arguments**:
+- `labid`: UUID or title
+
+**Returns**:  
+Full JSON from `/api/v0/labs/{labid}`
+
+**Use Case**:  
+Debugging node labels, startup-config, IP addresses
+
+**Example**:
+```bash
+cmltools getdetails Lab2 > lab_details.json
+```
+
+---
+
+#### `getstate` <labid>
+
+```bash
+cmltools getstate <labid>
+```
+
+**Purpose**:  
+Check if lab is `STARTED`, `STOPPED`, etc.
+
+**Arguments**:
+- `labid`: UUID or title
+
+**Returns**:
+- `STARTED`, `STOPPED`, `DEFINED`, etc.
+
+**Example**:
+```bash
+cmltools getstate Lab2
+# STARTED
+```
+
+---
+
+#### `startlab` <labid>
+
+```bash
+cmltools startlab <labid>
+```
+
+**Purpose**:  
+Start a lab. **Free SKU**: stops all other labs first.
+
+**Arguments**:
+- `labid`: UUID or title
+
+**Returns**:
+- `true` on success
+- `false` on failure
+
+**Behavior**:
+- Polls every 10s up to 30 times
+- Enforces **Free SKU compliance**
+
+**Example**:
+```bash
+cmltools startlab "My Lab"
+```
+
+---
+
+#### `stoplab` <labid>
+
+```bash
+cmltools stoplab <labid>
+```
+
+**Purpose**:  
+Stop a running lab.
+
+**Arguments**:
+- `labid`: UUID or title
+
+**Returns**:
+- `true` on success
+- `false` on failure
+
+**Example**:
+```bash
+cmltools stoplab Lab2
+```
+
+---
+
+#### `gettestbed` <labid>
+
+```bash
+cmltools gettestbed <labid>
+```
+
+**Purpose**:  
+Generate **PyATS testbed YAML** with:
+- Device connections
+- Terminal server proxy
+- **Injected credentials** (from `device_info` or defaults)
+
+**Arguments**:
+- `labid`: UUID or title
+
+**Returns**:
+- Full testbed YAML
+
+**Example**:
+```bash
+cmltools gettestbed Lab2 --debug > testbed.yaml
+```
+
+---
+
+#### `validate` <labid> [--deviceinfo]
+
+```bash
+cmltools validate -labid <labid> -deviceinfo "$device_info"
+```
+
+**Purpose**:  
+**Scoring command** — runs validation and returns `True`/`False`.
+
+**Arguments**:
+- `-labid`: required
+- `-deviceinfo`: optional JSON string
+
+**Behavior**:
+1. Starts lab if stopped
+2. Gets testbed
+3. Applies `device_info` credentials
+4. Runs commands
+5. Validates output
+6. Prints per-check results
+7. Final line: `True` or `False`
+
+**Example**:
+```bash
+cmltools validate -labid Lab2 -deviceinfo "$device_info" --debug
+```
+
+**Output**:
+```
+Correctly Configured - HOST1 - uname -a
+Incorrectly Configured - SWITCH1 - connect_failed
+False
+```
+
+
+---
+
+#### `importlab` -source <url>
+
+```bash
+cmltools importlab -source <url>
+```
+
+**Purpose**:  
+**One-step import** from GitHub (`.yaml`, `.cml`, `.zip`).
+
+**Arguments**:
+- `-source`: public GitHub URL
+
+**Features**:
+- Converts `blob` → `raw`
+- Extracts from ZIP
+- **Idempotent**: reuses lab by title
+- Returns lab UUID
+
+**Example**:
+```bash
+cmltools importlab -source "https://github.com/user/lab/blob/main/mylab.yaml"
+```
+
+---
+
+### Pro Tips
+
+- Use `--debug` **always** during development
+- Pipe output: `cmltools validate ... | grep Configured`
+- Combine with `findlab`:  
+  ```bash
+  LAB_ID=$(cmltools findlab "My Lab")
+  cmltools validate -labid "$LAB_ID"
+  ```
+
 ---
 
 ## `device_info` JSON Format
@@ -279,3 +572,23 @@ cmltools validate -labid Lab2 -deviceinfo "$device_info" --debug
 ```
 
 Look for:
+
+```bash
+INFO - Applied device_info credentials to HOST1: admin/cis***
+INFO - Correctly Configured - HOST1 - uname -a
+```
+
+---
+
+## Summary
+
+| Feature | Optional? | Default |
+|-------|----------|--------|
+| `device_name` | No | — |
+| `credentials` | Yes | Testbed |
+| `commands` | No | — |
+| `validations` | No | — |
+| `match_type` | Yes | `wildcard` |
+| `device_info` | Yes | Auto-generated |
+
+---
