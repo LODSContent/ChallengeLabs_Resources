@@ -4,6 +4,7 @@
 This manual is for **lab authors** who need to:
 1. **Import** labs into CML
 2. **Validate** student configurations
+3. **Manually Test** via the pyATS scoring server
 
 It includes:
 - Full **import script** (now supports **multiple labs**)
@@ -564,6 +565,225 @@ main
 | Use **cisco/cisco** | Change creds unless required |
 | Match **Skillable Lab ID** | Duplicate titles |
 | Test with `--debug` | Assume success |
+
+---
+
+## Manual Validation Testing on the pyATS VM
+
+While developing and debugging your `device_info` validations, you can **run `cmltools validate` directly on the pyATS VM** — no need to wait for lab deployment.
+
+Follow these steps:
+
+---
+
+### Step 1: Log into the pyATS VM
+
+- SSH or console into the **pyATS scoring VM**
+- Ensure `cmltools` is available (from `cml_env.sh`)
+
+---
+
+### Step 2: Quick CLI Test (Compressed JSON)
+
+Use **inline JSON** with `-deviceinfo` for fast iteration.
+
+```bash
+cmltools validate -labid "CCNA.1-LAB2" -deviceinfo '[
+  {
+    "device_name": "R1",
+    "commands": [
+      {
+        "command": "show ip interface brief",
+        "validations": [
+          { "pattern": "GigabitEthernet0/0*up*up", match_type: "wildcard" }
+        ]
+      }
+    ]
+  }
+]' --debug
+```
+
+> **Tip**: Use single quotes to avoid shell escaping
+
+---
+
+### Step 3: Multi-Line JSON via Variable (Like the Script)
+
+Replicate the **validation script’s style** using `cat << 'EOF'`.
+
+```bash
+device_info=$(cat << 'EOF'
+[
+  {
+    "device_name": "SW1",
+    "commands": [
+      {
+        "command": "show vlan brief",
+        "validations": [
+          { "pattern": "10*Sales*active", "match_type": "wildcard" },
+          { "pattern": "20*Voice*active", "match_type": "wildcard" }
+        ]
+      }
+    ]
+  },
+  {
+    "device_name": "HOST1",
+    "credentials": { "username": "admin", "password": "cisco" },
+    "commands": [
+      {
+        "command": "uname -a",
+        "validations": [
+          { "pattern": "*Linux*", "match_type": "wildcard" }
+        ]
+      }
+    ]
+  }
+]
+EOF
+)
+
+# Now run
+cmltools validate -labid "CCNA.1-LAB2" -deviceinfo "$device_info" --debug
+```
+
+---
+
+### Step 4: Auto-Start Lab (If Stopped)
+
+If the lab is **not running**, `cmltools validate` will:
+- Automatically start it
+- Wait up to 5 minutes
+- Proceed with validation
+
+No extra steps needed.
+
+---
+
+### Step 5: Debug Output
+
+Use `--debug` **only during troubleshooting** — it produces **extensive logs** (testbed, connections, full output).
+
+Look for:
+```text
+INFO - Executing command on R1: show ip interface brief
+INFO - Validation passed: GigabitEthernet0/0*up*up
+Correctly Configured - R1 - show ip interface brief
+```
+
+> **Warning**: `--debug` is **not for general use** — output is overwhelming in production.
+
+---
+
+### Step 6: Validate Multiple Labs Sequentially
+
+Run **Lab1**, then **Lab2** — **first lab auto-stops** before second starts (CML Free SKU).
+
+```bash
+# Lab1
+cmltools validate -labid "Lab1" -deviceinfo "$device_info_lab1"
+
+# Lab2 (Lab1 stops automatically)
+cmltools validate -labid "Lab2" -deviceinfo "$device_info_lab2"
+```
+
+> **CML Free**: Only **one lab** runs at a time.  
+> `cmltools` handles stop/start safely.
+
+---
+
+### Additional Examples
+
+#### Example 1: **Router BGP Peer**
+
+```bash
+cmltools validate -labid "Lab1" -deviceinfo '[
+  {
+    "device_name": "R1",
+    "commands": [
+      {
+        "command": "show ip bgp summary",
+        "validations": [
+          { "pattern": "2.2.2.2*Established", "match_type": "wildcard" }
+        ]
+      }
+    ]
+  }
+]'
+```
+
+---
+
+#### Example 2: **Switch Port Security**
+
+```bash
+device_info=$(cat << 'EOF'
+[
+  {
+    "device_name": "SW2",
+    "commands": [
+      {
+        "command": "show port-security interface Gi1/0/1",
+        "validations": [
+          { "pattern": "Port Security*Enabled", "match_type": "wildcard" },
+          { "pattern": "Maximum MAC Addresses*1", "match_type": "wildcard" }
+        ]
+      }
+    ]
+  }
+]
+EOF
+)
+cmltools validate -labid "Lab2" -deviceinfo "$device_info"
+```
+
+---
+
+#### Example 3: **Linux Disk Usage**
+
+```bash
+cmltools validate -labid "Lab1" -deviceinfo '[
+  {
+    "device_name": "HOST1",
+    "credentials": { "username": "admin", "password": "cisco" },
+    "commands": [
+      {
+        "command": "df -h /",
+        "validations": [
+          { "pattern": "/dev/sda1*ext4*/*50%*", "match_type": "wildcard" }
+        ]
+      }
+    ]
+  }
+]'
+```
+
+#### Example 4: **Switch VLAN Check – Ultra-Minimal JSON (Single Line, No `pattern`/`match_type`)**
+
+Omit `pattern` and `match_type` — **defaults to `wildcard`**.
+
+```bash
+cmltools validate -labid "Lab1" -deviceinfo '[{"device_name":"SW1","commands":[{"command":"show vlan brief","validations":["10*Sales*active"]}]}]'
+```
+
+> **Confirmed**:  
+> - `"10*Sales*active"` → treated as **`wildcard`**  
+> - No `pattern` or `match_type` needed  
+> - Valid, minimal, single-line JSON
+
+---
+
+### Pro Tips for Testing
+
+| Task | Command |
+|------|--------|
+| **Check testbed** | `cmltools gettestbed "Lab2" --debug > testbed.yaml` |
+| **List devices** | `yq '.devices | keys' testbed.yaml` |
+| **Find lab ID** | `cmltools findlab "CCNA"` |
+| **Start lab** | `cmltools startlab "Lab2"` |
+
+---
+
+**You’re now ready to test validations in real time.**
 
 ---
 
