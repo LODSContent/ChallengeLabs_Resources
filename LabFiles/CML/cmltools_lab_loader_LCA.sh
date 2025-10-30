@@ -1,32 +1,49 @@
 #!/bin/bash
 # =============================================================================
-# CML Lab Import Script - Silent, Sourced-Safe, Outputs ONLY true/false
-# This will run as a Lifecycle Action on the pyATS VM
+# CML Multi-Lab Import Script - Silent, Sourced-Safe, Outputs ONLY true/false
+# Imports multiple labs from array of URLs. All must succeed → true
 # =============================================================================
 
 # Source environment
 source "$HOME/labfiles/cml_env.sh" 2>/dev/null || { echo false; return; }
 
-LAB_URL="https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CCNA.1/Sample_Lab_1.yaml"
+# === DEFINE YOUR LAB URLS HERE ===
+LAB_URLS=(
+  "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CCNA.1/Sample_Lab_1.yaml"
+  "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CCNA.1/CCNA.1-LAB2.yaml"
+  # Add more URLs as needed
+)
+
 MAX_RETRIES=3
 RETRY_DELAY=5
-attempt=1
 
-main() {
+# Function: Import one lab, return 0 on success, 1 on failure
+import_single_lab() {
+  local url="$1"
+  local attempt=1
+
   while [ $attempt -le $MAX_RETRIES ]; do
-    # Run import, capture ONLY stdout, suppress ALL stderr
-    LAB_ID=$(cmltools importlab -source "$LAB_URL" 2>/dev/null | head -n1)
+    LAB_ID=$(cmltools importlab -source "$url" 2>/dev/null | head -n1)
 
-    # Validate UUID
     if [[ "$LAB_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
-      return 0  # Success
+      return 0  # Success (new or reused)
     fi
 
     ((attempt++))
     [ $attempt -le $MAX_RETRIES ] && sleep $RETRY_DELAY
   done
 
-  return 1  # Failure
+  return 1  # All retries failed
+}
+
+# Main: Try to import ALL labs
+main() {
+  for url in "${LAB_URLS[@]}"; do
+    if ! import_single_lab "$url"; then
+      return 1  # Any failure → overall failure
+    fi
+  done
+  return 0  # All succeeded
 }
 
 # Run and capture result
