@@ -18,6 +18,8 @@ This manual describes the **full workflow** for using `cmltools` in **Cisco Mode
 
 All scripts are **container-safe**, **idempotent**, and **debuggable**.
 
+[cmltools reference `cmltools_setup.sh`](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CML/cmltools_setup.sh)
+
 ---
 
 ## Environment Setup
