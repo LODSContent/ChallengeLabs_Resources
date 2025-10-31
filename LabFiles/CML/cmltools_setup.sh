@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251031.0957
+# CML Tools v1.20251031.1027
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -198,14 +198,6 @@ def convert_wildcard_to_regex(pattern):
     return escaped_pattern.replace('\\*', '.*').replace('\\?', '.')
 
 def validate_pattern(validation, data, device_name, command, debug=False):
-    # Validate a single pattern against command output
-    # Args:
-    #   validation: Validation pattern (str) or dict with pattern and match_type
-    #   data: Command output to validate
-    #   device_name: Name of the device
-    #   command: Command being validated
-    #   debug: Log detailed messages if True
-    # Returns: Tuple (bool indicating if pattern matched, list of debug messages)
     results = []
     if isinstance(validation, str):
         pattern = validation
@@ -231,6 +223,24 @@ def validate_pattern(validation, data, device_name, command, debug=False):
             results.append(error_msg)
         return False, results
 
+    # === AUTO-CONVERT DATA TO STRING ===
+    if isinstance(data, dict):
+        # Convert dict to pretty string
+        try:
+            data = json.dumps(data, indent=2)
+        except:
+            data = str(data)
+    elif isinstance(data, (list, tuple)):
+        # Convert list to newline string
+        data = '\n'.join(str(item) for item in data)
+    elif not isinstance(data, (str, bytes)):
+        data = str(data)
+
+    # Ensure string
+    if isinstance(data, bytes):
+        data = data.decode('utf-8', errors='ignore')
+
+    # === COMPILE REGEX (CASE-INSENSITIVE) ===
     try:
         regex = re.compile(regex_pattern, re.DOTALL | re.IGNORECASE)
         pattern_match = bool(regex.search(data))
@@ -242,7 +252,7 @@ def validate_pattern(validation, data, device_name, command, debug=False):
         return False, results
 
     if not pattern_match:
-        log_msg = f"Pattern '{pattern}' ({match_type}, regex: '{regex_pattern}') not found in output of '{command}' on {device_name}"
+        log_msg = f"Pattern '{pattern}' ({match_type}) not found in output of '{command}' on {device_name}"
         logging.info(log_msg)
         if debug:
             results.append(log_msg)
