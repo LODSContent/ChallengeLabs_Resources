@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251031.1227
+# CML Tools v1.20251031.1027
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -125,6 +125,7 @@ cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHO
 #   stoplab: Stop a specific lab
 #   gettestbed: Get PyATS testbed YAML for a lab
 #   validate: Validate device configurations
+#   exec: Execute command(s) on a device and return RAW output (multiline cmds OK)
 #   importlab: Download lab from URL, convert, and import into CML (one step)
 #
 # Environment Variables:
@@ -683,13 +684,14 @@ class CMLClient:
         results = []
         device_passed = True
         dev_name = device['device_name']
+
         dev = testbed.devices.get(actual_name)
         if not dev:
             msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
             results.append(msg)
             logging.error(msg)
             return results, False
-    
+
         try:
             connect_kwargs = {
                 'mit': True,
@@ -703,58 +705,134 @@ class CMLClient:
             if self.debug:
                 logging.info(f"Connected to {actual_name}")
         except Exception as e:
+            # RESILIENT: Log and continue
             msg = f"Incorrectly Configured - {dev_name} - connect_failed"
             results.append(msg)
             logging.error(f"Connect failed for {actual_name}: {e}")
             return results, False
-    
-        # === STEALTH: Use dev.send() + manual \r ===
+
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
-            output = ""
-    
             try:
-                for line in cmd.split('\n'):
-                    if line.strip():
-                        # === SEND WITHOUT ECHO OR HISTORY ===
-                        dev.send(line.strip() + '\r')
-                        # Wait for prompt
-                        dev.expect(dev.prompt, timeout=10)
-                        # Capture output
-                        current_output = dev.spawn.match_buffer
-                        dev.spawn.match_buffer = ''
-                        output += current_output
-                # =======================================
-    
+                output = dev.execute(cmd)
             except Exception as e:
                 msg = f"Incorrectly Configured - {dev_name} - {cmd}"
                 results.append(msg)
                 logging.error(f"Command failed: {e}")
                 device_passed = False
                 continue
-    
+
             validations = cmd_info.get('validations', [])
             if not validations:
                 results.append(f"Correctly Configured - {dev_name} - {cmd}")
                 continue
-    
+
             passed = True
             for val in validations:
                 match, _ = validate_pattern(val, output, dev_name, cmd, self.debug)
                 if not match:
                     passed = False
-    
             status = "Correctly Configured" if passed else "Incorrectly Configured"
             results.append(f"{status} - {dev_name} - {cmd}")
             if not passed:
                 device_passed = False
-    
+
         try:
             dev.disconnect()
         except:
             pass
-    
+
         return results, device_passed
+
+    def exec_command(self, lab_id, device_name, command_str, username=None, password=None):
+        # Resolve lab_id (same as validate)
+        if not lab_id:
+            lab_id = self.findlab()
+            if not lab_id:
+                return f"Failed: no_lab_id"
+        if not self._is_valid_lab_id(lab_id):
+            lab_id = self.findlab(lab_id)
+            if not lab_id:
+                return f"Failed: no_lab_found"
+
+        # Start lab if needed (same as validate)
+        if self.get_lab_state(lab_id) != "STARTED":
+            self.startlab(lab_id)
+            for _ in range(30):
+                time.sleep(10)
+                if self.get_lab_state(lab_id) == "STARTED":
+                    break
+            else:
+                return f"Failed: {device_name} lab_not_started"
+
+        # Get & parse testbed (same as validate)
+        testbed_yaml = self.gettestbed(lab_id)
+        if not testbed_yaml:
+            return f"Failed: {device_name} no_testbed"
+        try:
+            testbed_data = yaml.safe_load(testbed_yaml)
+        except Exception:
+            return f"Failed: {device_name} invalid_testbed"
+
+        # Device map (case-insensitive)
+        device_map = {k.lower(): k for k in testbed_data.get('devices', {}) if k.lower() != 'terminal_server'}
+        req = device_name.lower()
+        actual_dev = device_map.get(req)
+        if not actual_dev:
+            return f"Failed: {device_name} not_in_testbed"
+
+        ts = testbed_data['devices'].get('terminal_server')
+        if not ts:
+            return f"Failed: {device_name} no_terminal_server"
+
+        # Minimal testbed
+        minimal = {
+            'devices': {
+                actual_dev: testbed_data['devices'][actual_dev].copy(),
+                'terminal_server': ts.copy()
+            }
+        }
+
+        # Override credentials if provided
+        if username and password:
+            if 'credentials' not in minimal['devices'][actual_dev]:
+                minimal['devices'][actual_dev]['credentials'] = {}
+            minimal['devices'][actual_dev]['credentials']['default'] = {
+                'username': username,
+                'password': password
+            }
+
+        # Load & connect
+        try:
+            tb_yaml = yaml.safe_dump(minimal)
+            testbed = load(tb_yaml)
+        except Exception as e:
+            return f"Failed: {device_name} testbed_load: {str(e)[:50]}"
+
+        dev = testbed.devices[actual_dev]
+        try:
+            dev.connect()
+        except Exception as e:
+            return f"Failed: {device_name} connect: {str(e)[:50]}"
+
+        # Split & execute commands (merge raw outputs)
+        cmds = [c.strip() for c in command_str.splitlines() if c.strip()]
+        if not cmds:
+            dev.disconnect()
+            return f"Failed: {device_name} empty_command"
+
+        raw_output = ''
+        for cmd in cmds:
+            try:
+                output = dev.execute(cmd)
+                raw_output += output.text.rstrip() + '\n\n'
+            except Exception as e:
+                dev.disconnect()
+                short_cmd = cmd[:30] + '...' if len(cmd) > 30 else cmd
+                return f"Failed: {device_name} '{short_cmd}': {str(e)[:50]}"
+
+        dev.disconnect()
+        return raw_output.rstrip('\n')
 
     def validate(self, lab_id, device_info=None):
         # Resolve lab_id
@@ -1018,6 +1096,10 @@ def main():
         "-source",
         help="Public GitHub URL to download a CML lab file (.cml, .yaml, .yml, or .zip) for importlab"
     )
+    parser.add_argument("-devicename", help="Device name (required for exec)")
+    parser.add_argument("-command", help="Command(s) to execute (required for exec; use \\n for multiple)")
+    parser.add_argument("-username", help="Username override (optional for exec/validate)")
+    parser.add_argument("-password", help="Password override (optional for exec/validate)")
     parser.add_argument(
         "--debug",
         action="store_true",
@@ -1033,7 +1115,7 @@ def main():
         sys.exit(1)
 
     # Validate command
-    valid_commands = ["authenticate", "findlab", "getlabs", "getdetails", "getstate", "startlab", "stoplab", "gettestbed", "validate", "importlab"]
+    valid_commands = ["authenticate", "findlab", "getlabs", "getdetails", "getstate", "startlab", "stoplab", "gettestbed", "validate", "exec", "importlab"]
     if command not in valid_commands:
         print(f"Error: Invalid command '{command}'. Valid commands: {', '.join(valid_commands)}", file=sys.stderr)
         sys.exit(1)
@@ -1084,6 +1166,21 @@ def main():
         for result in results:
             print(result)
         print(str(overall_result))
+    elif command == "exec":
+        labid = args.labid or args.named_labid
+        if not labid:
+            print("Error: -labid or positional LABID required for exec", file=sys.stderr)
+            sys.exit(1)
+        devicename = args.devicename
+        if not devicename:
+            print("Error: -devicename required for exec", file=sys.stderr)
+            sys.exit(1)
+        command_str = args.command
+        if not command_str:
+            print("Error: -command required for exec", file=sys.stderr)
+            sys.exit(1)
+        output = client.exec_command(labid, devicename, command_str, args.username, args.password)
+        print(output)
     elif command == "importlab":
         if not args.source:
             print("Error: -source URL required for importlab command", file=sys.stderr)
