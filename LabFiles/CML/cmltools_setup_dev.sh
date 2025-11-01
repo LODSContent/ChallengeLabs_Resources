@@ -907,34 +907,60 @@ class CMLClient:
 
     # === NEW: Execute raw command(s) on device and return merged output ===
     def execute_raw(self, lab_id, devicename, username=None, password=None, command=None):
-        if not command or not devicename:
-            return "Error: -devicename and -command required for execute"
+        """
+        Execute one or more commands on a device and return the merged raw output.
+        Behaviour mirrors the other commands:
+          • If lab_id is omitted → find first running or first available lab
+          • If the lab is not STARTED → call startlab() (which enforces Free-SKU stop-others)
+          • Optional username/password override testbed credentials
+        """
+        # ------------------------------------------------------------------
+        # 1. Resolve lab_id (title → UUID if needed)
+        # ------------------------------------------------------------------
         if not lab_id:
-            lab_id = self.findlab()
+            lab_id = self.findlab()                     # ← first running or first lab
             if not lab_id:
                 return "Error: No lab ID provided and no default lab found"
+
         if not self._is_valid_lab_id(lab_id):
-            lab_id = self.findlab(lab_id)
+            lab_id = self.findlab(lab_id)               # ← title lookup
             if not lab_id:
                 return "Error: No lab found"
+
+        # ------------------------------------------------------------------
+        # 2. Ensure the lab is STARTED (Free-SKU enforcement inside startlab)
+        # ------------------------------------------------------------------
         if self.get_lab_state(lab_id) != "STARTED":
-            self.startlab(lab_id)
+            self.startlab(lab_id)                       # ← stops other labs if Free SKU
+            # Wait up to ~5 min for the lab to come up
             for _ in range(30):
                 time.sleep(10)
                 if self.get_lab_state(lab_id) == "STARTED":
                     break
+
+        # ------------------------------------------------------------------
+        # 3. Pull the testbed YAML
+        # ------------------------------------------------------------------
         testbed_yaml = self.gettestbed(lab_id)
         if not testbed_yaml:
             return "Error: Failed to fetch testbed YAML"
+
+        # ------------------------------------------------------------------
+        # 4. Parse testbed and locate the requested device
+        # ------------------------------------------------------------------
         try:
             testbed_data = yaml.safe_load(testbed_yaml)
         except Exception as e:
             return f"Error: Failed to parse testbed YAML: {e}"
+
         device_map = {k.lower(): k for k in testbed_data['devices'] if k != 'terminal_server'}
         actual = device_map.get(devicename.lower())
         if not actual:
             return f"Error: Device '{devicename}' not found in testbed"
-        # Override credentials if provided
+
+        # ------------------------------------------------------------------
+        # 5. Optional credential override
+        # ------------------------------------------------------------------
         if username and password:
             if "connections" in testbed_data["devices"][actual] and "cli" in testbed_data["devices"][actual]["connections"]:
                 testbed_data["devices"][actual]["credentials"] = testbed_data["devices"][actual].get("credentials", {})
@@ -942,12 +968,17 @@ class CMLClient:
                     "username": username,
                     "password": password
                 }
+
+        # ------------------------------------------------------------------
+        # 6. Build a minimal testbed (device + terminal_server) and connect
+        # ------------------------------------------------------------------
         minimal = {
             'devices': {
                 actual: testbed_data['devices'][actual],
                 'terminal_server': testbed_data['devices']['terminal_server']
             }
         }
+
         try:
             testbed = load(yaml.safe_dump(minimal))
             dev = testbed.devices[actual]
@@ -960,20 +991,30 @@ class CMLClient:
             )
         except Exception as e:
             return f"Failed: {devicename} - connection failed: {e}"
+
+        # ------------------------------------------------------------------
+        # 7. Execute each command (semicolon-separated) and collect output
+        # ------------------------------------------------------------------
         output_lines = []
         commands = [c.strip() for c in command.split(';') if c.strip()]
+
         for cmd in commands:
             try:
-                output = dev.execute(cmd)
-                output_lines.append(f"=== {cmd} ===\n{output}\n")
+                out = dev.execute(cmd)
+                output_lines.append(f"=== {cmd} ===\n{out}\n")
             except Exception as e:
                 output_lines.append(f"Failed: {devicename} - {cmd}\n")
                 if self.debug:
                     logging.error(f"Command failed: {cmd} on {devicename}: {e}")
+
+        # ------------------------------------------------------------------
+        # 8. Clean up and return merged raw text
+        # ------------------------------------------------------------------
         try:
             dev.disconnect()
         except:
             pass
+
         return "\n".join(output_lines)
 
 def main():
