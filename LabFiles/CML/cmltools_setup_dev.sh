@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251102.1634
+# CML Tools v1.20251102.1657
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -649,13 +649,24 @@ class CMLClient:
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
             try:
-                output = dev.execute(cmd, timeout=timeout)
-                raw_outputs.append(output)
+                if timeout == 0:
+                    # Fire-and-forget: send command without waiting for output
+                    dev.send(cmd)
+                    raw_outputs.append("")  # No output captured
+                    results.append(f"Correctly Configured - {dev_name} - {cmd}")
+                else:
+                    output = dev.execute(cmd, timeout=timeout)
+                    raw_outputs.append(output)
             except Exception as e:
-                raw_outputs.append(f"Failed: {dev_name} {cmd}")
-                msg = f"Incorrectly Configured - {dev_name} - {cmd}"
-                results.append(msg)
-                logging.error(f"Command failed: {e}")
+                if timeout == 0:
+                    raw_outputs.append("")
+                    results.append(f"Incorrectly Configured - {dev_name} - {cmd}")
+                    logging.error(f"Command '{cmd}' failed to send: {e}")
+                else:
+                    raw_outputs.append(f"Failed: {dev_name} {cmd}")
+                    msg = f"Incorrectly Configured - {dev_name} - {cmd}"
+                    results.append(msg)
+                    logging.error(f"Command failed: {e}")
                 device_passed = False
                 continue
             validations = cmd_info.get('validations', [])
@@ -918,7 +929,7 @@ def main():
     parser.add_argument("-password", help="Override password")
     parser.add_argument("-command", help="Command(s) to run (comma-separated)")
     parser.add_argument("-pattern", help="Validation pattern (wildcard)")
-    parser.add_argument("-timeout", type=int, default=60, help="Per-command timeout in seconds (default: 60)")
+    parser.add_argument("-timeout", type=int, default=60, help="Per-command timeout in seconds (default: 60). Use 0 to send command without waiting.")
     parser.add_argument("-source", help="Lab source URL for importlab")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
