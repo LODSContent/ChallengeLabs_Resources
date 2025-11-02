@@ -920,7 +920,7 @@ def main():
     # All parameter names and command values are case-insensitive
     parser = CaseInsensitiveArgumentParser(
         description="CML Tools for lab management and validation",
-        usage="%(prog)s [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug]\n%(prog)s [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex]"
+        usage="\n%(prog)s [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug]\n%(prog)s [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex]"
     )
     parser.add_argument("function", nargs="?", help="Function to execute")
     parser.add_argument("labid", nargs="?", help="Lab ID or title")
