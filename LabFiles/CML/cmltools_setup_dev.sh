@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251102.1711
+# CML Tools v1.20251102.1715
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -654,7 +654,8 @@ class CMLClient:
                     dev.sendline(cmd)
                     raw_outputs.append("")  # No output
                     results.append(f"Correctly Configured - {dev_name} - {cmd}")
-                    # Critical: Do NOT call execute() or expect() — skip all I/O
+                    # Skip validation and result duplication
+                    continue
                 else:
                     output = dev.execute(cmd, timeout=timeout)
                     raw_outputs.append(output)
@@ -665,11 +666,26 @@ class CMLClient:
                     logging.error(f"Fire-and-forget command '{cmd}' failed to send: {e}")
                 else:
                     raw_outputs.append(f"Failed: {dev_name} {cmd}")
-                    msg = f"Incorrectly Configured - {dev_name} - {cmd}"
-                    results.append(msg)
+                    results.append(f"Incorrectly Configured - {dev_name} - {cmd}")
                     logging.error(f"Command failed: {e}")
                 device_passed = False
                 continue
+
+            # Only reach here if timeout > 0 and command succeeded
+            validations = cmd_info.get('validations', [])
+            if not validations:
+                results.append(f"Correctly Configured - {dev_name} - {cmd}")
+                continue
+
+            passed = True
+            for val in validations:
+                match, _ = validate_pattern(val, output, dev_name, cmd, self.debug)
+                if not match:
+                    passed = False
+            status = "Correctly Configured" if passed else "Incorrectly Configured"
+            results.append(f"{status} - {dev_name} - {cmd}")
+            if not passed:
+                device_passed = False
             validations = cmd_info.get('validations', [])
             if not validations:
                 results.append(f"Correctly Configured - {dev_name} - {cmd}")
