@@ -905,14 +905,14 @@ class CMLClient:
             print(f"Error: Import failed: {e}", file=sys.stderr)
             return ""
 
-    # === NEW: Execute raw command(s) on device and return merged output ===
+    # === Execute raw command(s) on device and return merged output ===
     def execute_raw(self, lab_id, devicename, username=None, password=None, command=None):
         """
         Execute one or more commands on a device and return the merged raw output.
         Behaviour mirrors the other commands:
           • If lab_id is omitted → find first running or first available lab
           • If the lab is not STARTED → call startlab() (which enforces Free-SKU stop-others)
-          • Optional username/password override testbed credentials
+          • Optional username/password override testbed credentials (applied to YAML before load)
         """
         # ------------------------------------------------------------------
         # 1. Resolve lab_id (title → UUID if needed)
@@ -946,7 +946,23 @@ class CMLClient:
             return "Error: Failed to fetch testbed YAML"
 
         # ------------------------------------------------------------------
-        # 4. Parse testbed and locate the requested device
+        # 4. Apply credential override to FULL YAML (like in validate)
+        # ------------------------------------------------------------------
+        if username and password:
+            # Build a device_info-like list for the single device
+            device_info_list = [{
+                "device_name": devicename,
+                "credentials": {
+                    "username": username,
+                    "password": password
+                }
+            }]
+            testbed_yaml = self.apply_device_info_credentials(testbed_yaml, device_info_list)
+            if self.debug:
+                logging.info(f"Applied credential override for {devicename}: {username}/{password[:3]}***")
+
+        # ------------------------------------------------------------------
+        # 5. Parse testbed and locate the requested device
         # ------------------------------------------------------------------
         try:
             testbed_data = yaml.safe_load(testbed_yaml)
@@ -957,17 +973,6 @@ class CMLClient:
         actual = device_map.get(devicename.lower())
         if not actual:
             return f"Error: Device '{devicename}' not found in testbed"
-
-        # ------------------------------------------------------------------
-        # 5. Optional credential override
-        # ------------------------------------------------------------------
-        if username and password:
-            if "connections" in testbed_data["devices"][actual] and "cli" in testbed_data["devices"][actual]["connections"]:
-                testbed_data["devices"][actual]["credentials"] = testbed_data["devices"][actual].get("credentials", {})
-                testbed_data["devices"][actual]["credentials"]["default"] = {
-                    "username": username,
-                    "password": password
-                }
 
         # ------------------------------------------------------------------
         # 6. Build a minimal testbed (device + terminal_server) and connect
