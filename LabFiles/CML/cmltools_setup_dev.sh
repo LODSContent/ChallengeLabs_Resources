@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251102.1731
+# CML Tools v1.20251102.1742
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -935,6 +935,7 @@ def main():
     parser.add_argument("-timeout", type=int, default=60, help="Per-command timeout in seconds (default: 60). Use 0 to send command without waiting.")
     parser.add_argument("-source", help="Lab source URL for importlab")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--regex", action="store_true", help="Use regex instead of wildcard for -pattern (default: wildcard)")
 
     args = parser.parse_args()
     function = (args.function or args.named_function or "").lower()
@@ -1005,7 +1006,8 @@ def main():
                 for cmd in commands:
                     cmd_info = {"command": cmd}
                     if args.pattern:
-                        cmd_info["validations"] = [{"pattern": args.pattern, "match_type": "wildcard"}]
+                        match_type = "regex" if args.regex else "wildcard"
+                        cmd_info["validations"] = [{"pattern": args.pattern, "match_type": match_type}]
                     device["commands"].append(cmd_info)
             device_info = json.dumps([device])
         results, overall_result, merged_raw = client.validate(labid, device_info, timeout=args.timeout)
