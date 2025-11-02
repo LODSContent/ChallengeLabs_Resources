@@ -113,7 +113,7 @@ cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHO
 #
 # Usage:
 #   cmltools.py [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug]
-#   cmltools.py [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [--debug]
+#   cmltools.py [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug]
 #
 # Functions:
 #   authenticate: Authenticate with CML server and return JWT token
@@ -257,6 +257,14 @@ def validate_pattern(validation, data, device_name, command, debug=False):
     return True, results
 
 class CMLClient:
+    # Client for interacting with Cisco Modeling Labs (CML) API
+    # Attributes:
+    #   cml_address: URL of the CML server (e.g., https://192.168.1.10)
+    #   cml_ip: IP address of the CML server (e.g., 192.168.1.10)
+    #   username: Username for CML authentication
+    #   password: Password for CML authentication
+    #   jwt: JWT token for authenticated API calls
+    #   debug: Enable debug logging if True
     def __init__(self, cml_address, cml_ip, username, password, debug=False):
         self.cml_address = cml_address.rstrip('/')
         self.cml_ip = cml_ip
@@ -267,6 +275,8 @@ class CMLClient:
         setup_logging(debug=debug)
 
     def authenticate(self):
+        # Authenticate with CML server and return JWT token
+        # Returns: JWT token (str) on success, empty string on failure
         try:
             response = requests.post(
                 f"{self.cml_address}/api/v0/authenticate",
@@ -290,6 +300,8 @@ class CMLClient:
             return ""
 
     def ensure_jwt(self):
+        # Ensure a valid JWT token is available
+        # Exits with code 1 if authentication fails
         if not self.jwt or self.jwt == "null":
             self.jwt = self.authenticate()
         if not self.jwt or self.jwt == "null":
@@ -299,6 +311,8 @@ class CMLClient:
         return self.jwt
 
     def get_labs(self):
+        # Get list of lab IDs from CML
+        # Returns: List of lab IDs, or empty list on failure
         try:
             self.ensure_jwt()
             response = requests.get(
@@ -321,6 +335,10 @@ class CMLClient:
             return []
 
     def get_lab_state(self, lab_id):
+        # Get the state of a specific lab
+        # Args:
+        #   lab_id: UUID of the lab
+        # Returns: Lab state (e.g., "STARTED"), or empty string on failure
         try:
             self.ensure_jwt()
             response = requests.get(
@@ -343,6 +361,10 @@ class CMLClient:
             return ""
 
     def get_lab_details(self, lab_id):
+        # Get detailed information about a lab
+        # Args:
+        #   lab_id: UUID of the lab
+        # Returns: Dict with lab details, or empty dict on failure
         try:
             self.ensure_jwt()
             response = requests.get(
@@ -365,6 +387,10 @@ class CMLClient:
             return {}
 
     def get_default_lab_id(self, lab_ids):
+        # Find the first started lab or first available lab
+        # Args:
+        #   lab_ids: List of lab IDs
+        # Returns: Lab ID, or empty string if none available
         for lab_id in lab_ids:
             state = self.get_lab_state(lab_id)
             if state == "STARTED":
@@ -374,6 +400,10 @@ class CMLClient:
         return lab_ids[0] if lab_ids else ""
 
     def findlab(self, lab_title=None):
+        # Find a lab by title or return the first running/available lab
+        # Args:
+        #   lab_title: Title of the lab to find (optional, case-insensitive, whitespace-tolerant)
+        # Returns: Lab ID, or empty string if not found
         lab_ids = self.get_labs()
         if not lab_ids:
             logging.error("No labs found")
@@ -401,6 +431,10 @@ class CMLClient:
         return lab_id
 
     def startlab(self, lab_id=None):
+        # Start a specific lab or the first available lab
+        # Args:
+        #   lab_id: UUID or title of the lab (optional)
+        # Returns: Lab ID on success, empty string on failure
         if not lab_id:
             lab_id = self.findlab()
             if not lab_id:
@@ -454,6 +488,10 @@ class CMLClient:
             return ""
 
     def stoplab(self, lab_id=None):
+        # Stop a specific lab or the first available lab
+        # Args:
+        #   lab_id: UUID or title of the lab (optional)
+        # Returns: Lab ID on success, empty string on failure
         if not lab_id:
             lab_id = self.findlab()
             if not lab_id:
@@ -485,6 +523,10 @@ class CMLClient:
             return ""
 
     def gettestbed(self, lab_id=None):
+        # Get PyATS testbed YAML for a lab
+        # Args:
+        #   lab_id: UUID or title of the lab (optional)
+        # Returns: Testbed YAML (str), or empty string on failure
         if not lab_id:
             lab_id = self.findlab()
             if not lab_id:
@@ -518,6 +560,13 @@ class CMLClient:
             return ""
 
     def update_testbed_device_credentials(self, testbed_yaml, device_name, username, password):
+        # Update device credentials in a testbed YAML
+        # Args:
+        #   testbed_yaml: YAML string of the testbed
+        #   device_name: Device to update (e.g., terminal_server)
+        #   username: Username to set
+        #   password: Password to set
+        # Returns: Updated YAML string, or original YAML on failure
         try:
             data = yaml.safe_load(testbed_yaml)
             if not data or 'devices' not in data or device_name not in data['devices']:
@@ -533,6 +582,8 @@ class CMLClient:
             return testbed_yaml
 
     def apply_device_info_credentials(self, testbed_yaml, device_info_list):
+        # Apply optional username/password from device_info to the testbed
+        # Only touches devices that have a 'credentials' block
         try:
             data = yaml.safe_load(testbed_yaml)
             if not data or 'devices' not in data:
@@ -561,7 +612,14 @@ class CMLClient:
             logging.error(f"Failed to apply device_info credentials: {e}")
             return testbed_yaml
 
-    def execute_commands_on_device(self, device, testbed, actual_name):
+    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60):
+        # Execute commands on a device and validate if specified
+        # Args:
+        #   device: Device info dict (from device_info JSON or single-device mode)
+        #   testbed: PyATS testbed object
+        #   actual_name: Actual device name in testbed
+        #   timeout: Per-command timeout in seconds (default: 60)
+        # Returns: results (list), device_passed (bool), raw_outputs (list)
         results = []
         raw_outputs = []
         device_passed = True
@@ -577,7 +635,7 @@ class CMLClient:
                 'hostkey_verify': False,
                 'allow_agent': False,
                 'look_for_keys': False,
-                'timeout': 60
+                'timeout': 60  # Connection timeout
             }
             init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
             dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
@@ -591,7 +649,7 @@ class CMLClient:
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
             try:
-                output = dev.execute(cmd)
+                output = dev.execute(cmd, timeout=timeout)
                 raw_outputs.append(output)
             except Exception as e:
                 raw_outputs.append(f"Failed: {dev_name} {cmd}")
@@ -619,7 +677,13 @@ class CMLClient:
             pass
         return results, device_passed, raw_outputs
 
-    def validate(self, lab_id, device_info=None):
+    def validate(self, lab_id, device_info=None, timeout=60):
+        # Validate device configurations
+        # Args:
+        #   lab_id: Lab ID or title
+        #   device_info: JSON string of device info (or None for default)
+        #   timeout: Per-command timeout in seconds (default: 60)
+        # Returns: results (list), overall_result (bool), raw_output (str if no validation)
         if not lab_id:
             lab_id = self.findlab()
             if not lab_id:
@@ -725,7 +789,7 @@ class CMLClient:
                 overall_result = False
                 continue
 
-            res, passed, raw_out = self.execute_commands_on_device(device, testbed, actual)
+            res, passed, raw_out = self.execute_commands_on_device(device, testbed, actual, timeout=timeout)
             all_results.extend(res)
             all_raw_outputs.extend(raw_out)
             if not passed:
@@ -738,10 +802,16 @@ class CMLClient:
             return all_results, overall_result, merged_raw
 
     def _is_valid_lab_id(self, lab_id):
+        # Check if a lab_id matches the UUID format
+        # Args:
+        #   lab_id: Lab ID to validate
+        # Returns: True if valid UUID, False otherwise
         uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         return bool(re.match(uuid_pattern, lab_id.lower()))
 
     def import_lab(self, source_url):
+        # Unified import: download, convert, and upload to CML
+        # Now idempotent: if lab with same title exists, return existing ID
         if 'github.com' in source_url and '/blob/' in source_url:
             source_url = source_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
             if self.debug:
@@ -831,6 +901,9 @@ class CMLClient:
             return ""
 
 def main():
+    # Main function to handle command-line arguments and dispatch commands
+    # Supports positional arguments (FUNCTION, LABID) and named arguments
+    # All parameter names and command values are case-insensitive
     parser = CaseInsensitiveArgumentParser(
         description="CML Tools for lab management and validation",
         usage="%(prog)s [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug]"
@@ -845,6 +918,7 @@ def main():
     parser.add_argument("-password", help="Override password")
     parser.add_argument("-command", help="Command(s) to run (comma-separated)")
     parser.add_argument("-pattern", help="Validation pattern (wildcard)")
+    parser.add_argument("-timeout", type=int, default=60, help="Per-command timeout in seconds (default: 60)")
     parser.add_argument("-source", help="Lab source URL for importlab")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
@@ -920,7 +994,7 @@ def main():
                         cmd_info["validations"] = [{"pattern": args.pattern, "match_type": "wildcard"}]
                     device["commands"].append(cmd_info)
             device_info = json.dumps([device])
-        results, overall_result, merged_raw = client.validate(labid, device_info)
+        results, overall_result, merged_raw = client.validate(labid, device_info, timeout=args.timeout)
         if merged_raw:
             print(merged_raw)
         else:
