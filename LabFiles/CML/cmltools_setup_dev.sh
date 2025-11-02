@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251102.1704
+# CML Tools v1.20251102.1711
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -650,11 +650,11 @@ class CMLClient:
             cmd = cmd_info['command']
             try:
                 if timeout == 0:
-                    # Fire-and-forget: send command and return immediately
+                    # Fire-and-forget: send command, do NOT read anything
                     dev.sendline(cmd)
                     raw_outputs.append("")  # No output
                     results.append(f"Correctly Configured - {dev_name} - {cmd}")
-                    # Do NOT wait, do NOT read
+                    # Critical: Do NOT call execute() or expect() — skip all I/O
                 else:
                     output = dev.execute(cmd, timeout=timeout)
                     raw_outputs.append(output)
