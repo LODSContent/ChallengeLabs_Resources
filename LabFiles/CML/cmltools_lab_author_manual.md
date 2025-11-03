@@ -132,8 +132,8 @@ username=""
 password=""
 command="show version"
 pattern="cisco*ios"
-timeout=""
 regex=false
+timeout=""
 script_debug=false
 # ------------------------------------------------------------------
 # Update labID with the "Title" of the lab to be evaluated
