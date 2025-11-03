@@ -5,6 +5,7 @@ This manual is for **lab authors** who need to:
 2. **Validate** student configurations
 3. **Manually Test** via the pyATS scoring server
 4. **CML Configuration** steps for configuring CML devices for scoring
+
 It includes:
 - Full **import script** (now supports **multiple labs**)
 - Full **validation script with two methods**
@@ -945,21 +946,11 @@ cmltools validate -labid "DHCP-Lab" \
 ---
 ## 4. CML Configuration
 ### Switch and Router config updates
-- In the CML console, in each switch and router *Config* tab, enter the following code at the end of the config to enable all commands to be logged in history:
-```bash
-archive
- log config
-  logging enable
-  logging size 1000
-  hidekeys
-  notify syslog contenttype plaintext
-logging buffered 32768 informational
-end
-```
+- Leave the default username and password set to cisco / cisco. Otherwise, you will need to add the modified username and password to the validation script settings.
 - For the **command** variable in the validation script, use `enable\nshow history all` to retrieve all of the previously entered commands. Set the **pattern** variable to the string you want to search for in the output.
 
 ### Linux host configuration
-- For linux hosts, leave the default username and password set to cisco / cisco. Otherwise, you will need to add the modified username and password to the validation script settings.
+- Leave the default username and password set to cisco / cisco. Otherwise, you will need to add the modified username and password to the validation script settings.
 - For the **command** variable in the validation script, use `cat /home/admin/.ash_history` to retrieve all of the previously entered commands. Set the **pattern** variable to the string you want to search for in the output.
 ---
 **You're ready to author and score labs.**
