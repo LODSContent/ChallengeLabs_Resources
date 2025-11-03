@@ -26,9 +26,9 @@ Runs on VM boot:
 [cmltools Loader LCA `cmltools_setup_loader_LCA.sh`](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CML/cmltools_setup_loader_LCA.sh)
 ---
 ### 2. **Lifecycle Action: Lab Import**
-^^^bash
+```bash
 cmltools importlab -source "https://github.com/..."
-^^^
+```
 - Downloads `.yaml`, `.cml`, or `.zip`
 - Converts GitHub blob to raw URL
 - Imports into CML
@@ -37,9 +37,9 @@ cmltools importlab -source "https://github.com/..."
 [CML lab import LCA `cmltools_lab_loader_LCA.sh`](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CML/cmltools_lab_loader_LCA.sh)
 ---
 ### 3. **Validation Script**
-^^^bash
+```bash
 cmltools validate -labid "LAB_ID" -deviceinfo "$device_info"
-^^^
+```
 - Starts lab if stopped
 - Fetches PyATS testbed
 - Applies optional credential overrides from `device_info`
@@ -73,9 +73,9 @@ Below is a **complete, expanded reference** for every `cmltools` command, includ
 All commands support `--debug` for verbose logging. Commands and parameter names are case-insensitive.
 ---
 #### `authenticate`
-^^^bash
+```bash
 cmltools authenticate
-^^^
+```
 **Purpose**:
 Authenticate with CML and return the **JWT token** (used internally by all other commands).
 **Returns**:
@@ -84,15 +84,15 @@ Authenticate with CML and return the **JWT token** (used internally by all other
 **Use Case**:
 Rarely needed manually — used by other commands via `ensure_jwt()`.
 **Example**:
-^^^bash
+```bash
 cmltools authenticate
 # eyJhbGciOiJIUzI1NiIs...
-^^^
+```
 ---
 #### `findlab` [title]
-^^^bash
+```bash
 cmltools findlab [title]
-^^^
+```
 **Purpose**:
 Find a lab by **title** or return the **first running lab**.
 **Arguments**:
@@ -105,26 +105,26 @@ Find a lab by **title** or return the **first running lab**.
 - If title: case-insensitive partial match
 - Falls back to first **available** lab if no running
 **Examples**:
-^^^bash
+```bash
 # Find by title
 cmltools findlab "CCNA Lab"
 # Find first running
 cmltools findlab
-^^^
+```
 ---
 #### `getlabs`
-^^^bash
+```bash
 cmltools getlabs
-^^^
+```
 **Purpose**:
 List **all labs** in CML with ID, title, and state.
 **Returns**:
 Pretty-printed JSON array
 **Example**:
-^^^bash
+```bash
 cmltools getlabs
-^^^
-^^^json
+```
+```json
 [
   {
     "id": "b70cc0d4-...",
@@ -132,12 +132,12 @@ cmltools getlabs
     "state": "STARTED"
   }
 ]
-^^^
+```
 ---
 #### `getdetails` <labid>
-^^^bash
+```bash
 cmltools getdetails <labid>
-^^^
+```
 **Purpose**:
 Fetch **full lab topology** including nodes, configs, and connections.
 **Arguments**:
@@ -147,14 +147,14 @@ Full JSON from `/api/v0/labs/{labid}`
 **Use Case**:
 Debugging node labels, startup-config, IP addresses
 **Example**:
-^^^bash
+```bash
 cmltools getdetails Lab2 > lab_details.json
-^^^
+```
 ---
 #### `getstate` <labid>
-^^^bash
+```bash
 cmltools getstate <labid>
-^^^
+```
 **Purpose**:
 Check if lab is `STARTED`, `STOPPED`, etc.
 **Arguments**:
@@ -162,15 +162,15 @@ Check if lab is `STARTED`, `STOPPED`, etc.
 **Returns**:
 - `STARTED`, `STOPPED`, `DEFINED`, etc.
 **Example**:
-^^^bash
+```bash
 cmltools getstate Lab2
 # STARTED
-^^^
+```
 ---
 #### `startlab` <labid>
-^^^bash
+```bash
 cmltools startlab <labid>
-^^^
+```
 **Purpose**:
 Start a lab. **Free SKU**: stops all other labs first.
 **Arguments**:
@@ -182,14 +182,14 @@ Start a lab. **Free SKU**: stops all other labs first.
 - Polls every 10s up to 30 times
 - Enforces **Free SKU compliance**
 **Example**:
-^^^bash
+```bash
 cmltools startlab "My Lab"
-^^^
+```
 ---
 #### `stoplab` <labid>
-^^^bash
+```bash
 cmltools stoplab <labid>
-^^^
+```
 **Purpose**:
 Stop a running lab.
 **Arguments**:
@@ -198,14 +198,14 @@ Stop a running lab.
 - `true` on success
 - `false` on failure
 **Example**:
-^^^bash
+```bash
 cmltools stoplab Lab2
-^^^
+```
 ---
 #### `gettestbed` <labid>
-^^^bash
+```bash
 cmltools gettestbed <labid>
-^^^
+```
 **Purpose**:
 Generate **PyATS testbed YAML** with:
 - Device connections
@@ -216,18 +216,18 @@ Generate **PyATS testbed YAML** with:
 **Returns**:
 - Full testbed YAML
 **Example**:
-^^^bash
+```bash
 cmltools gettestbed Lab2 --debug > testbed.yaml
-^^^
+```
 ---
 #### `validate` <labid> [--deviceinfo] or [-devicename] [...]
-^^^bash
+```bash
 cmltools validate -labid <labid> -deviceinfo "$device_info"
-^^^
+```
 or
-^^^bash
+```bash
 cmltools validate -labid <labid> -devicename <name> -command <cmd> -pattern <pat> [-timeout <sec>] [--regex] [-username <user>] [-password <pass>]
-^^^
+```
 **Purpose**:
 **Scoring command** — runs validation and returns `True`/`False`.
 **Arguments**:
@@ -244,13 +244,13 @@ cmltools validate -labid <labid> -devicename <name> -command <cmd> -pattern <pat
 7. Final line: `True` or `False`
 If no pattern, returns raw output instead of True/False.
 **Example (JSON)**:
-^^^bash
+```bash
 cmltools validate -labid Lab2 -deviceinfo "$device_info" --debug
-^^^
+```
 **Example (Parameters)**:
-^^^bash
+```bash
 cmltools validate -labid "CCNA.1-LAB2" -devicename "switch1" -command "show version" -pattern "cisco*ios" --debug
-^^^
+```
 **Output**:
 ```
 Correctly Configured - HOST1 - uname -a
@@ -259,9 +259,9 @@ False
 ```
 ---
 #### `importlab` -source <url>
-^^^bash
+```bash
 cmltools importlab -source <url>
-^^^
+```
 **Purpose**:
 **One-step import** from GitHub (`.yaml`, `.cml`, `.zip`).
 **Arguments**:
@@ -272,25 +272,25 @@ cmltools importlab -source <url>
 - **Idempotent**: reuses lab by title
 - Returns lab UUID
 **Example**:
-^^^bash
+```bash
 cmltools importlab -source "https://github.com/user/lab/blob/main/mylab.yaml"
-^^^
+```
 ---
 ### Pro Tips
 - Use `--debug` **always** during development
 - Pipe output: `cmltools validate ... | grep Configured`
 - Combine with `findlab`:
-  ^^^bash
+  ```bash
   LAB_ID=$(cmltools findlab "My Lab")
   cmltools validate -labid "$LAB_ID"
-  ^^^
+  ```
 - For multi-lab import, use a loop or array in bash:
-  ^^^bash
+  ```bash
   LAB_URLS=("url1" "url2")
   for url in "${LAB_URLS[@]}"; do
     cmltools importlab -source "$url"
   done
-  ^^^
+  ```
 ---
 ## `device_info` JSON Format
 A **list** of device validation objects. Use for multi-device or complex validations; for single-device, prefer command-line parameters.
@@ -305,21 +305,21 @@ A **list** of device validation objects. Use for multi-device or complex validat
 ---
 ### `validations` – Flexible Syntax
 **Option 1: Simple String List** (Recommended)
-^^^json
+```json
 "validations": [
   "*Linux*",
   "*x86_64*"
 ]
-^^^
+```
 → Each string is **wildcard**
 → `match_type` **optional**, defaults to `wildcard`
 **Option 2: Dict with Explicit `match_type`**
-^^^json
+```json
 "validations": [
   { "pattern": "^Linux.*x86_64", "match_type": "regex" },
   { "pattern": "HOST1", "match_type": "exact" }
 ]
-^^^
+```
 ---
 ## `match_type` Options
 | Type | Behavior | Example |
@@ -331,7 +331,7 @@ A **list** of device validation objects. Use for multi-device or complex validat
 ---
 ## `device_info` Examples
 ### 1. **Basic IOS Switch**
-^^^json
+```json
 [
   {
     "device_name": "SWITCH1",
@@ -345,14 +345,14 @@ A **list** of device validation objects. Use for multi-device or complex validat
     ]
   }
 ]
-^^^
+```
 ### Parameter Equivalent:
-^^^bash
+```bash
 cmltools validate -labid <labid> -devicename "SWITCH1" -command "show version" -pattern "Cisco IOS Software"
-^^^
+```
 ---
 ### 2. **Linux Host with Custom Creds**
-^^^json
+```json
 [
   {
     "device_name": "HOST1",
@@ -370,14 +370,14 @@ cmltools validate -labid <labid> -devicename "SWITCH1" -command "show version" -
     ]
   }
 ]
-^^^
+```
 ### Parameter Equivalent:
-^^^bash
+```bash
 cmltools validate -labid <labid> -devicename "HOST1" -username "admin" -password "cisco" -command "uname -a" -pattern "*Linux*"
-^^^
+```
 ---
 ### 3. **EtherChannel (Your Style)**
-^^^json
+```json
 [
   {
     "device_name": "CORE1",
@@ -392,14 +392,14 @@ cmltools validate -labid <labid> -devicename "HOST1" -username "admin" -password
     ]
   }
 ]
-^^^
+```
 ### Parameter Equivalent (for single validation):
-^^^bash
+```bash
 cmltools validate -labid <labid> -devicename "CORE1" -command "show etherchannel summary" -pattern "12\s+Po12\(SU\)\s+-\s+Gi0/2\(P\)\s+Gi0/3\(P\)" --regex
-^^^
+```
 ---
 ### 4. **Multi-Device, Multi-Command**
-^^^json
+```json
 [
   {
     "device_name": "R1",
@@ -434,16 +434,16 @@ cmltools validate -labid <labid> -devicename "CORE1" -command "show etherchannel
     ]
   }
 ]
-^^^
+```
 ### Parameter Equivalent (single device/command; repeat for multi):
-^^^bash
+```bash
 cmltools validate -labid <labid> -devicename "R1" -command "show ip interface brief,show version" -pattern "GigabitEthernet0/0*up*up" --regex
-^^^
+```
 ---
 ### 5. **Auto Mode (No `device_info`)**
-^^^bash
+```bash
 cmltools validate -labid Lab2
-^^^
+```
 → Auto-generates:
 - IOS: `show version` → `"Cisco IOS Software"`
 - Linux: `uname -a` → `"Linux"`
@@ -458,17 +458,17 @@ cmltools validate -labid Lab2
 | Use `r"...` in bash for backslashes | Escape manually |
 ---
 ## Debug Tips
-^^^bash
+```bash
 # See testbed
 cmltools gettestbed Lab2 --debug > testbed.yaml
 # See validation
 cmltools validate -labid Lab2 -deviceinfo "$device_info" --debug
-^^^
+```
 Look for:
-^^^bash
+```bash
 INFO - Applied device_info credentials to HOST1: admin/cis***
 INFO - Correctly Configured - HOST1 - uname -a
-^^^
+```
 ---
 ## Summary
 | Feature | Optional? | Default |
