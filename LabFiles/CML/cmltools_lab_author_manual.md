@@ -132,6 +132,7 @@ username=""
 password=""
 command="show version"
 pattern="cisco*ios"
+timeout=""
 regex=false
 script_debug=false
 # ------------------------------------------------------------------
@@ -148,7 +149,7 @@ script_debug=false
 #   "Cisco.*IOS"         - regex (when regex=true)
 # If regex is false, wildcard matching is used with ? for single or * for multiple characters
 # If regex is true, full regex matching is performed
-#
+# Set timeout to 0 for commands that would hang the interface like 'exit'. Default is 60 when blank.
 # Set script_debug to true for verbose output
 # ------------------------------------------------------------------
 
@@ -168,9 +169,7 @@ main() {
     [[ "$script_debug" == "true" ]] && echo "cml_env.sh loaded"
 
     # Build cmltools command(s)
-    cmd=(cmltools validate -labid "$labID" -devicename "$device" -command "$command" -pattern "$pattern")
-    # put additional commands using the above format here...
-    # Add a -timeout 0 parameter for commands that should be run but will not wait for return data
+    cmd=(cmltools validate -labid "$labID" -devicename "$device" -command "$command")
 
     # Add --regex if enabled
     [[ "$regex" == "true" ]] && cmd+=(--regex)
@@ -181,6 +180,12 @@ main() {
     # Add -password only if not empty
     [[ -n "$password" ]] && cmd+=(-password "$password")
     
+    # Add -pattern only if not empty
+    [[ -n "$pattern" ]] && cmd+=(-pattern "$pattern")
+
+    # Add -timeout only if not empty
+    [[ -n "$timeout" ]] && cmd+=(-timeout "$timeout")    
+
     [[ "$script_debug" == "true" ]] && echo "Running: ${cmd[*]}"
 
     # Execute
