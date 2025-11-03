@@ -1002,10 +1002,7 @@ def main():
                 if args.password:
                     device["credentials"]["password"] = args.password
             if args.command:
-                if args.command:
-                    commands = [c.strip() for c in args.command.split('\n') if c.strip()]
-                else:
-                    commands = []
+                commands = [c.strip() for c in args.command.split(",")]
                 for cmd in commands:
                     cmd_info = {"command": cmd}
                     if args.pattern:
