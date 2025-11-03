@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251102.2305
+# CML Tools v1.20251103.1030
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -648,6 +648,20 @@ class CMLClient:
             return results, False, raw_outputs
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
+            # ---- special merge command ---------------------------------
+            if cmd == "__MERGE_FOR_VALIDATION__":
+                merged = "\n\n".join([o for o in raw_outputs if o])
+                # run validation once on the merged text
+                passed = True
+                for val in cmd_info.get('validations', []):
+                    match, _ = validate_pattern(val, merged, dev_name, "MERGED", self.debug)
+                    if not match:
+                        passed = False
+                status = "Correctly Configured" if passed else "Incorrectly Configured"
+                results.append(f"{status} - {dev_name} - MERGED_OUTPUT")
+                if not passed:
+                    device_passed = False
+                continue            
             try:
                 if timeout == 0:
                     # Fire-and-forget
@@ -991,45 +1005,46 @@ def main():
     elif function == "validate":
         device_info = args.deviceinfo
     
-        # === SINGLE DEVICE MODE: -devicename + -command (newline-safe) ===
+        # === SINGLE DEVICE MODE: -devicename + -command (merged output) ===
         if args.devicename:
             if device_info:
                 print("Error: Cannot use both -deviceinfo and -devicename", file=sys.stderr)
                 sys.exit(1)
-    
+
             device = {"device_name": args.devicename, "commands": []}
-    
-            # Apply optional credentials override
+
+            # ----- credentials -------------------------------------------------
             if args.username or args.password:
                 device["credentials"] = {}
                 if args.username:
                     device["credentials"]["username"] = args.username
                 if args.password:
                     device["credentials"]["password"] = args.password
-    
-            # === COMMAND PARSING: Support literal \n AND real newlines ===
+
+            # ----- command parsing (supports \n inside quotes) ----------------
             if args.command:
-                # First, convert escaped \n to real newlines
                 processed = args.command.replace('\\n', '\n')
-                
-                # Now split on real newlines
                 raw_commands = processed.split('\n')
-                commands = [cmd.strip() for cmd in raw_commands if cmd.strip()]
+                commands = [c.strip() for c in raw_commands if c.strip()]
             else:
                 commands = []
-    
-            # Build command list with optional validation
+
+            # ----- build the command list ------------------------------------
             for cmd in commands:
-                cmd_info = {"command": cmd}
-                if args.pattern:
-                    match_type = "regex" if args.regex else "wildcard"
-                    cmd_info["validations"] = [{
+                # we keep the command for execution / reporting
+                device["commands"].append({"command": cmd})
+
+            # ----- special handling: merge outputs for pattern validation ----
+            # we add a *dummy* command that will hold the merged output
+            if args.pattern and commands:
+                device["commands"].append({
+                    "command": "__MERGE_FOR_VALIDATION__",
+                    "validations": [{
                         "pattern": args.pattern,
-                        "match_type": match_type
+                        "match_type": "regex" if args.regex else "wildcard"
                     }]
-                device["commands"].append(cmd_info)
-    
-            # Convert to JSON string for validate()
+                })
+
             device_info = json.dumps([device])
     
         # === CALL VALIDATE ===
