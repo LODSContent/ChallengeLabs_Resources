@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251102.2254
+# CML Tools v1.20251102.2305
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -1007,10 +1007,13 @@ def main():
                 if args.password:
                     device["credentials"]["password"] = args.password
     
-            # === COMMAND PARSING: Use \n instead of comma ===
+            # === COMMAND PARSING: Support literal \n AND real newlines ===
             if args.command:
-                # Split on newlines, strip whitespace, ignore empty lines
-                raw_commands = args.command.split('\n')
+                # First, convert escaped \n to real newlines
+                processed = args.command.replace('\\n', '\n')
+                
+                # Now split on real newlines
+                raw_commands = processed.split('\n')
                 commands = [cmd.strip() for cmd in raw_commands if cmd.strip()]
             else:
                 commands = []
