@@ -613,8 +613,6 @@ class CMLClient:
             return testbed_yaml
 
     def execute_commands_on_device(self, device, testbed, actual_name, timeout=60):
-        # Execute commands on a device and validate if specified
-        # Returns: results (list), device_passed (bool), raw_outputs (list)
         results = []
         raw_outputs = []
         device_passed = True
@@ -643,12 +641,12 @@ class CMLClient:
             logging.error(f"Connect failed for {actual_name}: {e}")
             return results, False, raw_outputs
 
-        merged_output = []  # Collect real command outputs for merge
+        merged_output = []
 
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
 
-            # === SPECIAL: MERGE ALL OUTPUTS FOR SINGLE PATTERN CHECK ===
+            # === MERGE COMMAND: validate once on all output ===
             if cmd == "__MERGE_FOR_VALIDATION__":
                 combined = "\n\n".join(merged_output)
                 passed = True
@@ -656,10 +654,13 @@ class CMLClient:
                     ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
                     if not ok:
                         passed = False
+                # Store result for main() to print
+                status = "Correctly Configured" if passed else "Incorrectly Configured"
+                results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
                 device_passed = passed
                 continue
 
-            # === NORMAL COMMAND EXECUTION ===
+            # === NORMAL COMMAND: just collect output ===
             try:
                 if timeout == 0:
                     dev.sendline(cmd)
@@ -669,9 +670,8 @@ class CMLClient:
                     merged_output.append(output)
             except Exception as e:
                 merged_output.append("")
-                logging.error(f"Command failed on {dev_name}: {cmd} – {e}")
+                logging.error(f"Command failed: {cmd} – {e}")
                 device_passed = False
-                continue
 
         try:
             dev.disconnect()
@@ -979,9 +979,9 @@ def main():
     # === VALIDATE FUNCTION ===
     elif function == "validate":
         device_info = args.deviceinfo
-        original_cmd = ""  # Will store user-entered command string
+        original_cmd = ""
 
-        # --- SINGLE DEVICE MODE ---
+        # === SINGLE DEVICE MODE ===
         if args.devicename:
             if device_info:
                 print("Error: Cannot use both -deviceinfo and -devicename", file=sys.stderr)
@@ -996,46 +996,44 @@ def main():
                 if args.password:
                     device["credentials"]["password"] = args.password
 
-            # Parse commands: support \n in quotes OR real newlines
+            # Parse and save original command string
             if args.command:
+                original_cmd = args.command
                 processed = args.command.replace('\\n', '\n')
                 raw_cmds = processed.split('\n')
                 commands = [c.strip() for c in raw_cmds if c.strip()]
-                original_cmd = args.command  # Save exact user input
             else:
                 commands = []
 
+            # Add real commands
             for cmd in commands:
                 device["commands"].append({"command": cmd})
 
-            # Add merge command if pattern is given
+            # Add merge command with original_cmd for output
             if args.pattern and commands:
                 device["commands"].append({
                     "command": "__MERGE_FOR_VALIDATION__",
                     "validations": [{
                         "pattern": args.pattern,
                         "match_type": "regex" if args.regex else "wildcard"
-                    }]
+                    }],
+                    "original_cmd": original_cmd  # This preserves the full string
                 })
 
             device_info = json.dumps([device])
 
-        # --- CALL VALIDATE ---
+        # === CALL VALIDATE ===
         results, overall_result, merged_raw = client.validate(labid, device_info, timeout=args.timeout)
 
-        # --- OUTPUT ---
-        if args.devicename and args.pattern and original_cmd:
-            # Single line: original command -> true/false
-            status = "true" if overall_result else "false"
-            print(f"{original_cmd} -> {status}")
+        # === OUTPUT: EXACTLY LIKE BEFORE ===
+        if results:
+            for result in results:
+                print(result)
         else:
-            # Legacy: per-command output (for -deviceinfo or no pattern)
-            if merged_raw:
-                print(merged_raw)
-            else:
-                for result in results:
-                    print(result)
-                print(str(overall_result).lower())
+            # Fallback if no results (shouldn't happen)
+            status = "Correctly Configured" if overall_result else "Incorrectly Configured"
+            print(f"{status} - {args.devicename or 'UNKNOWN'} - {original_cmd or 'UNKNOWN'}")
+        print(str(overall_result).lower())
 
     elif function == "importlab":
         if not args.source:
