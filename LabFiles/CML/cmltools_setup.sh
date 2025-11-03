@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251102.2225
+# CML Tools v1.20251102.2254
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -990,33 +990,55 @@ def main():
         print(client.gettestbed(labid))
     elif function == "validate":
         device_info = args.deviceinfo
+    
+        # === SINGLE DEVICE MODE: -devicename + -command (newline-safe) ===
         if args.devicename:
             if device_info:
                 print("Error: Cannot use both -deviceinfo and -devicename", file=sys.stderr)
                 sys.exit(1)
+    
             device = {"device_name": args.devicename, "commands": []}
+    
+            # Apply optional credentials override
             if args.username or args.password:
                 device["credentials"] = {}
                 if args.username:
                     device["credentials"]["username"] = args.username
                 if args.password:
                     device["credentials"]["password"] = args.password
+    
+            # === COMMAND PARSING: Use \n instead of comma ===
             if args.command:
-                commands = [c.strip() for c in args.command.split(",")]
-                for cmd in commands:
-                    cmd_info = {"command": cmd}
-                    if args.pattern:
-                        match_type = "regex" if args.regex else "wildcard"
-                        cmd_info["validations"] = [{"pattern": args.pattern, "match_type": match_type}]
-                    device["commands"].append(cmd_info)
+                # Split on newlines, strip whitespace, ignore empty lines
+                raw_commands = args.command.split('\n')
+                commands = [cmd.strip() for cmd in raw_commands if cmd.strip()]
+            else:
+                commands = []
+    
+            # Build command list with optional validation
+            for cmd in commands:
+                cmd_info = {"command": cmd}
+                if args.pattern:
+                    match_type = "regex" if args.regex else "wildcard"
+                    cmd_info["validations"] = [{
+                        "pattern": args.pattern,
+                        "match_type": match_type
+                    }]
+                device["commands"].append(cmd_info)
+    
+            # Convert to JSON string for validate()
             device_info = json.dumps([device])
+    
+        # === CALL VALIDATE ===
         results, overall_result, merged_raw = client.validate(labid, device_info, timeout=args.timeout)
+    
+        # === OUTPUT ===
         if merged_raw:
             print(merged_raw)
         else:
             for result in results:
                 print(result)
-            print(str(overall_result))
+            print(str(overall_result).lower())  # Ensure lowercase true/false
     elif function == "importlab":
         if not args.source:
             print("Error: -source URL required for importlab", file=sys.stderr)
