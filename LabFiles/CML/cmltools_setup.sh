@@ -53,7 +53,7 @@ export RETRY_DELAY=10
 # Returns: None
 log_debug() {
   if [[ "${SCRIPT_DEBUG,,}" == "true" ]]; then
-    echo "Debug: $*" >&2
+    echo "Debug: \$*" >&2
   fi
 }
 
@@ -106,16 +106,16 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251031.1027
+# CML Tools v1.20251102.1742
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
 #
 # Usage:
-#   cmltools.py [COMMAND] [LABID] [--deviceinfo DEVICEINFO] [-source URL] [--debug]
-#   cmltools.py [-command COMMAND] [-labid LABID] [--deviceinfo DEVICEINFO] [-source URL] [--debug]
+#   cmltools.py [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug]
+#   cmltools.py [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex]
 #
-# Commands:
+# Functions:
 #   authenticate: Authenticate with CML server and return JWT token
 #   findlab: Find a lab by title or return first running/available lab
 #   getlabs: Get a list of all lab IDs
@@ -124,7 +124,7 @@ cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHO
 #   startlab: Start a specific lab
 #   stoplab: Stop a specific lab
 #   gettestbed: Get PyATS testbed YAML for a lab
-#   validate: Validate device configurations
+#   validate: Validate device configurations or return raw command output
 #   importlab: Download lab from URL, convert, and import into CML (one step)
 #
 # Environment Variables:
@@ -225,22 +225,18 @@ def validate_pattern(validation, data, device_name, command, debug=False):
 
     # === AUTO-CONVERT DATA TO STRING ===
     if isinstance(data, dict):
-        # Convert dict to pretty string
         try:
             data = json.dumps(data, indent=2)
         except:
             data = str(data)
     elif isinstance(data, (list, tuple)):
-        # Convert list to newline string
         data = '\n'.join(str(item) for item in data)
     elif not isinstance(data, (str, bytes)):
         data = str(data)
 
-    # Ensure string
     if isinstance(data, bytes):
         data = data.decode('utf-8', errors='ignore')
 
-    # === COMPILE REGEX (CASE-INSENSITIVE) ===
     try:
         regex = re.compile(regex_pattern, re.DOTALL | re.IGNORECASE)
         pattern_match = bool(regex.search(data))
@@ -413,13 +409,10 @@ class CMLClient:
             logging.error("No labs found")
             print("Error: No labs found", file=sys.stderr)
             return ""
-
         if lab_title:
-            # Normalize the search title: strip and lowercase
             search_title = lab_title.strip().lower()
             for lab_id in lab_ids:
                 details = self.get_lab_details(lab_id)
-                # Safely get and normalize lab title
                 lab_name = details.get("lab_title", "").strip().lower()
                 if lab_name == search_title:
                     if self.debug:
@@ -428,8 +421,6 @@ class CMLClient:
             logging.error(f"No lab found with title '{lab_title}' (searched as '{search_title}')")
             print(f"Error: No lab found with title '{lab_title}'", file=sys.stderr)
             return ""
-
-        # No title provided: fallback to first STARTED or first lab
         lab_id = self.get_default_lab_id(lab_ids)
         if not lab_id:
             logging.error("No labs available")
@@ -450,23 +441,16 @@ class CMLClient:
                 logging.error("No lab ID provided and no default lab found")
                 print("Error: No lab ID provided and no default lab found", file=sys.stderr)
                 return ""
-
-        # Resolve title → UUID if needed
         if not self._is_valid_lab_id(lab_id):
             lab_id = self.findlab(lab_id)
             if not lab_id:
                 return ""
-
-        # ------------------------------------------------------------------
-        # FREE SKU ENFORCEMENT
-        # ------------------------------------------------------------------
         sku = os.environ.get("CML_SKU", "").strip().lower()
         if sku == "free":
-            # Stop every lab *except* the one we are about to start
             all_lab_ids = self.get_labs()
             for lid in all_lab_ids:
                 if lid == lab_id:
-                    continue                     # keep the target lab
+                    continue
                 cur_state = self.get_lab_state(lid)
                 if cur_state == "STARTED":
                     if self.debug:
@@ -483,10 +467,6 @@ class CMLClient:
                         )
                     except requests.RequestException as e:
                         logging.error(f"Failed to stop lab {lid}: {e}")
-
-        # ------------------------------------------------------------------
-        # START THE REQUESTED LAB
-        # ------------------------------------------------------------------
         try:
             self.ensure_jwt()
             response = requests.put(
@@ -518,7 +498,6 @@ class CMLClient:
                 logging.error("No lab ID provided and no default lab found")
                 print("Error: No lab ID provided and no default lab found", file=sys.stderr)
                 return ""
-        # Check if lab_id is a title and convert to ID
         if not self._is_valid_lab_id(lab_id):
             lab_id = self.findlab(lab_id)
             if not lab_id:
@@ -554,7 +533,6 @@ class CMLClient:
                 logging.error("No lab ID provided and no default lab found")
                 print("Error: No lab ID provided and no default lab found", file=sys.stderr)
                 return ""
-        # Check if lab_id is a title and convert to ID
         if not self._is_valid_lab_id(lab_id):
             lab_id = self.findlab(lab_id)
             if not lab_id:
@@ -572,7 +550,6 @@ class CMLClient:
                 logging.error(f"Invalid testbed YAML for lab {lab_id}")
                 print(f"Error: Invalid testbed YAML for lab {lab_id}", file=sys.stderr)
                 return ""
-            # Update terminal server credentials
             testbed_yaml = self.update_testbed_device_credentials(testbed_yaml, "terminal_server", self.username, self.password)
             if self.debug:
                 logging.info(f"Retrieved testbed YAML for lab {lab_id}: {testbed_yaml[:100]}...")
@@ -598,24 +575,19 @@ class CMLClient:
                 return testbed_yaml
             data['devices'][device_name]['credentials']['default']['username'] = username
             data['devices'][device_name]['credentials']['default']['password'] = password
-            updated_yaml = yaml.safe_dump(data)
-            return updated_yaml
+            return yaml.safe_dump(data)
         except yaml.YAMLError as e:
             logging.error(f"Failed to update testbed YAML: {e}")
             print(f"Error: Failed to update testbed YAML: {e}", file=sys.stderr)
             return testbed_yaml
 
     def apply_device_info_credentials(self, testbed_yaml, device_info_list):
-        """
-        Apply optional username/password from device_info to the testbed.
-        Only touches devices that have a 'credentials' block.
-        """
+        # Apply optional username/password from device_info to the testbed
+        # Only touches devices that have a 'credentials' block
         try:
             data = yaml.safe_load(testbed_yaml)
             if not data or 'devices' not in data:
                 return testbed_yaml
-    
-            # Build map: device_name (lower) → credentials dict
             cred_map = {}
             for dev in device_info_list:
                 name = dev.get('device_name')
@@ -625,10 +597,8 @@ class CMLClient:
                         'username': creds.get('username', 'cisco'),
                         'password': creds.get('password', 'cisco')
                     }
-    
             if not cred_map:
-                return testbed_yaml  # No overrides
-    
+                return testbed_yaml
             for dev_name, dev in data['devices'].items():
                 override = cred_map.get(dev_name.lower())
                 if override:
@@ -636,91 +606,71 @@ class CMLClient:
                     creds['username'] = override['username']
                     creds['password'] = override['password']
                     if self.debug:
-                        logging.info(f"Applied device_info credentials to {dev_name}: "
-                                     f"{override['username']}/{override['password'][:3]}***")
-    
+                        logging.info(f"Applied device_info credentials to {dev_name}: {override['username']}/***")
             return yaml.safe_dump(data)
-    
         except Exception as e:
             logging.error(f"Failed to apply device_info credentials: {e}")
             return testbed_yaml
 
-    def build_default_device_info(self, testbed_yaml):
-        try:
-            data = yaml.safe_load(testbed_yaml)
-            if not data or 'devices' not in data:
-                logging.error("Invalid testbed YAML structure")
-                return []
-            device_info = []
-            for device_name, device_data in data['devices'].items():
-                if device_name == "terminal_server":
-                    continue
-                os_type = device_data.get('os')
-                if os_type == "ios":
-                    device_info.append({
-                        "device_name": device_name,
-                        "commands": [{
-                            "command": "show version",
-                            "validations": [{"pattern": "Cisco IOS Software", "match_type": "wildcard"}]
-                        }]
-                    })
-                elif os_type == "linux":
-                    device_info.append({
-                        "device_name": device_name,
-                        "commands": [{
-                            "command": "uname -a",
-                            "validations": [{"pattern": "Linux", "match_type": "wildcard"}]
-                        }]
-                    })
-            if self.debug:
-                logging.info(f"Built default device_info: {len(device_info)} devices")
-            return device_info
-        except yaml.YAMLError as e:
-            logging.error(f"Failed to parse testbed YAML for device_info: {e}")
-            return []
-
-    def execute_commands_on_device(self, device, testbed, actual_name):
+    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60):
+        # Execute commands on a device and validate if specified
+        # Args:
+        #   device: Device info dict (from device_info JSON or single-device mode)
+        #   testbed: PyATS testbed object
+        #   actual_name: Actual device name in testbed
+        #   timeout: Per-command timeout in seconds (default: 60)
+        # Returns: results (list), device_passed (bool), raw_outputs (list)
         results = []
+        raw_outputs = []
         device_passed = True
         dev_name = device['device_name']
-
         dev = testbed.devices.get(actual_name)
         if not dev:
             msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
             results.append(msg)
-            logging.error(msg)
-            return results, False
-
+            return results, False, raw_outputs
         try:
             connect_kwargs = {
                 'mit': True,
                 'hostkey_verify': False,
                 'allow_agent': False,
                 'look_for_keys': False,
-                'timeout': 60
+                'timeout': 60  # Connection timeout
             }
             init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
             dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
             if self.debug:
                 logging.info(f"Connected to {actual_name}")
         except Exception as e:
-            # RESILIENT: Log and continue
             msg = f"Incorrectly Configured - {dev_name} - connect_failed"
             results.append(msg)
             logging.error(f"Connect failed for {actual_name}: {e}")
-            return results, False
-
+            return results, False, raw_outputs
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
             try:
-                output = dev.execute(cmd)
+                if timeout == 0:
+                    # Fire-and-forget
+                    dev.sendline(cmd)
+                    raw_outputs.append("")
+                    results.append(f"Correctly Configured - {dev_name} - {cmd}")
+                    continue  # Skip all validation
+                else:
+                    output = dev.execute(cmd, timeout=timeout)
+                    raw_outputs.append(output)
             except Exception as e:
-                msg = f"Incorrectly Configured - {dev_name} - {cmd}"
-                results.append(msg)
-                logging.error(f"Command failed: {e}")
+                if timeout == 0:
+                    raw_outputs.append("")
+                    results.append(f"Incorrectly Configured - {dev_name} - {cmd}")
+                    logging.error(f"Fire-and-forget command '{cmd}' failed to send: {e}")
+                else:
+                    raw_outputs.append(f"Failed: {dev_name} {cmd}")
+                    results.append(f"Incorrectly Configured - {dev_name} - {cmd}")
+                    logging.error(f"Command failed: {e}")
                 device_passed = False
                 continue
 
+            # Only run validation if timeout > 0 and command succeeded
             validations = cmd_info.get('validations', [])
             if not validations:
                 results.append(f"Correctly Configured - {dev_name} - {cmd}")
@@ -735,48 +685,48 @@ class CMLClient:
             results.append(f"{status} - {dev_name} - {cmd}")
             if not passed:
                 device_passed = False
-
         try:
             dev.disconnect()
         except:
             pass
+        return results, device_passed, raw_outputs
 
-        return results, device_passed
-
-    def validate(self, lab_id, device_info=None):
-        # Resolve lab_id
+    def validate(self, lab_id, device_info=None, timeout=60):
+        # Validate device configurations
+        # Args:
+        #   lab_id: Lab ID or title
+        #   device_info: JSON string of device info (or None for default)
+        #   timeout: Per-command timeout in seconds (default: 60)
+        # Returns: results (list), overall_result (bool), raw_output (str if no validation)
         if not lab_id:
             lab_id = self.findlab()
             if not lab_id:
                 msg = "Error: No lab ID provided and no default lab found"
                 logging.error(msg)
                 print(msg, file=sys.stderr)
-                return [msg], False
+                return [msg], False, ""
         if not self._is_valid_lab_id(lab_id):
             lab_id = self.findlab(lab_id)
             if not lab_id:
                 msg = "Error: No lab found"
                 logging.error(msg)
                 print(msg, file=sys.stderr)
-                return [msg], False
-    
-        # Start lab if needed
+                return [msg], False, ""
+
         if self.get_lab_state(lab_id) != "STARTED":
             self.startlab(lab_id)
             for _ in range(30):
                 time.sleep(10)
                 if self.get_lab_state(lab_id) == "STARTED":
                     break
-    
-        # Get testbed
+
         testbed_yaml = self.gettestbed(lab_id)
         if not testbed_yaml:
             msg = "Error: Failed to fetch testbed YAML"
             logging.error(msg)
             print(msg, file=sys.stderr)
-            return [msg], False
-    
-        # ---- NEW: Apply device_info credentials (optional) ----
+            return [msg], False, ""
+
         if device_info:
             try:
                 device_info_list = ast.literal_eval(device_info)
@@ -784,22 +734,20 @@ class CMLClient:
                     testbed_yaml = self.apply_device_info_credentials(testbed_yaml, device_info_list)
             except Exception as e:
                 logging.warning(f"Failed to parse device_info for credentials: {e}")
-    
+
         try:
             testbed_data = yaml.safe_load(testbed_yaml)
         except Exception as e:
             msg = "Error: Failed to parse testbed YAML"
             logging.error(msg)
             print(msg, file=sys.stderr)
-            return [msg], False
-    
-        # Device map from testbed
+            return [msg], False, ""
+
         device_map = {
             k.lower(): k for k in testbed_data['devices']
             if k != 'terminal_server'
         }
-    
-        # Build device_info list
+
         if not device_info:
             device_info_list = []
             for name in device_map.values():
@@ -820,11 +768,17 @@ class CMLClient:
                 msg = "Error: Invalid device_info"
                 logging.error(msg)
                 print(msg, file=sys.stderr)
-                return [msg], False
-    
+                return [msg], False, ""
+
+        has_validations = any(
+            any("validations" in cmd_info for cmd_info in dev.get("commands", []))
+            for dev in device_info_list
+        )
+
         all_results = []
+        all_raw_outputs = []
         overall_result = True
-    
+
         for device in device_info_list:
             req = device['device_name'].lower()
             actual = device_map.get(req)
@@ -833,8 +787,7 @@ class CMLClient:
                 all_results.append(msg)
                 overall_result = False
                 continue
-    
-            # Minimal testbed
+
             minimal = {
                 'devices': {
                     actual: testbed_data['devices'][actual],
@@ -849,13 +802,18 @@ class CMLClient:
                 logging.error(f"Load failed: {e}")
                 overall_result = False
                 continue
-    
-            res, passed = self.execute_commands_on_device(device, testbed, actual)
+
+            res, passed, raw_out = self.execute_commands_on_device(device, testbed, actual, timeout=timeout)
             all_results.extend(res)
+            all_raw_outputs.extend(raw_out)
             if not passed:
                 overall_result = False
-    
-        return all_results, overall_result
+
+        if has_validations:
+            return all_results, overall_result, ""
+        else:
+            merged_raw = "\n\n".join(all_raw_outputs)
+            return all_results, overall_result, merged_raw
 
     def _is_valid_lab_id(self, lab_id):
         # Check if a lab_id matches the UUID format
@@ -872,7 +830,6 @@ class CMLClient:
             source_url = source_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
             if self.debug:
                 logging.info(f"Converted blob URL to raw: {source_url}")
-
         try:
             if self.debug:
                 logging.info(f"Downloading from {source_url}")
@@ -880,13 +837,11 @@ class CMLClient:
             response.raise_for_status()
             content = response.content
             filename = source_url.split('/')[-1].lower()
-
             is_zip = (
                 filename.endswith('.zip') or
                 response.headers.get('Content-Type', '').startswith('application/zip') or
                 content[:2] == b'PK'
             )
-
             if is_zip:
                 if self.debug:
                     logging.info("Extracting ZIP...")
@@ -899,14 +854,11 @@ class CMLClient:
                     filename = candidates[0]
             else:
                 file_bytes = content
-
             try:
                 file_str = file_bytes.decode('utf-8')
             except UnicodeDecodeError:
                 print("Error: File is not UTF-8", file=sys.stderr)
                 return ""
-
-            # Parse title from YAML or CML
             lab_title = None
             if filename.endswith(('.yaml', '.yml')):
                 try:
@@ -922,18 +874,14 @@ class CMLClient:
                     data = json.loads(lab_json)
                     lab_title = data.get("lab", {}).get("title") or data.get("title")
                 except json.JSONDecodeError:
-                    pass  # fall back to import
-
-            # === IDEMPOTENCY: Check if lab with this title already exists ===
+                    pass
             if lab_title:
                 existing_lab_id = self.findlab(lab_title)
                 if existing_lab_id:
-                    print(existing_lab_id)  # Return existing ID
+                    print(existing_lab_id)
                     if self.debug:
                         print(f"Lab already exists: '{lab_title}' → {existing_lab_id}", file=sys.stderr)
                     return existing_lab_id
-
-            # === Upload new lab ===
             try:
                 self.ensure_jwt()
                 if self.debug:
@@ -954,13 +902,11 @@ class CMLClient:
                 if self.debug:
                     print(f"Lab imported: {lab_id}", file=sys.stderr)
                 return lab_id
-
             except requests.RequestException as e:
                 print(f"Error: Upload failed: {e}", file=sys.stderr)
                 if hasattr(e, 'response') and e.response is not None:
                     print(f"Response: {e.response.text}", file=sys.stderr)
                 return ""
-
         except requests.RequestException as e:
             print(f"Error: Download failed: {e}", file=sys.stderr)
             return ""
@@ -970,62 +916,39 @@ class CMLClient:
 
 def main():
     # Main function to handle command-line arguments and dispatch commands
-    # Supports positional arguments (COMMAND, LABID) and named arguments
-    # (-command, -labid, -deviceinfo, -source, --debug)
+    # Supports positional arguments (FUNCTION, LABID) and named arguments
     # All parameter names and command values are case-insensitive
     parser = CaseInsensitiveArgumentParser(
         description="CML Tools for lab management and validation",
-        usage="%(prog)s [COMMAND] [LABID] [--deviceinfo DEVICEINFO] [-source URL] [--debug]"
+        usage="\n%(prog)s [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug]\n%(prog)s [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex]"
     )
-    parser.add_argument(
-        "command",
-        nargs="?",
-        help="Command to execute (authenticate, findlab, getlabs, getdetails, getstate, startlab, stoplab, gettestbed, validate, importlab)"
-    )
-    parser.add_argument(
-        "labid",
-        nargs="?",
-        help="Lab ID or title (required for findlab, getdetails, getstate, startlab, stoplab, gettestbed, validate if searching by title)"
-    )
-    parser.add_argument(
-        "-command",
-        dest="named_command",
-        help="Command to execute (alternative to positional argument)"
-    )
-    parser.add_argument(
-        "-labid",
-        dest="named_labid",
-        help="Lab ID or title (alternative to positional argument)"
-    )
-    parser.add_argument(
-        "-deviceinfo",
-        help="Device info JSON (optional for validate; if empty, uses testbed YAML)"
-    )
-    parser.add_argument(
-        "-source",
-        help="Public GitHub URL to download a CML lab file (.cml, .yaml, .yml, or .zip) for importlab"
-    )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Enable debug logging"
-    )
-    args = parser.parse_args()
+    parser.add_argument("function", nargs="?", help="Function to execute")
+    parser.add_argument("labid", nargs="?", help="Lab ID or title")
+    parser.add_argument("-function", dest="named_function", help="Function to execute (alternative)")
+    parser.add_argument("-labid", dest="named_labid", help="Lab ID or title (alternative)")
+    parser.add_argument("-deviceinfo", help="Device info JSON")
+    parser.add_argument("-devicename", help="Single device name")
+    parser.add_argument("-username", help="Override username")
+    parser.add_argument("-password", help="Override password")
+    parser.add_argument("-command", help="Command(s) to run (comma-separated)")
+    parser.add_argument("-pattern", help="Validation pattern (wildcard)")
+    parser.add_argument("-timeout", type=int, default=60, help="Per-command timeout in seconds (default: 60). Use 0 to send command without waiting.")
+    parser.add_argument("-source", help="Lab source URL for importlab")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument("--regex", action="store_true", help="Use regex instead of wildcard for -pattern (default: wildcard)")
 
-    # Handle positional and named arguments
-    command = (args.command or args.named_command or "").lower()
+    args = parser.parse_args()
+    function = (args.function or args.named_function or "").lower()
     labid = args.labid or args.named_labid
-    if not command:
+    if not function:
         parser.print_help()
         sys.exit(1)
 
-    # Validate command
-    valid_commands = ["authenticate", "findlab", "getlabs", "getdetails", "getstate", "startlab", "stoplab", "gettestbed", "validate", "importlab"]
-    if command not in valid_commands:
-        print(f"Error: Invalid command '{command}'. Valid commands: {', '.join(valid_commands)}", file=sys.stderr)
+    valid_functions = ["authenticate", "findlab", "getlabs", "getdetails", "getstate", "startlab", "stoplab", "gettestbed", "validate", "importlab"]
+    if function not in valid_functions:
+        print(f"Error: Invalid function '{function}'. Valid: {', '.join(valid_functions)}", file=sys.stderr)
         sys.exit(1)
 
-    # Initialize CMLClient with environment variables
     cml_address = os.environ.get("CML_ADDRESS", "https://192.168.1.10")
     cml_ip = os.environ.get("CML_IP", "192.168.1.10")
     username = os.environ.get("CML_USERNAME", "")
@@ -1036,19 +959,18 @@ def main():
 
     client = CMLClient(cml_address, cml_ip, username, password, args.debug)
 
-    # Dispatch commands
-    if command == "authenticate":
+    if function == "authenticate":
         print(client.authenticate())
-    elif command == "findlab":
+    elif function == "findlab":
         print(client.findlab(labid))
-    elif command == "getlabs":
+    elif function == "getlabs":
         print(json.dumps(client.get_labs(), indent=2))
-    elif command == "getdetails":
+    elif function == "getdetails":
         if not labid:
             print("Error: -labid or positional LABID required for getdetails", file=sys.stderr)
             sys.exit(1)
         print(json.dumps(client.get_lab_details(labid), indent=2))
-    elif command == "getstate":
+    elif function == "getstate":
         if not labid:
             labid = client.findlab()
             if not labid:
@@ -1060,20 +982,44 @@ def main():
                 print("Error: No lab found", file=sys.stderr)
                 sys.exit(1)
         print(client.get_lab_state(labid))
-    elif command == "startlab":
+    elif function == "startlab":
         print(client.startlab(labid))
-    elif command == "stoplab":
+    elif function == "stoplab":
         print(client.stoplab(labid))
-    elif command == "gettestbed":
+    elif function == "gettestbed":
         print(client.gettestbed(labid))
-    elif command == "validate":
-        results, overall_result = client.validate(labid, args.deviceinfo)
-        for result in results:
-            print(result)
-        print(str(overall_result))
-    elif command == "importlab":
+    elif function == "validate":
+        device_info = args.deviceinfo
+        if args.devicename:
+            if device_info:
+                print("Error: Cannot use both -deviceinfo and -devicename", file=sys.stderr)
+                sys.exit(1)
+            device = {"device_name": args.devicename, "commands": []}
+            if args.username or args.password:
+                device["credentials"] = {}
+                if args.username:
+                    device["credentials"]["username"] = args.username
+                if args.password:
+                    device["credentials"]["password"] = args.password
+            if args.command:
+                commands = [c.strip() for c in args.command.split(",")]
+                for cmd in commands:
+                    cmd_info = {"command": cmd}
+                    if args.pattern:
+                        match_type = "regex" if args.regex else "wildcard"
+                        cmd_info["validations"] = [{"pattern": args.pattern, "match_type": match_type}]
+                    device["commands"].append(cmd_info)
+            device_info = json.dumps([device])
+        results, overall_result, merged_raw = client.validate(labid, device_info, timeout=args.timeout)
+        if merged_raw:
+            print(merged_raw)
+        else:
+            for result in results:
+                print(result)
+            print(str(overall_result))
+    elif function == "importlab":
         if not args.source:
-            print("Error: -source URL required for importlab command", file=sys.stderr)
+            print("Error: -source URL required for importlab", file=sys.stderr)
             sys.exit(1)
         lab_id = client.import_lab(args.source)
         if not lab_id:
