@@ -674,22 +674,22 @@ class CMLClient:
                 device_passed = False
 
         try:
-        # === CLEAR SCREEN & EXIT CONFIG MODE ===
-        if device.get("clear_screen"):
-            os_type = getattr(dev, 'os', '').lower()
-            if os_type == 'ios':
-                try:
-                    # CTRL-Z = \x1A (ASCII 26)
-                    dev.send('\x1A')  # Exit config mode
-                    time.sleep(0.1)
-                    dev.sendline('exit')  # Exit exec mode
-                except Exception as e:
-                    logging.debug(f"Failed to send CTRL-Z/exit: {e}")
-            elif 'linux' in os_type:
-                try:
-                    dev.sendline('clear')
-                except Exception as e:
-                    logging.debug(f"Failed to send clear: {e}")
+          # === CLEAR SCREEN & EXIT CONFIG MODE ===
+          if device.get("clear_screen"):
+              os_type = getattr(dev, 'os', '').lower()
+              if os_type == 'ios':
+                  try:
+                      # CTRL-Z = \x1A (ASCII 26)
+                      dev.send('\x1A')  # Exit config mode
+                      time.sleep(0.1)
+                      dev.sendline('exit')  # Exit exec mode
+                  except Exception as e:
+                      logging.debug(f"Failed to send CTRL-Z/exit: {e}")
+              elif 'linux' in os_type:
+                  try:
+                      dev.sendline('clear')
+                  except Exception as e:
+                      logging.debug(f"Failed to send clear: {e}")
 
         try:
             dev.disconnect()
