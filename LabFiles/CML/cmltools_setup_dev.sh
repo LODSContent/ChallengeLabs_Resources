@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251104.1354
+# CML Tools v1.20251104.1400
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -679,10 +679,9 @@ class CMLClient:
               os_type = getattr(dev, 'os', '').lower()
               if os_type == 'ios':
                   try:
-                      # CTRL-Z = \x1A (ASCII 26)
-                      dev.send('\x1A')  # Exit config mode
+                      dev.send('\x1A')  # CTRL-Z
                       time.sleep(0.1)
-                      dev.sendline('exit')  # Exit exec mode
+                      dev.sendline('exit')
                   except Exception as e:
                       logging.debug(f"Failed to send CTRL-Z/exit: {e}")
               elif 'linux' in os_type:
@@ -690,11 +689,11 @@ class CMLClient:
                       dev.sendline('clear')
                   except Exception as e:
                       logging.debug(f"Failed to send clear: {e}")
-
-        try:
-            dev.disconnect()
-        except:
-            pass
+  
+          try:
+              dev.disconnect()
+          except:
+              pass
 
         # If raw_mode, return merged output; otherwise return results list
         if getattr(device, 'raw_mode', False):
