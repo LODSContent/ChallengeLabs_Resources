@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.1825
+# CML Tools v1.20251105.1838
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -612,17 +612,21 @@ class CMLClient:
             logging.error(f"Failed to apply device_info credentials: {e}")
             return testbed_yaml
 
-    def send_clear_sequence(self, dev, os_type):
+    def send_clear_sequence(self, dev, os_type, wait_for_prompt=False):
         # Send Ctrl-Z and clear/exit sequence to escape editors and clear screen
-        # Works on both IOS and Linux
+        # Hides output from raw results by not capturing response
         try:
             dev.sendline('\x1A')  # Ctrl-Z
             time.sleep(0.2)
             if os_type == 'ios':
                 dev.sendline('exit')
+                time.sleep(0.1)
+                if wait_for_prompt:
+                    dev.sendline('')  # Enter to get prompt
+                    time.sleep(0.3)
             else:
                 dev.sendline('clear')
-            time.sleep(0.1)
+                time.sleep(0.1)
         except:
             pass  # Best effort
 
@@ -659,7 +663,7 @@ class CMLClient:
 
         # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
         if clear_screen:
-            self.send_clear_sequence(dev, os_type)
+            self.send_clear_sequence(dev, os_type, wait_for_prompt=True)
 
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
@@ -690,11 +694,11 @@ class CMLClient:
 
             # === CLEAR AFTER EACH COMMAND (if --clear) ===
             if clear_screen:
-                self.send_clear_sequence(dev, os_type)
+                self.send_clear_sequence(dev, os_type, wait_for_prompt=True)
 
         # === FINAL CLEAR AFTER LAST COMMAND (if --clear) ===
         if clear_screen:
-            self.send_clear_sequence(dev, os_type)
+            self.send_clear_sequence(dev, os_type, wait_for_prompt=False)
 
         try:
             dev.disconnect()
