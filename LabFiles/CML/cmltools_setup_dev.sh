@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251104.1154
+# CML Tools v1.20251104.1331
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -705,14 +705,12 @@ class CMLClient:
                 logging.error(msg)
                 print(msg, file=sys.stderr)
                 return [msg], False, ""
-
         if self.get_lab_state(lab_id) != "STARTED":
             self.startlab(lab_id)
             for _ in range(30):
                 time.sleep(10)
                 if self.get_lab_state(lab_id) == "STARTED":
                     break
-
         testbed_yaml = self.gettestbed(lab_id)
         if not testbed_yaml:
             msg = "Error: Failed to fetch testbed YAML"
@@ -720,13 +718,24 @@ class CMLClient:
             print(msg, file=sys.stderr)
             return [msg], False, ""
 
+        # === Parse device_info safely using json.loads ===
         if device_info:
             try:
-                device_info_list = ast.literal_eval(device_info)
-                if isinstance(device_info_list, list):
-                    testbed_yaml = self.apply_device_info_credentials(testbed_yaml, device_info_list)
+                device_info_list = json.loads(device_info)
+            except json.JSONDecodeError as e:
+                msg = f"Error: Invalid JSON in device_info: {e}"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False, ""
+        else:
+            device_info_list = []
+
+        # Apply credentials from device_info (if any)
+        if device_info_list and isinstance(device_info_list, list):
+            try:
+                testbed_yaml = self.apply_device_info_credentials(testbed_yaml, device_info_list)
             except Exception as e:
-                logging.warning(f"Failed to parse device_info for credentials: {e}")
+                logging.warning(f"Failed to apply credentials from device_info: {e}")
 
         try:
             testbed_data = yaml.safe_load(testbed_yaml)
@@ -741,8 +750,8 @@ class CMLClient:
             if k != 'terminal_server'
         }
 
-        if not device_info:
-            device_info_list = []
+        # Default behavior: no device_info → validate all devices
+        if not device_info_list:
             for name in device_map.values():
                 os_type = testbed_data['devices'][name].get('os', '').lower()
                 cmd = "show version" if os_type == 'ios' else "uname -a"
@@ -755,13 +764,8 @@ class CMLClient:
                     }]
                 })
         else:
-            try:
-                device_info_list = ast.literal_eval(device_info)
-            except Exception as e:
-                msg = "Error: Invalid device_info"
-                logging.error(msg)
-                print(msg, file=sys.stderr)
-                return [msg], False, ""
+            # Already parsed from JSON
+            pass
 
         has_validations = any(
             any("validations" in cmd_info for cmd_info in dev.get("commands", []))
@@ -795,6 +799,10 @@ class CMLClient:
                 logging.error(f"Load failed: {e}")
                 overall_result = False
                 continue
+
+            # Pass raw_mode flag if set
+            if device.get("raw_mode"):
+                testbed.devices[actual].raw_mode = True
 
             res, passed, raw_out = self.execute_commands_on_device(device, testbed, actual, timeout=timeout)
             all_results.extend(res)
