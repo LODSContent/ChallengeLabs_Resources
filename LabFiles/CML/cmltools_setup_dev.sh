@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251104.1806
+# CML Tools v1.20251105.1825
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -612,6 +612,20 @@ class CMLClient:
             logging.error(f"Failed to apply device_info credentials: {e}")
             return testbed_yaml
 
+    def send_clear_sequence(self, dev, os_type):
+        # Send Ctrl-Z and clear/exit sequence to escape editors and clear screen
+        # Works on both IOS and Linux
+        try:
+            dev.sendline('\x1A')  # Ctrl-Z
+            time.sleep(0.2)
+            if os_type == 'ios':
+                dev.sendline('exit')
+            else:
+                dev.sendline('clear')
+            time.sleep(0.1)
+        except:
+            pass  # Best effort
+
     def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False):
         results = []
         raw_outputs = []
@@ -639,7 +653,14 @@ class CMLClient:
             results.append(msg)
             logging.error(f"Connect failed for {actual_name}: {e}")
             return results, False, raw_outputs
+
+        os_type = getattr(dev, 'os', '').lower()
         merged_output = []
+
+        # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
+        if clear_screen:
+            self.send_clear_sequence(dev, os_type)
+
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
             # === MERGE COMMAND: validate once on all output ===
@@ -650,7 +671,6 @@ class CMLClient:
                     ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
                     if not ok:
                         passed = False
-                # Store result for main() to print
                 status = "Correctly Configured" if passed else "Incorrectly Configured"
                 results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
                 device_passed = passed
@@ -667,19 +687,15 @@ class CMLClient:
                 merged_output.append("")
                 logging.error(f"Command failed: {cmd} – {e}")
                 device_passed = False
-        # === CLEAR SCREEN AFTER ALL COMMANDS (if requested) ===
+
+            # === CLEAR AFTER EACH COMMAND (if --clear) ===
+            if clear_screen:
+                self.send_clear_sequence(dev, os_type)
+
+        # === FINAL CLEAR AFTER LAST COMMAND (if --clear) ===
         if clear_screen:
-            try:
-                os_type = getattr(dev, 'os', '').lower()
-                if os_type == 'ios':
-                    dev.sendline('\x1A')  # Ctrl-Z
-                    time.sleep(0.1)
-                    dev.sendline('exit')
-                elif os_type in ['linux', 'ubuntu']:
-                    dev.sendline('clear')
-                # No wait for response
-            except:
-                pass  # Best effort
+            self.send_clear_sequence(dev, os_type)
+
         try:
             dev.disconnect()
         except:
@@ -692,7 +708,7 @@ class CMLClient:
         #   lab_id: Lab ID or title
         #   device_info: JSON string of device info (or None for default)
         #   timeout: Per-command timeout in seconds (default: 60)
-        #   clear_screen: If True, send clear command after all commands
+        #   clear_screen: If True, send clear sequence before, after each, and after all commands
         # Returns: results (list), overall_result (bool), raw_output (str if no validation)
         if not lab_id:
             lab_id = self.findlab()
@@ -916,13 +932,13 @@ def main():
     parser.add_argument("-devicename", help="Single device name")
     parser.add_argument("-username", help="Override username")
     parser.add_argument("-password", help="Override password")
-    parser.add_argument("-command", help="Command(s) to run (comma-separated or \\n for newlines). Without -pattern, returns raw output.")
+    parser.add_argument("-command", help="Command(s) to run (\\n for newlines). Without -pattern, returns raw output.")
     parser.add_argument("-pattern", help="Validation pattern (wildcard or regex with --regex)")
     parser.add_argument("-timeout", type=int, default=60, help="Per-command timeout in seconds (default: 60). Use 0 to send command without waiting.")
     parser.add_argument("-source", help="Lab source URL for importlab")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--regex", action="store_true", help="Use regex instead of wildcard for -pattern (default: wildcard)")
-    parser.add_argument("--clear", action="store_true", help="Clear device screen after commands (Ctrl-Z + exit on IOS, 'clear' on Linux)")
+    parser.add_argument("--clear", action="store_true", help="Escape editors and clear screen before, after each, and after all commands")
 
     args = parser.parse_args()
     function = (args.function or args.named_function or "").lower()
@@ -978,7 +994,7 @@ def main():
     elif function == "validate":
         device_info = args.deviceinfo
         original_cmd = ""
-        # === SINGLE DEVICE MODE (supports raw output when no pattern) ===
+        # === SINGLE DEVICE MODE ===
         if args.devicename:
             if device_info:
                 print("Error: Cannot use both -deviceinfo and -devicename", file=sys.stderr)
@@ -998,7 +1014,6 @@ def main():
                 raw_cmds = []
             for cmd in raw_cmds:
                 device["commands"].append({"command": cmd})
-            # Only add merge command if pattern is provided
             if args.pattern and raw_cmds:
                 device["commands"].append({
                     "command": "__MERGE_FOR_VALIDATION__",
@@ -1015,15 +1030,12 @@ def main():
         )
         # === OUTPUT HANDLING ===
         if args.pattern:
-            # Validation mode: print results and true/false
             for result in results:
                 print(result)
             print(str(overall_result).lower())
         else:
-            # Raw output mode: print only the merged output (no validation messages or true/false)
             if merged_raw:
                 print(merged_raw.rstrip())
-            # No output if no commands
     elif function == "importlab":
         if not args.source:
             print("Error: -source URL required for importlab", file=sys.stderr)
