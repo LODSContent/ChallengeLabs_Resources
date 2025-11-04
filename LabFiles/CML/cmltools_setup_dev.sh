@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251103.1030
+# CML Tools v1.20251104.1154
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -678,6 +678,10 @@ class CMLClient:
         except:
             pass
 
+        # If raw_mode, return merged output; otherwise return results list
+        if getattr(device, 'raw_mode', False):
+            return [], True, merged_output
+            
         return results, device_passed, merged_output
 
     def validate(self, lab_id, device_info=None, timeout=60):
@@ -980,6 +984,7 @@ def main():
     elif function == "validate":
         device_info = args.deviceinfo
         original_cmd = ""
+        raw_mode = args.devicename and args.command and not args.pattern
 
         # === SINGLE DEVICE MODE ===
         if args.devicename:
@@ -1019,21 +1024,27 @@ def main():
                     }],
                     "original_cmd": original_cmd  # This preserves the full string
                 })
-
+            
+            if raw_mode:
+                device['raw_mode'] = True
+            
             device_info = json.dumps([device])
 
         # === CALL VALIDATE ===
         results, overall_result, merged_raw = client.validate(labid, device_info, timeout=args.timeout)
 
-        # === OUTPUT: EXACTLY LIKE BEFORE ===
-        if results:
+        # === OUTPUT ===
+        if raw_mode:
+            # NO pattern → just print raw merged output
+            print(merged_raw.strip())
+        elif results:
             for result in results:
                 print(result)
         else:
-            # Fallback if no results (shouldn't happen)
             status = "Correctly Configured" if overall_result else "Incorrectly Configured"
             print(f"{status} - {args.devicename or 'UNKNOWN'} - {original_cmd or 'UNKNOWN'}")
-        print(str(overall_result).lower())
+        if not raw_mode:
+            print(str(overall_result).lower())
 
     elif function == "importlab":
         if not args.source:
