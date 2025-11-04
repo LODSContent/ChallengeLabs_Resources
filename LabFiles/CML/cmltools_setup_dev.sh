@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251104.1400
+# CML Tools v1.20251104.1459
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -623,6 +623,7 @@ class CMLClient:
             results.append(msg)
             return results, False, raw_outputs
 
+        # === CONNECT TO DEVICE ===
         try:
             connect_kwargs = {
                 'mit': True,
@@ -641,12 +642,48 @@ class CMLClient:
             logging.error(f"Connect failed for {actual_name}: {e}")
             return results, False, raw_outputs
 
-        merged_output = []
+        # === RAW MODE: collect output only (no validation) ===
+        if device.get("raw_mode"):
+            merged_output = []
+            for cmd_info in device['commands']:
+                cmd = cmd_info['command']
+                try:
+                    if timeout == 0:
+                        dev.sendline(cmd)
+                        merged_output.append("")
+                    else:
+                        output = dev.execute(cmd, timeout=timeout)
+                        merged_output.append(output)
+                except Exception as e:
+                    merged_output.append("")
+                    logging.error(f"Command failed in raw mode: {cmd} – {e}")
+            # === CLEAR SCREEN AFTER (fire-and-forget) ===
+            if device.get("clear_screen"):
+                os_type = getattr(dev, 'os', '').lower()
+                if os_type == 'ios':
+                    try:
+                        dev.send('\x1A')  # CTRL-Z
+                        time.sleep(0.1)
+                        dev.sendline('exit')
+                    except Exception as e:
+                        logging.debug(f"Failed to send CTRL-Z/exit: {e}")
+                elif 'linux' in os_type:
+                    try:
+                        dev.sendline('clear')
+                    except Exception as e:
+                        logging.debug(f"Failed to send clear: {e}")
+            try:
+                dev.disconnect()
+            except:
+                pass
+            return [], True, "\n\n".join(merged_output)
 
+        # === NORMAL MODE: run commands + validation ===
+        merged_output = []
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
 
-            # === MERGE COMMAND: validate once on all output ===
+            # === MERGE VALIDATION (pattern supplied) ===
             if cmd == "__MERGE_FOR_VALIDATION__":
                 combined = "\n\n".join(merged_output)
                 passed = True
@@ -654,13 +691,12 @@ class CMLClient:
                     ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
                     if not ok:
                         passed = False
-                # Store result for main() to print
                 status = "Correctly Configured" if passed else "Incorrectly Configured"
                 results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
                 device_passed = passed
                 continue
 
-            # === NORMAL COMMAND: just collect output ===
+            # === EXECUTE NORMAL COMMAND ===
             try:
                 if timeout == 0:
                     dev.sendline(cmd)
@@ -673,32 +709,27 @@ class CMLClient:
                 logging.error(f"Command failed: {cmd} – {e}")
                 device_passed = False
 
-        try:
-          # === CLEAR SCREEN & EXIT CONFIG MODE ===
-          if device.get("clear_screen"):
-              os_type = getattr(dev, 'os', '').lower()
-              if os_type == 'ios':
-                  try:
-                      dev.send('\x1A')  # CTRL-Z
-                      time.sleep(0.1)
-                      dev.sendline('exit')
-                  except Exception as e:
-                      logging.debug(f"Failed to send CTRL-Z/exit: {e}")
-              elif 'linux' in os_type:
-                  try:
-                      dev.sendline('clear')
-                  except Exception as e:
-                      logging.debug(f"Failed to send clear: {e}")
-  
-          try:
-              dev.disconnect()
-          except:
-              pass
+        # === CLEAR SCREEN AFTER (fire-and-forget) ===
+        if device.get("clear_screen"):
+            os_type = getattr(dev, 'os', '').lower()
+            if os_type == 'ios':
+                try:
+                    dev.send('\x1A')  # CTRL-Z
+                    time.sleep(0.1)
+                    dev.sendline('exit')
+                except Exception as e:
+                    logging.debug(f"Failed to send CTRL-Z/exit: {e}")
+            elif 'linux' in os_type:
+                try:
+                    dev.sendline('clear')
+                except Exception as e:
+                    logging.debug(f"Failed to send clear: {e}")
 
-        # If raw_mode, return merged output; otherwise return results list
-        if getattr(device, 'raw_mode', False):
-            return [], True, merged_output
-            
+        try:
+            dev.disconnect()
+        except:
+            pass
+
         return results, device_passed, merged_output
 
     def validate(self, lab_id, device_info=None, timeout=60):
