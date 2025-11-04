@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251104.1331
+# CML Tools v1.20251104.1349
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -674,6 +674,24 @@ class CMLClient:
                 device_passed = False
 
         try:
+        # === CLEAR SCREEN & EXIT CONFIG MODE ===
+        if device.get("clear_screen"):
+            os_type = getattr(dev, 'os', '').lower()
+            if os_type == 'ios':
+                try:
+                    # CTRL-Z = \x1A (ASCII 26)
+                    dev.send('\x1A')  # Exit config mode
+                    time.sleep(0.1)
+                    dev.sendline('exit')  # Exit exec mode
+                except Exception as e:
+                    logging.debug(f"Failed to send CTRL-Z/exit: {e}")
+            elif 'linux' in os_type:
+                try:
+                    dev.sendline('clear')
+                except Exception as e:
+                    logging.debug(f"Failed to send clear: {e}")
+
+        try:
             dev.disconnect()
         except:
             pass
@@ -934,6 +952,7 @@ def main():
     parser.add_argument("-source", help="Lab source URL for importlab")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--regex", action="store_true", help="Use regex instead of wildcard for -pattern (default: wildcard)")
+    parser.add_argument("-clear", action="store_true", help="Clear screen after commands (exit on IOS, clear on Linux)")
 
     args = parser.parse_args()
     function = (args.function or args.named_function or "").lower()
@@ -1035,7 +1054,10 @@ def main():
             
             if raw_mode:
                 device['raw_mode'] = True
-            
+
+            if args.clear:
+                device["clear_screen"] = True
+                
             device_info = json.dumps([device])
 
         # === CALL VALIDATE ===
