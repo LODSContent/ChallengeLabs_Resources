@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251104.1635
+# CML Tools v1.20251104.1655
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -613,22 +613,18 @@ class CMLClient:
             return testbed_yaml
 
     def execute_commands_on_device(self, device, testbed, actual_name, timeout=60):
-        """
-        Run the commands on the device.
-        • raw_mode  → return only the merged output (no validation lines)
-        • -clear    → send CTRL-Z + exit (IOS) or clear (Linux) after everything
-        """
         results = []
         raw_outputs = []
         device_passed = True
         dev_name = device['device_name']
         dev = testbed.devices.get(actual_name)
         if not dev:
-            msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
-            results.append(msg)
-            return results, False, raw_outputs
+            # FIXED: Immediate error if requested device not in testbed
+            error_msg = f"Error: Device '{dev_name}' not found in lab testbed"
+            logging.error(error_msg)
+            print(error_msg, file=sys.stderr)
+            return [error_msg], False, []
 
-        # ---------- CONNECT ----------
         try:
             connect_kwargs = {
                 'mit': True,
@@ -647,7 +643,7 @@ class CMLClient:
             logging.error(f"Connect failed for {actual_name}: {e}")
             return results, False, raw_outputs
 
-        # ---------- RAW MODE (no pattern) ----------
+        # RAW MODE: collect output only
         if device.get("raw_mode"):
             merged = []
             for cmd_info in device['commands']:
@@ -657,25 +653,33 @@ class CMLClient:
                         dev.sendline(cmd)
                         merged.append("")
                     else:
-                        out = dev.execute(cmd, timeout=timeout)
-                        merged.append(out)
+                        output = dev.execute(cmd, timeout=timeout)
+                        merged.append(output)
                 except Exception as e:
                     merged.append("")
                     logging.error(f"raw_mode command failed: {cmd} – {e}")
-            # fire-and-forget clear
-            self._send_clear(dev, device.get("clear_screen"))
+            # Clear screen (fire-and-forget)
+            if device.get("clear_screen"):
+                os_type = getattr(dev, 'os', '').lower()
+                if os_type == 'ios':
+                    try:
+                        dev.send('\x1A')  # CTRL-Z
+                        time.sleep(0.1)
+                        dev.sendline('exit')
+                    except Exception as e:
+                        logging.debug(f"IOS clear failed: {e}")
             try:
                 dev.disconnect()
             except:
                 pass
+            # FIXED: Return joined string, not list
             return [], True, "\n\n".join(merged)
 
-        # ---------- NORMAL MODE (validation may be present) ----------
+        # NORMAL MODE (validation)
         merged_output = []
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
 
-            # ----- MERGE VALIDATION (when -pattern is used) -----
             if cmd == "__MERGE_FOR_VALIDATION__":
                 combined = "\n\n".join(merged_output)
                 passed = True
@@ -688,49 +692,35 @@ class CMLClient:
                 device_passed = passed
                 continue
 
-            # ----- EXECUTE REGULAR COMMAND -----
             try:
                 if timeout == 0:
                     dev.sendline(cmd)
                     merged_output.append("")
                 else:
-                    out = dev.execute(cmd, timeout=timeout)
-                    merged_output.append(out)
+                    output = dev.execute(cmd, timeout=timeout)
+                    merged_output.append(output)
             except Exception as e:
                 merged_output.append("")
                 logging.error(f"Command failed: {cmd} – {e}")
                 device_passed = False
 
-        # ---------- CLEAR SCREEN (fire-and-forget) ----------
-        self._send_clear(dev, device.get("clear_screen"))
+        # Clear screen
+        if device.get("clear_screen"):
+            os_type = getattr(dev, 'os', '').lower()
+            if os_type == 'ios':
+                try:
+                    dev.send('\x1A')
+                    time.sleep(0.1)
+                    dev.sendline('exit')
+                except Exception as e:
+                    logging.debug(f"IOS clear failed: {e}")
 
-        # ---------- DISCONNECT ----------
         try:
             dev.disconnect()
         except:
             pass
 
         return results, device_passed, merged_output
-
-    # -----------------------------------------------------------------
-    # Helper – fire-and-forget clear / exit
-    # -----------------------------------------------------------------
-    def _send_clear(self, dev, do_clear):
-        if not do_clear:
-            return
-        os_type = getattr(dev, 'os', '').lower()
-        if os_type == 'ios':
-            try:
-                dev.send('\x1A')          # CTRL-Z
-                time.sleep(0.1)
-                dev.sendline('exit')
-            except Exception as e:
-                logging.debug(f"IOS clear failed: {e}")
-        elif 'linux' in os_type:
-            try:
-                dev.sendline('clear')
-            except Exception as e:
-                logging.debug(f"Linux clear failed: {e}")
 
     def validate(self, lab_id, device_info=None, timeout=60):
         # Validate device configurations
