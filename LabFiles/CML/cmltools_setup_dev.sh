@@ -604,7 +604,7 @@ class CMLClient:
                 if override:
                     creds = dev.setdefault('credentials', {}).setdefault('default', {})
                     creds['username'] = override['username']
- 'password'] = override['password']
+                    creds['password'] = override['password']
                     if self.debug:
                         logging.info(f"Applied device_info credentials to {dev_name}: {override['username']}/***")
             return yaml.safe_dump(data)
