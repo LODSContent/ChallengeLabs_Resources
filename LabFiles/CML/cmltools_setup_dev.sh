@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.0138
+# CML Tools v1.20251105.0145
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -637,34 +637,35 @@ class CMLClient:
             msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
             results.append(msg)
             return results, False, raw_outputs
-        try:
-            connect_kwargs = {
-                'mit': True,
-                'hostkey_verify': False,
-                'allow_agent': False,
-                'look_for_keys': False,
-                'timeout': 2
-            }
-            init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
-            dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
-            if self.debug:
-                logging.info(f"Connected to {actual_name}")
-        except Exception as e:
-            msg = f"Incorrectly Configured - {dev_name} - connect_failed"
-            results.append(msg)
-            logging.error(f"Connect failed for {actual_name}: {e}")
-            return results, False, raw_outputs
-
-        os_type = getattr(dev, 'os', '').lower()
 
         # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
         if clear_screen:
-            self.send_clear_sequence(dev, os_type)
+            try:
+                connect_kwargs = {
+                    'mit': True,
+                    'hostkey_verify': False,
+                    'allow_agent': False,
+                    'look_for_keys': False,
+                    'timeout': 2
+                }
+                init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
+                dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
+                if self.debug:
+                    logging.info(f"Connected to {actual_name}")
+            except Exception as e:
+                msg = f"Incorrectly Configured - {dev_name} - connect_failed"
+                results.append(msg)
+                logging.error(f"Connect failed for {actual_name}: {e}")
+                return results, False, raw_outputs
+    
+            os_type = getattr(dev, 'os', '').lower()
 
-        try:
-            dev.disconnect()
-        except:
-            pass
+            self.send_clear_sequence(dev, os_type)
+    
+            try:
+                dev.disconnect()
+            except:
+                pass
 
         try:
             connect_kwargs = {
@@ -732,38 +733,37 @@ class CMLClient:
         except:
             pass
 
-        try:
-            connect_kwargs = {
-                'mit': True,
-                'hostkey_verify': False,
-                'allow_agent': False,
-                'look_for_keys': False,
-                'timeout': 2
-            }
-            init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
-            dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
-            if self.debug:
-                logging.info(f"Connected to {actual_name}")
-        except Exception as e:
-            msg = f"Incorrectly Configured - {dev_name} - connect_failed"
-            results.append(msg)
-            logging.error(f"Connect failed for {actual_name}: {e}")
-            return results, False, raw_outputs
-
-        os_type = getattr(dev, 'os', '').lower()
-
         # === CLEAR AFTER LAST COMMAND (if --clear) ===
         if clear_screen:
+            try:
+                connect_kwargs = {
+                    'mit': True,
+                    'hostkey_verify': False,
+                    'allow_agent': False,
+                    'look_for_keys': False,
+                    'timeout': 2
+                }
+                init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
+                dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
+                if self.debug:
+                    logging.info(f"Connected to {actual_name}")
+            except Exception as e:
+                msg = f"Incorrectly Configured - {dev_name} - connect_failed"
+                results.append(msg)
+                logging.error(f"Connect failed for {actual_name}: {e}")
+                return results, False, raw_outputs
+    
+            os_type = getattr(dev, 'os', '').lower()
             self.send_clear_sequence(dev, os_type)
 
-        try:
-            dev.disconnect()
-        except:
-            pass
+            try:
+                dev.disconnect()
+            except:
+                pass
 
         # === FINAL CLEAR AFTER LAST COMMAND (if --clear) ===
-        if clear_screen:
-            self.send_clear_sequence(dev, os_type)
+        #if clear_screen:
+        #    self.send_clear_sequence(dev, os_type)
 
         try:
             dev.disconnect()
