@@ -337,9 +337,6 @@ nodes:
         content: |-
           # this is a shell script which will be sourced at boot
           hostname HOST1
-          # configurable user account
-          USERNAME=admin
-          PASSWORD=cisco
     cpu_limit: null
     cpus: null
     data_volume: null
@@ -380,9 +377,6 @@ nodes:
         content: |-
           # this is a shell script which will be sourced at boot
           hostname HOST2
-          # configurable user account
-          USERNAME=admin
-          PASSWORD=cisco
     cpu_limit: null
     cpus: null
     data_volume: null
