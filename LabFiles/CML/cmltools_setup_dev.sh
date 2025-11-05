@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.2003
+# CML Tools v1.20251105.2019
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -616,15 +616,17 @@ class CMLClient:
         # Send Ctrl-Z and clear/exit sequence to escape editors and clear screen
         # Output is NOT captured — prevents contamination of raw output
         try:
-            dev.send('\x1A\n')  # Ctrl-Z + Enter
+            dev.send('\x1A')  # Ctrl-Z
             time.sleep(0.2)
             if os_type == 'ios':
-                dev.send('exit\n')
+                dev.send('exit')
                 time.sleep(0.1)
                 dev.send('\n')  # Final Enter
                 time.sleep(0.3)
             else:
-                dev.send('clear\n')
+                dev.send('clear')
+                time.sleep(0.1)
+                dev.send('\n')
                 time.sleep(0.1)
         except:
             pass  # Best effort
@@ -684,11 +686,12 @@ class CMLClient:
                     dev.sendline(cmd)
                     merged_output.append("")
                 else:
-                    # === ENSURE PROMPT BEFORE COMMAND ===
-                    if clear_screen:
-                        dev.send('\n')
-                        time.sleep(0.1)
                     output = dev.execute(cmd, timeout=timeout)
+                    # === STRIP PROMPT FROM END OF OUTPUT ===
+                    lines = output.splitlines()
+                    if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
+                        lines = lines[:-1]
+                    output = '\n'.join(lines)
                     merged_output.append(output)
             except Exception as e:
                 merged_output.append("")
@@ -894,7 +897,7 @@ class CMLClient:
             try:
                 self.ensure_jwt()
                 if self.debug:
-                    logging.info, "Uploading lab to CML..."
+                    logging.info("Uploading lab to CML...")
                 response = requests.post(
                     f"{self.cml_address}/api/v0/import",
                     headers={
