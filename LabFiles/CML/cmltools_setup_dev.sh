@@ -1,3 +1,11 @@
+																																																																																																										
+
+																																																																																																																																																											 
+
+																																																																												   
+
+												  
+  
 #!/bin/bash
 # =============================================================================
 # CML Tools Setup Script
@@ -106,7 +114,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.0012
+# CML Tools v1.20251105.0016
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -617,18 +625,14 @@ class CMLClient:
         # Output is NOT captured — prevents contamination of raw output
         try:
             dev.send('\x1A')  # Ctrl-Z
-            time.sleep(0.1)
+            time.sleep(0.2)
             if os_type == 'ios':
-                dev.sendline('exit')
+                dev.send('exit')
                 time.sleep(0.1)
-                dev.sendline('\n')  # Final Enter
-                time.sleep(0.3)
-                dev.sendline('\n')
-                time.sleep(0.2)
-                dev.sendline('\n')
+                dev.send('\n')  # Final Enter
                 time.sleep(0.3)
             else:
-                dev.sendline('clear')
+                dev.send('clear\r')  # \r only for Linux
                 time.sleep(0.2)
         except:
             pass  # Best effort
@@ -672,17 +676,13 @@ class CMLClient:
             cmd = cmd_info['command']
             # === MERGE COMMAND: validate once on all output ===
             if cmd == "__MERGE_FOR_VALIDATION__":
-                if clear_screen:
-                    #    dev.send('\n')
-                  time.sleep(0.2)
-                  dev.recv_buffer().clear()
-                  time.sleep(0.2)
                 combined = "\n\n".join(merged_output)
                 passed = True
                 for val in cmd_info.get('validations', []):
                     ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
                     if not ok:
                         passed = False
+												  
                 status = "Correctly Configured" if passed else "Incorrectly Configured"
                 results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
                 device_passed = passed
@@ -693,12 +693,11 @@ class CMLClient:
                     dev.sendline(cmd)
                     merged_output.append("")
                 else:
-                    # === ENSURE PROMPT BEFORE COMMAND (only if clear_screen) ===
+                    # === DRAIN ANY RESIDUAL OUTPUT BEFORE COMMAND ===
                     if clear_screen:
-                    #    dev.send('\n')
+                        dev.send('\n')
                         time.sleep(0.2)
                         dev.recv_buffer().clear()
-                        time.sleep(0.2)
                     output = dev.execute(cmd, timeout=timeout)
                     # === STRIP FINAL PROMPT ===
                     lines = output.splitlines()
@@ -716,8 +715,8 @@ class CMLClient:
                 self.send_clear_sequence(dev, os_type)
 
         # === FINAL CLEAR AFTER LAST COMMAND (if --clear) ===
-        #if clear_screen:
-        #    self.send_clear_sequence(dev, os_type)
+        if clear_screen:
+            self.send_clear_sequence(dev, os_type)
 
         try:
             dev.disconnect()
@@ -987,7 +986,7 @@ def main():
 
     if function == "authenticate":
         print(client.authenticate())
-    elif function == "findlab":
+    elif function ==934 "findlab":
         print(client.findlab(labid))
     elif function == "getlabs":
         print(json.dumps(client.get_labs(), indent=2))
@@ -1014,6 +1013,7 @@ def main():
         print(client.stoplab(labid))
     elif function == "gettestbed":
         print(client.gettestbed(labid))
+							   
     elif function == "validate":
         device_info = args.deviceinfo
         original_cmd = ""
@@ -1029,14 +1029,18 @@ def main():
                     device["credentials"]["username"] = args.username
                 if args.password:
                     device["credentials"]["password"] = args.password
+													
             if args.command:
                 original_cmd = args.command
                 processed = args.command.replace('\\n', '\n')
+												
                 raw_cmds = [c.strip() for c in processed.split('\n') if c.strip()]
             else:
                 raw_cmds = []
+							   
             for cmd in raw_cmds:
                 device["commands"].append({"command": cmd})
+															
             if args.pattern and raw_cmds:
                 device["commands"].append({
                     "command": "__MERGE_FOR_VALIDATION__",
@@ -1059,6 +1063,8 @@ def main():
         else:
             if merged_raw:
                 print(merged_raw.rstrip())
+																							 
+										  
     elif function == "importlab":
         if not args.source:
             print("Error: -source URL required for importlab", file=sys.stderr)
