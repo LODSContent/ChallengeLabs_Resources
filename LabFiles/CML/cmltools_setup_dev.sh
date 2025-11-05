@@ -621,11 +621,11 @@ class CMLClient:
             if os_type == 'ios':
                 dev.sendline('exit')
                 time.sleep(0.1)
-                dev.send('\n')  # Final Enter
+                dev.sendline('\n')  # Final Enter
                 time.sleep(0.3)
-                dev.send('\n')
+                dev.sendline('\n')
                 time.sleep(0.2)
-                dev.send('\n')
+                dev.sendline('\n')
                 time.sleep(0.3)
             else:
                 dev.sendline('clear')
