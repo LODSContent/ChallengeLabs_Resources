@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.2359
+# CML Tools v1.20251106.0012
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -672,6 +672,11 @@ class CMLClient:
             cmd = cmd_info['command']
             # === MERGE COMMAND: validate once on all output ===
             if cmd == "__MERGE_FOR_VALIDATION__":
+                if clear_screen:
+                    #    dev.send('\n')
+                  time.sleep(0.2)
+                  dev.recv_buffer().clear()
+                  time.sleep(0.2)
                 combined = "\n\n".join(merged_output)
                 passed = True
                 for val in cmd_info.get('validations', []):
@@ -689,9 +694,11 @@ class CMLClient:
                     merged_output.append("")
                 else:
                     # === ENSURE PROMPT BEFORE COMMAND (only if clear_screen) ===
-                    #if clear_screen:
+                    if clear_screen:
                     #    dev.send('\n')
-                    #    time.sleep(0.2)
+                        time.sleep(0.2)
+                        dev.recv_buffer().clear()
+                        time.sleep(0.2)
                     output = dev.execute(cmd, timeout=timeout)
                     # === STRIP FINAL PROMPT ===
                     lines = output.splitlines()
