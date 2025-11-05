@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.2104
+# CML Tools v1.20251105.2114
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -624,7 +624,7 @@ class CMLClient:
                 dev.send('\n')  # Final Enter
                 time.sleep(0.3)
             else:
-                dev.send('clear\n')
+                dev.send('clear\r')  # \r only for Linux
                 time.sleep(0.2)
         except:
             pass  # Best effort
@@ -684,10 +684,11 @@ class CMLClient:
                     dev.sendline(cmd)
                     merged_output.append("")
                 else:
-                    # === ENSURE PROMPT BEFORE COMMAND (only if clear_screen) ===
+                    # === DRAIN ANY RESIDUAL OUTPUT BEFORE COMMAND ===
                     if clear_screen:
                         dev.send('\n')
-                        time.sleep(0.1)
+                        time.sleep(0.2)
+                        dev.recv_buffer().clear()
                     output = dev.execute(cmd, timeout=timeout)
                     # === STRIP FINAL PROMPT ===
                     lines = output.splitlines()
@@ -798,7 +799,7 @@ class CMLClient:
             req = device['device_name'].lower()
             actual = device_map.get(req)
             if not actual:
-                msg = f"Incorrectly Configured - {device['device_name']} - notSuites_in_testbed"
+                msg = f"Incorrectly Configured - {device['device_name']} - not_in_testbed"
                 all_results.append(msg)
                 overall_result = False
                 continue
@@ -976,7 +977,7 @@ def main():
 
     if function == "authenticate":
         print(client.authenticate())
-    elif function == "findlab":
+    elif function ==934 "findlab":
         print(client.findlab(labid))
     elif function == "getlabs":
         print(json.dumps(client.get_labs(), indent=2))
