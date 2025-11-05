@@ -469,6 +469,6 @@ links:
     label: SERVER1-eth0<->SWITCH2-Ethernet0/1
 lab:
   description: ''
-  notes: ''
+  notes: 'v1.1'
   title: LAB-TOPOLOGY1
   version: 0.3.0
