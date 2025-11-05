@@ -468,7 +468,7 @@ links:
     conditioning: {}
     label: SERVER1-eth0<->SWITCH2-Ethernet0/1
 lab:
-  description: ''
-  notes: 'v1.1'
+  description: 'v1.1'
+  notes: ''
   title: LAB-TOPOLOGY1
   version: 0.3.0
