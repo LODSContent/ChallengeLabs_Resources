@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.1938
+# CML Tools v1.20251105.2003
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -604,7 +604,7 @@ class CMLClient:
                 if override:
                     creds = dev.setdefault('credentials', {}).setdefault('default', {})
                     creds['username'] = override['username']
-                    creds['password'] = override['password']
+ 'password'] = override['password']
                     if self.debug:
                         logging.info(f"Applied device_info credentials to {dev_name}: {override['username']}/***")
             return yaml.safe_dump(data)
@@ -616,15 +616,15 @@ class CMLClient:
         # Send Ctrl-Z and clear/exit sequence to escape editors and clear screen
         # Output is NOT captured — prevents contamination of raw output
         try:
-            dev.sendline('\x1A')  # Ctrl-Z
+            dev.send('\x1A\n')  # Ctrl-Z + Enter
             time.sleep(0.2)
             if os_type == 'ios':
-                dev.sendline('exit')
+                dev.send('exit\n')
                 time.sleep(0.1)
-                dev.sendline('')  # Enter to get prompt
+                dev.send('\n')  # Final Enter
                 time.sleep(0.3)
             else:
-                dev.sendline('clear')
+                dev.send('clear\n')
                 time.sleep(0.1)
         except:
             pass  # Best effort
@@ -684,30 +684,11 @@ class CMLClient:
                     dev.sendline(cmd)
                     merged_output.append("")
                 else:
-                    output = dev.execute(cmd, timeout=timeout)
-                    # === STRIP RESIDUAL BANNER/PROMPT LINES (only if --clear) ===
+                    # === ENSURE PROMPT BEFORE COMMAND ===
                     if clear_screen:
-                        lines = output.splitlines()
-                        filtered = []
-                        for line in lines:
-                            line = line.strip()
-                            if not line:
-                                continue
-                            # Skip known banner/prompt lines
-                            if re.match(r'^[A-Z0-9_-]+[>#]', line):
-                                continue
-                            if 'con0 is now available' in line:
-                                continue
-                            if 'Press RETURN' in line:
-                                continue
-                            if 'Cisco IOS' in line and 'Software' in line:
-                                continue
-                            if 'Last reload' in line or 'uptime is' in line:
-                                continue
-                            if line.startswith('clear') or line.startswith('exit'):
-                                continue
-                            filtered.append(line)
-                        output = '\n'.join(filtered)
+                        dev.send('\n')
+                        time.sleep(0.1)
+                    output = dev.execute(cmd, timeout=timeout)
                     merged_output.append(output)
             except Exception as e:
                 merged_output.append("")
@@ -913,7 +894,7 @@ class CMLClient:
             try:
                 self.ensure_jwt()
                 if self.debug:
-                    logging.info("Uploading lab to CML...")
+                    logging.info, "Uploading lab to CML..."
                 response = requests.post(
                     f"{self.cml_address}/api/v0/import",
                     headers={
