@@ -126,7 +126,7 @@ fi
 # Version:  2025.11.02 - Template.v5
 #
 # Parameters (set in lab definition)
-labID="CCNA.1-LAB2"
+labID="LAB-TOPOLOGY1"
 device="switch1"
 username=""
 password=""
@@ -134,7 +134,9 @@ command="show version"
 pattern="cisco*ios"
 regex=false
 timeout=""
+clear_screen=true
 script_debug=false
+cml_debug=false
 # ------------------------------------------------------------------
 # Update labID with the "Title" of the lab to be evaluated
 # Update device with the name of the device for commands to be run on
@@ -150,7 +152,9 @@ script_debug=false
 # If regex is false, wildcard matching is used with ? for single or * for multiple characters
 # If regex is true, full regex matching is performed
 # Set timeout to 0 for commands that would hang the interface like 'exit'. Default is 60 when blank.
+# Set clear_screen to true to wipe the device screen before and after validation commands.
 # Set script_debug to true for verbose output
+# Set cml_debug to true for super-verbose cml output
 # ------------------------------------------------------------------
 
 # Set default result
@@ -184,7 +188,16 @@ main() {
     [[ -n "$pattern" ]] && cmd+=(-pattern "$pattern")
 
     # Add -timeout only if not empty
-    [[ -n "$timeout" ]] && cmd+=(-timeout "$timeout")    
+    [[ -n "$timeout" ]] && cmd+=(-timeout "$timeout")
+
+    # Add --clear if enabled
+    [[ "$clear_screen" == "true" ]] && cmd+=(--clear)
+
+    # Add --debug if enabled
+    if [[ "$cml_debug" == "true" ]]; then
+        cmd+=(--debug)
+        script_debug=true
+    fi     
 
     [[ "$script_debug" == "true" ]] && echo "Running: ${cmd[*]}"
 
