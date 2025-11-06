@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.1751
+# CML Tools v1.20251106.1810
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -943,7 +943,7 @@ class CMLClient:
             print(f"Error: Import failed: {e}", file=sys.stderr)
             return ""
 
-     def wipelab(self, lab_id):
+    def wipelab(self, lab_id):
         # Wipe a specific lab (remove configurations and reset to clean state)
         # Args:
         #   lab_id: UUID of the lab to wipe
