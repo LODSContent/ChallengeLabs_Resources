@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.2205
+# CML Tools v1.20251105.2226
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -616,11 +616,15 @@ class CMLClient:
         # Send Ctrl-Z and clear/exit sequence to escape editors and clear screen
         # Output is NOT captured — prevents contamination of raw output
         try:
-            dev.sendline('\x1A') # Ctrl-Z
-            time.sleep(0.1)
-            if os_type != 'ios':
-                dev.sendline('clear')
+            if os_type == 'ios':
+                dev.sendline('end')
                 time.sleep(0.1)
+                dev.send('\x0C')
+            else:
+                dev.send('\x1B:q!\r')
+                time.sleep(0.1)
+                dev.sendline('clear')
+            time.sleep(0.1)
         except:
             pass # Best effort
 
@@ -683,7 +687,7 @@ class CMLClient:
                     # === ENSURE PROMPT BEFORE COMMAND ===
                     if clear_screen:
                         dev.sendline('')
-                        time.sleep(0.5)
+                        time.sleep(0.1)
                     output = dev.execute(cmd, timeout=timeout)
                     # === STRIP FINAL PROMPT ===
                     lines = output.splitlines()
