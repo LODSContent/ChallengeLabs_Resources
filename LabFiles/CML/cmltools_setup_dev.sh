@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.2135
+# CML Tools v1.20251105.2140
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -623,8 +623,12 @@ class CMLClient:
                 time.sleep(0.3)
                 dev.sendline('term len 0')
                 time.sleep(0.2)
-                dev.sendline('clear line')
-                time.sleep(0.3)
+                # Try clear line – ignore if not supported
+                try:
+                    dev.sendline('clear line')
+                    time.sleep(0.3)
+                except Exception:
+                    pass  # Best effort
             else:
                 dev.sendline('clear')
                 time.sleep(0.3)
@@ -632,6 +636,7 @@ class CMLClient:
             pass
 
     def execute_one_command(self, dev, cmd, timeout, clear_screen):
+        """Connect → clear → execute → capture clean output → disconnect."""
         try:
             dev.connect(
                 mit=True,
@@ -706,121 +711,6 @@ class CMLClient:
             passed &= ok
 
         return raw_outputs, passed, raw_outputs
-
-    def validate(self, lab_id, device_info=None, timeout=60, clear_screen=False):
-        # Validate device configurations
-        # Args:
-        #   lab_id: Lab ID or title
-        #   device_info: JSON string of device info (or None for default)
-        #   timeout: Per-command timeout in seconds (default: 60)
-        #   clear_screen: If True, send clear sequence before, after each, and after all commands
-        # Returns: results (list), overall_result (bool), raw_output (str if no validation)
-        if not lab_id:
-            lab_id = self.findlab()
-            if not lab_id:
-                msg = "Error: No lab ID provided and no default lab found"
-                logging.error(msg)
-                print(msg, file=sys.stderr)
-                return [msg], False, ""
-        if not self._is_valid_lab_id(lab_id):
-            lab_id = self.findlab(lab_id)
-            if not lab_id:
-                msg = "Error: No lab found"
-                logging.error(msg)
-                print(msg, file=sys.stderr)
-                return [msg], False, ""
-        if self.get_lab_state(lab_id) != "STARTED":
-            self.startlab(lab_id)
-            for _ in range(30):
-                time.sleep(10)
-                if self.get_lab_state(lab_id) == "STARTED":
-                    break
-        testbed_yaml = self.gettestbed(lab_id)
-        if not testbed_yaml:
-            msg = "Error: Failed to fetch testbed YAML"
-            logging.error(msg)
-            print(msg, file=sys.stderr)
-            return [msg], False, ""
-        if device_info:
-            try:
-                device_info_list = ast.literal_eval(device_info)
-                if isinstance(device_info_list, list):
-                    testbed_yaml = self.apply_device_info_credentials(testbed_yaml, device_info_list)
-            except Exception as e:
-                logging.warning(f"Failed to parse device_info for credentials: {e}")
-        try:
-            testbed_data = yaml.safe_load(testbed_yaml)
-        except Exception as e:
-            msg = "Error: Failed to parse testbed YAML"
-            logging.error(msg)
-            print(msg, file=sys.stderr)
-            return [msg], False, ""
-        device_map = {
-            k.lower(): k for k in testbed_data['devices']
-            if k != 'terminal_server'
-        }
-        if not device_info:
-            device_info_list = []
-            for name in device_map.values():
-                os_type = testbed_data['devices'][name].get('os', '').lower()
-                cmd = "show version" if os_type == 'ios' else "uname -a"
-                pattern = "Cisco IOS Software" if os_type == 'ios' else "Linux"
-                device_info_list.append({
-                    "device_name": name,
-                    "commands": [{
-                        "command": cmd,
-                        "validations": [{"pattern": pattern, "match_type": "wildcard"}]
-                    }]
-                })
-        else:
-            try:
-                device_info_list = ast.literal_eval(device_info)
-            except Exception as e:
-                msg = "Error: Invalid device_info"
-                logging.error(msg)
-                print(msg, file=sys.stderr)
-                return [msg], False, ""
-        has_validations = any(
-            any("validations" in cmd_info for cmd_info in dev.get("commands", []))
-            for dev in device_info_list
-        )
-        all_results = []
-        all_raw_outputs = []
-        overall_result = True
-        for device in device_info_list:
-            req = device['device_name'].lower()
-            actual = device_map.get(req)
-            if not actual:
-                msg = f"Incorrectly Configured - {device['device_name']} - not_in_testbed"
-                all_results.append(msg)
-                overall_result = False
-                continue
-            minimal = {
-                'devices': {
-                    actual: testbed_data['devices'][actual],
-                    'terminal_server': testbed_data['devices']['terminal_server']
-                }
-            }
-            try:
-                testbed = load(yaml.safe_dump(minimal))
-            except Exception as e:
-                msg = f"Incorrectly Configured - {device['device_name']} - testbed_load_failed"
-                all_results.append(msg)
-                logging.error(f"Load failed: {e}")
-                overall_result = False
-                continue
-            res, passed, raw_out = self.execute_commands_on_device(
-                device, testbed, actual, timeout=timeout, clear_screen=clear_screen
-            )
-            all_results.extend(res)
-            all_raw_outputs.extend(raw_out)
-            if not passed:
-                overall_result = False
-        if has_validations:
-            return all_results, overall_result, ""
-        else:
-            merged_raw = "\n\n".join(all_raw_outputs)
-            return all_results, overall_result, merged_raw
 
     def _is_valid_lab_id(self, lab_id):
         # Check if a lab_id matches the UUID format
