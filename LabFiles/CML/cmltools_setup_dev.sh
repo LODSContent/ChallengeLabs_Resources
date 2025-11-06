@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.0049
+# CML Tools v1.20251106.0130
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -663,8 +663,6 @@ class CMLClient:
             dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
             if self.debug:
                 logging.info(f"Connected to {actual_name}")
-            # Drain initial buffer after connect to remove any pending prompt
-            dev.spawn.read()
         except Exception as e:
             msg = f"Incorrectly Configured - {dev_name} - connect_failed"
             results.append(msg)
@@ -676,7 +674,10 @@ class CMLClient:
         # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
         if clear_screen:
             self.send_clear_sequence(dev, os_type)
-
+            try:
+                dev.execute('', timeout=2)  # Sync to prompt, discard any leftover
+            except:
+                pass
         merged_output = []
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
