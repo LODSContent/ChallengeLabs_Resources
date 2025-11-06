@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.0130
+# CML Tools v1.20251106.0208
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -615,12 +615,12 @@ class CMLClient:
     def send_clear_sequence(self, dev, os_type):
         # Send sequence to escape editors/modes and clear screen/buffer
         # Output is consumed and NOT captured
-        try: 
+        try:
             # Ctrl-Z to exit config
             dev.send('\x1A')
             time.sleep(0.1)
             dev.spawn.read()  # Drain buffer
-    
+
             # Ctrl-C to interrupt
             dev.send('\x03')
             time.sleep(0.1)
@@ -636,7 +636,6 @@ class CMLClient:
                 dev.sendline('clear')
                 time.sleep(0.1)
                 dev.spawn.read()  # Drain buffer
-
         except:
             pass  # Best effort
 
@@ -650,7 +649,6 @@ class CMLClient:
             msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
             results.append(msg)
             return results, False, raw_outputs
-
         try:
             connect_kwargs = {
                 'mit': True,
@@ -668,16 +666,16 @@ class CMLClient:
             results.append(msg)
             logging.error(f"Connect failed for {actual_name}: {e}")
             return results, False, raw_outputs
-
         os_type = getattr(dev, 'os', '').lower()
-
         # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
         if clear_screen:
             self.send_clear_sequence(dev, os_type)
+        # Disable pagination for IOS to handle large outputs
+        if os_type == 'ios':
             try:
-                dev.execute('', timeout=2)  # Sync to prompt, discard any leftover
+                dev.execute('terminal length 0', timeout=5)
             except:
-                pass
+                pass  # Best effort
         merged_output = []
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
@@ -714,16 +712,19 @@ class CMLClient:
                 merged_output.append("")
                 logging.error(f"Command failed: {cmd} – {e}")
                 device_passed = False
-
+        # Restore pagination for IOS
+        if os_type == 'ios':
+            try:
+                dev.execute('terminal length 24', timeout=5)
+            except:
+                pass  # Best effort
         # === CLEAR AFTER LAST COMMAND (if --clear) ===
         if clear_screen:
             self.send_clear_sequence(dev, os_type)
-
         try:
             dev.disconnect()
         except:
             pass
-
         return results, device_passed, merged_output
 
     def validate(self, lab_id, device_info=None, timeout=60, clear_screen=False):
