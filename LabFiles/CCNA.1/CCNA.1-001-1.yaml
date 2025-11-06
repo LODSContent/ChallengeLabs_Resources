@@ -1,0 +1,686 @@
+annotations: []
+smart_annotations: []
+nodes:
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |2-
+
+          hostname Switch
+
+          logging console
+          !
+          interface range Ethernet0/0-3
+           switchport access vlan 1
+
+          interface vlan 1
+          no ip address
+          shutdown
+          !
+          line con 0
+           exec-timeout 0 0
+           no logging sync
+          line vty 0 4
+           exec-timeout 0 0
+           login
+           transport input none
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n0
+    image_definition: null
+    label: Switch-1
+    node_definition: ioll2-xe
+    parameters: {}
+    ram: null
+    tags: []
+    x: -320
+    y: -80
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          Building configuration...
+
+          Current configuration : 928 bytes
+          !
+          ! Last configuration change at 00:54:48 UTC Thu Oct 16 2025
+          !
+          version 17.16
+          service timestamps debug datetime msec
+          service timestamps log datetime msec
+          !
+          hostname Router
+          !
+          boot-start-marker
+          boot-end-marker
+          !
+          !
+          logging console
+          no aaa new-model
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          ip cef
+          login on-success log
+          no ipv6 cef
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          memory free low-watermark processor 79983
+          !
+          !
+          spanning-tree mode rapid-pvst
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          interface Ethernet0/0
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/1
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/2
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/3
+           no ip address
+           shutdown
+          !
+          ip forward-protocol nd
+          ip forward-protocol udp
+          !
+          !
+          ip http server
+          ip http secure-server
+          ip ssh bulk-mode 131072
+          no logging btrace
+          !
+          !
+          !
+          control-plane
+          !
+          !
+          !
+          line con 0
+           exec-timeout 0 0
+          line aux 0
+          line vty 0 4
+           exec-timeout 0 0
+           login
+           transport input none
+          !
+          !
+          !
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n1
+    image_definition: null
+    label: Router-1
+    node_definition: iol-xe
+    parameters: {}
+    ram: null
+    tags: []
+    x: -120
+    y: -80
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          Building configuration...
+
+          Current configuration : 2276 bytes
+          !
+          ! Last configuration change at 00:49:20 UTC Thu Oct 16 2025
+          !
+          version 17.16
+          service timestamps debug datetime msec
+          service timestamps log datetime msec
+          !
+          hostname THE_INTERNET
+          !
+          boot-start-marker
+          boot-end-marker
+          !
+          !
+          no logging console
+          no aaa new-model
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          ip dhcp pool SITE1
+           network 203.0.113.0 255.255.255.252
+           default-router 203.0.113.1
+           dns-server 8.8.8.8 8.8.4.4
+           domain-name site1.lab
+           lease 8
+          !
+          ip dhcp pool SITE2
+           network 203.0.113.4 255.255.255.252
+           default-router 203.0.113.5
+           dns-server 8.8.8.8 8.8.4.4
+           domain-name site2.lab
+           lease 8
+          !
+          !
+          !
+          ip host cisco.com 72.163.4.185
+          ip host google.com 142.250.176.14
+          ip host dns.google 8.8.8.8 8.8.4.4
+          ip host time.nist.gov 132.163.96.1
+          ip name-server 8.8.8.8
+          ip domain name internet.lab
+          ip cef
+          login on-success log
+          no ipv6 cef
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          memory free low-watermark processor 79983
+          !
+          !
+          spanning-tree mode rapid-pvst
+          !
+          enable secret 9 $9$HdkIF2Z/yLSxgP$.PmkGB.oOGj7JCwGwYca42Rw2T.GLuJC44fAHAhqX1U
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          interface Loopback1
+           description Google's primary DNS server
+           ip address 8.8.8.8 255.255.255.255
+          !
+          interface Loopback2
+           description Google's secondary DNS server
+           ip address 8.8.4.4 255.255.255.255
+          !
+          interface Loopback3
+           description Address for cisco.com
+           ip address 72.163.4.185 255.255.255.255
+          !
+          interface Loopback4
+           description Address for google.com
+           ip address 142.250.176.14 255.255.255.255
+          !
+          interface Loopback5
+           description Address for time.nist.gov (US based Time server)
+           ip address 132.163.96.1 255.255.255.255
+          !
+          interface Ethernet0/0
+           description Connect to Router-1 - RFC5737 Test Net 3 address space.
+           ip address 203.0.113.1 255.255.255.252
+          !
+          interface Ethernet0/1
+           description Connect to Router-2 - RFC5737 Test Net 3 address space.
+           ip address 203.0.113.5 255.255.255.252
+          !
+          interface Ethernet0/2
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/3
+           no ip address
+           shutdown
+          !
+          ip forward-protocol nd
+          ip forward-protocol udp
+          !
+          !
+          ip http server
+          ip http secure-server
+          ip dns server
+          ip ssh bulk-mode 131072
+          no logging btrace
+          !
+          !
+          !
+          control-plane
+          !
+          !
+          !
+          line con 0
+           exec-timeout 0 0
+           logging synchronous
+          line aux 0
+          line vty 0 4
+           exec-timeout 0 0
+           password cisco
+           login
+           transport input telnet ssh
+          !
+          ntp master 1
+          ntp update-calendar
+          !
+          !
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n2
+    image_definition: null
+    label: THE_INTERNET
+    node_definition: iol-xe
+    parameters: {}
+    ram: null
+    tags: []
+    x: 80
+    y: -120
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          Building configuration...
+
+          Current configuration : 928 bytes
+          !
+          ! Last configuration change at 00:54:48 UTC Thu Oct 16 2025
+          !
+          version 17.16
+          service timestamps debug datetime msec
+          service timestamps log datetime msec
+          !
+          hostname Router
+          !
+          boot-start-marker
+          boot-end-marker
+          !
+          !
+          logging console
+          no aaa new-model
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          ip cef
+          login on-success log
+          no ipv6 cef
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          memory free low-watermark processor 79983
+          !
+          !
+          spanning-tree mode rapid-pvst
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          !
+          interface Ethernet0/0
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/1
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/2
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/3
+           no ip address
+           shutdown
+          !
+          ip forward-protocol nd
+          ip forward-protocol udp
+          !
+          !
+          ip http server
+          ip http secure-server
+          ip ssh bulk-mode 131072
+          no logging btrace
+          !
+          !
+          !
+          control-plane
+          !
+          !
+          !
+          line con 0
+           exec-timeout 0 0
+          line aux 0
+          line vty 0 4
+           exec-timeout 0 0
+           login
+           transport input none
+          !
+          !
+          !
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n3
+    image_definition: null
+    label: Router-2
+    node_definition: iol-xe
+    parameters: {}
+    ram: null
+    tags: []
+    x: 280
+    y: -80
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |2-
+
+          hostname Switch
+
+          logging console
+          !
+          interface range Ethernet0/0-3
+           switchport access vlan 1
+
+          interface vlan 1
+          no ip address
+          shutdown
+          !
+          line con 0
+           exec-timeout 0 0
+           no logging sync
+          line vty 0 4
+           exec-timeout 0 0
+           login
+           transport input none
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n4
+    image_definition: null
+    label: Switch-2
+    node_definition: ioll2-xe
+    parameters: {}
+    ram: null
+    tags: []
+    x: 480
+    y: -80
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+links:
+  - id: l0
+    n1: n2
+    n2: n1
+    i1: i1
+    i2: i1
+    conditioning: {}
+    label: iol-0_0-Ethernet0/0<->iol-0-Ethernet0/0
+  - id: l1
+    n1: n2
+    n2: n3
+    i1: i2
+    i2: i1
+    conditioning: {}
+    label: iol-0_0-Ethernet0/1<->iol-0_1-Ethernet0/0
+  - id: l2
+    n1: n3
+    n2: n4
+    i1: i2
+    i2: i1
+    conditioning: {}
+    label: iol-0_1-Ethernet0/1<->iol-l2-0_0-Ethernet0/0
+  - id: l3
+    n1: n1
+    n2: n0
+    i1: i2
+    i2: i1
+    conditioning: {}
+    label: iol-0-Ethernet0/1<->iol-l2-0-Ethernet0/0
+lab:
+  description: 'v1.0'
+  notes: ''
+  title: LAB-TOPOLOGY1
+  version: 0.3.0
