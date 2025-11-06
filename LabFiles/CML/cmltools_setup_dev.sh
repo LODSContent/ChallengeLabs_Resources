@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.1355
+# CML Tools v1.20251106.1751
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -943,7 +943,7 @@ class CMLClient:
             print(f"Error: Import failed: {e}", file=sys.stderr)
             return ""
 
-    def wipelab(self, lab_id):
+     def wipelab(self, lab_id):
         # Wipe a specific lab (remove configurations and reset to clean state)
         # Args:
         #   lab_id: UUID of the lab to wipe
@@ -964,11 +964,11 @@ class CMLClient:
                     print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
                     return ""
                 # Wait for lab to stop
-                for _ in range(self.RETRY_COUNT):
+                for _ in range(int(os.getenv("RETRY_COUNT", 30))):
                     state = self.get_lab_state(lab_id)
                     if state != "STARTED":
                         break
-                    time.sleep(self.RETRY_DELAY)
+                    time.sleep(int(os.getenv("RETRY_DELAY", 10)))
                 if state == "STARTED":
                     logging.error(f"Lab {lab_id} failed to stop within timeout")
                     print(f"Error: Lab {lab_id} failed to stop", file=sys.stderr)
@@ -1017,11 +1017,11 @@ class CMLClient:
                     print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
                     return ""
                 # Wait for lab to stop
-                for _ in range(self.RETRY_COUNT):
+                for _ in range(int(os.getenv("RETRY_COUNT", 30))):
                     state = self.get_lab_state(lab_id)
                     if state != "STARTED":
                         break
-                    time.sleep(self.RETRY_DELAY)
+                    time.sleep(int(os.getenv("RETRY_DELAY", 10)))
                 if state == "STARTED":
                     logging.error(f"Lab {lab_id} failed to stop within timeout")
                     print(f"Error: Lab {lab_id} failed to stop", file=sys.stderr)
@@ -1055,7 +1055,7 @@ class CMLClient:
         except Exception as e:
             logging.error(f"Unexpected error deleting lab {lab_id}: {e}")
             print(f"Error: Unexpected error deleting lab {lab_id}: {e}", file=sys.stderr)
-            return ""            
+            return ""        
 
 def main():
     # Main function to handle command-line arguments and dispatch commands
@@ -1189,8 +1189,15 @@ def main():
             print("Error: -labid or positional LABID required for wipelab", file=sys.stderr)
             sys.exit(1)
         if not client._is_valid_lab_id(labid):
-            print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
-            sys.exit(1)
+            # Allow title lookup only if a title was supplied
+            if labid:
+                labid = client.findlab(labid)
+                if not labid:
+                    print(f"Error: Lab title '{labid}' not found", file=sys.stderr)
+                    sys.exit(1)
+            else:
+                print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
+                sys.exit(1)
         result = client.wipelab(labid)
         if result:
             print("true")
@@ -1201,8 +1208,15 @@ def main():
             print("Error: -labid or positional LABID required for deletelab", file=sys.stderr)
             sys.exit(1)
         if not client._is_valid_lab_id(labid):
-            print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
-            sys.exit(1)
+            # Allow title lookup only if a title was supplied
+            if labid:
+                labid = client.findlab(labid)
+                if not labid:
+                    print(f"Error: Lab title '{labid}' not found", file=sys.stderr)
+                    sys.exit(1)
+            else:
+                print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
+                sys.exit(1)
         result = client.deletelab(labid)
         if result:
             print("true")
