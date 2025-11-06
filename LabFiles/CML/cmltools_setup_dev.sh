@@ -628,7 +628,7 @@ class CMLClient:
 
             if os_type == 'ios':
                 dev.sendline('exit')
-                time.sleep(0.1)
+                time.sleep(1.0)
                 dev.sendline(' ')
                 time.sleep(0.1)
                 dev.spawn.read()  # Drain buffer
