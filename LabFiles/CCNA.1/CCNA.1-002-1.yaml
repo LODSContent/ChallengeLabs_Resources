@@ -402,9 +402,6 @@ nodes:
         content: |-
           # this is a shell script which will be sourced at boot
           hostname FILE_SERVER
-          # configurable user account
-          USERNAME=admin
-          PASSWORD=cisco
           sudo ifconfig eth0 10.1.10.100 netmask 255.255.255.0
           sudo ifconfig eth1 10.1.20.100 netmask 255.255.255.0
     cpu_limit: null
@@ -468,7 +465,7 @@ links:
     conditioning: {}
     label: SERVER1-eth0<->SWITCH2-Ethernet0/1
 lab:
-  description: 'v1.1'
+  description: 'v1.2'
   notes: ''
   title: LAB-TOPOLOGY1
   version: 0.3.0
