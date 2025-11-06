@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.2124
+# CML Tools v1.20251105.2135
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -612,107 +612,100 @@ class CMLClient:
             logging.error(f"Failed to apply device_info credentials: {e}")
             return testbed_yaml
 
-    def send_clear_sequence(self, dev, os_type):
-        # Send Ctrl-Z and clear/exit sequence to escape editors and clear screen
-        # Output is NOT captured — prevents contamination of raw output
+    def send_clear_sequence(self, dev):
+        """Clear screen and return to exec prompt without logging out."""
+        os_type = getattr(dev, 'os', '').lower()
         try:
-            dev.sendline('\x1A')  # Ctrl-Z
-            time.sleep(0.5)
+            dev.send('\x1A')  # Ctrl-Z
+            time.sleep(0.3)
             if os_type == 'ios':
-                dev.sendline('exit')
-                time.sleep(0.5)
-                dev.sendline('')  # Press RETURN to get started
-                time.sleep(0.5)
+                dev.sendline('end')
+                time.sleep(0.3)
+                dev.sendline('term len 0')
+                time.sleep(0.2)
+                dev.sendline('clear line')
+                time.sleep(0.3)
             else:
                 dev.sendline('clear')
-                time.sleep(0.5)
-        except:
-            pass  # Best effort
+                time.sleep(0.3)
+        except Exception:
+            pass
 
-    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False):
-        results = []
-        raw_outputs = []
-        device_passed = True
-        dev_name = device['device_name']
-        dev = testbed.devices.get(actual_name)
-        if not dev:
-            msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
-            results.append(msg)
-            return results, False, raw_outputs
+    def execute_one_command(self, dev, cmd, timeout, clear_screen):
         try:
-            connect_kwargs = {
-                'mit': True,
-                'hostkey_verify': False,
-                'allow_agent': False,
-                'look_for_keys': False,
-                'timeout': 60
-            }
-            init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
-            dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
-            if self.debug:
-                logging.info(f"Connected to {actual_name}")
+            dev.connect(
+                mit=True,
+                hostkey_verify=False,
+                allow_agent=False,
+                look_for_keys=False,
+                timeout=60
+            )
         except Exception as e:
-            msg = f"Incorrectly Configured - {dev_name} - connect_failed"
-            results.append(msg)
-            logging.error(f"Connect failed for {actual_name}: {e}")
-            return results, False, raw_outputs
+            logging.error(f"Connect failed: {e}")
+            return ""
 
-        os_type = getattr(dev, 'os', '').lower()
-        merged_output = []
-
-        # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
         if clear_screen:
-            self.send_clear_sequence(dev, os_type)
+            self.send_clear_sequence(dev)
 
-        for cmd_info in device['commands']:
-            cmd = cmd_info['command']
-            # === MERGE COMMAND: validate once on all output ===
-            if cmd == "__MERGE_FOR_VALIDATION__":
-                combined = "\n\n".join(merged_output)
-                passed = True
-                for val in cmd_info.get('validations', []):
-                    ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
-                    if not ok:
-                        passed = False
-                status = "Correctly Configured" if passed else "Incorrectly Configured"
-                results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
-                device_passed = passed
-                continue
-            # === NORMAL COMMAND: collect output ===
-            try:
-                if timeout == 0:
-                    dev.sendline(cmd)
-                    merged_output.append("")
-                else:
-                    # === ENSURE PROMPT BEFORE COMMAND ===
-                    if clear_screen:
-                        dev.sendline('')
-                        time.sleep(0.5)
-                    output = dev.execute(cmd, timeout=timeout)
-                    # === STRIP FINAL PROMPT ===
-                    lines = output.splitlines()
-                    if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
-                        lines = lines[:-1]
-                    output = '\n'.join(lines)
-                    merged_output.append(output)
-            except Exception as e:
-                merged_output.append("")
-                logging.error(f"Command failed: {cmd} – {e}")
-                device_passed = False
+        try:
+            out = dev.execute(cmd, timeout=timeout)
+            lines = out.splitlines()
+            if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
+                lines.pop()
+            clean = '\n'.join(lines)
+        except Exception as e:
+            logging.error(f"Command '{cmd}' failed: {e}")
+            clean = ""
 
-            # === CLEAR AFTER EACH COMMAND (if --clear) ===
-            if clear_screen:
-                self.send_clear_sequence(dev, os_type)
-
-        # === FINAL CLEAR AFTER LAST COMMAND (if --clear) ===
         if clear_screen:
-            self.send_clear_sequence(dev, os_type)
+            self.send_clear_sequence(dev)
 
         try:
             dev.disconnect()
-        except:
+        except Exception:
             pass
-        return results, device_passed, merged_output
+
+        return clean
+
+    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False):
+        dev_name = device['device_name']
+        dev = testbed.devices.get(actual_name)
+        if not dev:
+            return [f"Incorrectly Configured - {dev_name} - not_in_testbed"], False, []
+
+        raw_outputs = []
+        passed = True
+
+        for cmd_info in device['commands']:
+            cmd = cmd_info['command']
+            if cmd == "__MERGE_FOR_VALIDATION__":
+                continue
+
+            out = self.execute_one_command(dev, cmd, timeout, clear_screen)
+            raw_outputs.append(out)
+            if not out.strip():
+                passed = False
+
+        # MERGE VALIDATION
+        merge_idx = next((i for i, c in enumerate(device['commands'])
+                          if c['command'] == "__MERGE_FOR_VALIDATION__"), None)
+        if merge_idx is not None:
+            combined = "\n\n".join(raw_outputs)
+            merge_info = device['commands'][merge_idx]
+            ok = True
+            msgs = []
+            for v in merge_info.get('validations', []):
+                m, err = validate_pattern(v, combined, dev_name,
+                                          merge_info.get('original_cmd', 'MERGED'), self.debug)
+                ok &= m
+                msgs.extend(err)
+            status = "Correctly Configured" if ok else "Incorrectly Configured"
+            raw_outputs.append(f"{status} - {dev_name} - {merge_info.get('original_cmd','MERGED')}")
+            if msgs:
+                raw_outputs.extend(msgs)
+            passed &= ok
+
+        return raw_outputs, passed, raw_outputs
 
     def validate(self, lab_id, device_info=None, timeout=60, clear_screen=False):
         # Validate device configurations
