@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.0208
+# CML Tools v1.20251106.1355
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -126,6 +126,8 @@ cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHO
 #   gettestbed: Get PyATS testbed YAML for a lab
 #   validate: Validate device configurations or return raw command output
 #   importlab: Download lab from URL, convert, and import into CML (one step)
+#   wipelab: Wipe a specific lab (requires lab ID; lab must be stopped)
+#   deletelab: Delete a specific lab (requires lab ID; lab must be stopped and wiped)
 #
 # Environment Variables:
 #   CML_ADDRESS: URL of the CML server (e.g., https://192.168.1.10)
@@ -941,6 +943,120 @@ class CMLClient:
             print(f"Error: Import failed: {e}", file=sys.stderr)
             return ""
 
+    def wipelab(self, lab_id):
+        # Wipe a specific lab (remove configurations and reset to clean state)
+        # Args:
+        #   lab_id: UUID of the lab to wipe
+        # Returns: True on success, empty string on failure
+        if not self._is_valid_lab_id(lab_id):
+            logging.error(f"Invalid lab ID format: {lab_id}")
+            print(f"Error: Invalid lab ID format: {lab_id}", file=sys.stderr)
+            return ""
+        try:
+            # Ensure lab is stopped
+            state = self.get_lab_state(lab_id)
+            if state == "STARTED":
+                if self.debug:
+                    logging.info(f"Lab {lab_id} is running; stopping before wipe")
+                stop_result = self.stoplab(lab_id)
+                if not stop_result:
+                    logging.error(f"Failed to stop lab {lab_id} before wiping")
+                    print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
+                    return ""
+                # Wait for lab to stop
+                for _ in range(self.RETRY_COUNT):
+                    state = self.get_lab_state(lab_id)
+                    if state != "STARTED":
+                        break
+                    time.sleep(self.RETRY_DELAY)
+                if state == "STARTED":
+                    logging.error(f"Lab {lab_id} failed to stop within timeout")
+                    print(f"Error: Lab {lab_id} failed to stop", file=sys.stderr)
+                    return ""
+            self.ensure_jwt()
+            if self.debug:
+                logging.info(f"Wiping lab {lab_id}")
+            response = requests.post(
+                f"{self.cml_address}/api/v0/labs/{lab_id}/wipe",
+                headers={"Authorization": f"Bearer {self.jwt}"},
+                verify=False
+            )
+            response.raise_for_status()
+            if self.debug:
+                logging.info(f"Lab {lab_id} wiped successfully")
+            return True
+        except requests.RequestException as e:
+            logging.error(f"Failed to wipe lab {lab_id}: {e}")
+            print(f"Error: Failed to wipe lab {lab_id}: {e}", file=sys.stderr)
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"Response: {e.response.text}", file=sys.stderr)
+            return ""
+        except Exception as e:
+            logging.error(f"Unexpected error wiping lab {lab_id}: {e}")
+            print(f"Error: Unexpected error wiping lab {lab_id}: {e}", file=sys.stderr)
+            return ""
+
+    def deletelab(self, lab_id):
+        # Delete a specific lab (must be stopped and wiped)
+        # Args:
+        #   lab_id: UUID of the lab to delete
+        # Returns: True on success, empty string on failure
+        if not self._is_valid_lab_id(lab_id):
+            logging.error(f"Invalid lab ID format: {lab_id}")
+            print(f"Error: Invalid lab ID format: {lab_id}", file=sys.stderr)
+            return ""
+        try:
+            # Ensure lab is stopped
+            state = self.get_lab_state(lab_id)
+            if state == "STARTED":
+                if self.debug:
+                    logging.info(f"Lab {lab_id} is running; stopping before wipe")
+                stop_result = self.stoplab(lab_id)
+                if not stop_result:
+                    logging.error(f"Failed to stop lab {lab_id} before wiping")
+                    print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
+                    return ""
+                # Wait for lab to stop
+                for _ in range(self.RETRY_COUNT):
+                    state = self.get_lab_state(lab_id)
+                    if state != "STARTED":
+                        break
+                    time.sleep(self.RETRY_DELAY)
+                if state == "STARTED":
+                    logging.error(f"Lab {lab_id} failed to stop within timeout")
+                    print(f"Error: Lab {lab_id} failed to stop", file=sys.stderr)
+                    return ""
+            # Wipe lab before deletion
+            if self.debug:
+                logging.info(f"Wiping lab {lab_id} before deletion")
+            wipe_result = self.wipelab(lab_id)
+            if not wipe_result:
+                logging.error(f"Failed to wipe lab {lab_id} before deletion")
+                print(f"Error: Failed to wipe lab {lab_id}", file=sys.stderr)
+                return ""
+            self.ensure_jwt()
+            if self.debug:
+                logging.info(f"Deleting lab {lab_id}")
+            response = requests.delete(
+                f"{self.cml_address}/api/v0/labs/{lab_id}",
+                headers={"Authorization": f"Bearer {self.jwt}"},
+                verify=False
+            )
+            response.raise_for_status()
+            if self.debug:
+                logging.info(f"Lab {lab_id} deleted successfully")
+            return True
+        except requests.RequestException as e:
+            logging.error(f"Failed to delete lab {lab_id}: {e}")
+            print(f"Error: Failed to delete lab {lab_id}: {e}", file=sys.stderr)
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"Response: {e.response.text}", file=sys.stderr)
+            return ""
+        except Exception as e:
+            logging.error(f"Unexpected error deleting lab {lab_id}: {e}")
+            print(f"Error: Unexpected error deleting lab {lab_id}: {e}", file=sys.stderr)
+            return ""            
+
 def main():
     # Main function to handle command-line arguments and dispatch commands
     # Supports positional arguments (FUNCTION, LABID) and named arguments
@@ -972,7 +1088,7 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    valid_functions = ["authenticate", "findlab", "getlabs", "getdetails", "getstate", "startlab", "stoplab", "gettestbed", "validate", "importlab"]
+    valid_functions = ["authenticate", "findlab", "getlabs", "getdetails", "getstate", "startlab", "stoplab", "gettestbed", "validate", "importlab", "wipelab", "deletelab"]
     if function not in valid_functions:
         print(f"Error: Invalid function '{function}'. Valid: {', '.join(valid_functions)}", file=sys.stderr)
         sys.exit(1)
@@ -1067,6 +1183,30 @@ def main():
             sys.exit(1)
         lab_id = client.import_lab(args.source)
         if not lab_id:
+            sys.exit(1)
+    elif function == "wipelab":
+        if not labid:
+            print("Error: -labid or positional LABID required for wipelab", file=sys.stderr)
+            sys.exit(1)
+        if not client._is_valid_lab_id(labid):
+            print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
+            sys.exit(1)
+        result = client.wipelab(labid)
+        if result:
+            print("true")
+        else:
+            sys.exit(1)
+    elif function == "deletelab":
+        if not labid:
+            print("Error: -labid or positional LABID required for deletelab", file=sys.stderr)
+            sys.exit(1)
+        if not client._is_valid_lab_id(labid):
+            print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
+            sys.exit(1)
+        result = client.deletelab(labid)
+        if result:
+            print("true")
+        else:
             sys.exit(1)
     else:
         parser.print_help()
