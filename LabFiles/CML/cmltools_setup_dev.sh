@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.2329
+# CML Tools v1.20251105.2335
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -619,22 +619,22 @@ class CMLClient:
             # Escape vi/editor
             dev.send('\x1B:q!\r')  # ESC :q!
             time.sleep(0.1)
-            dev.expect(re.compile('.*', re.DOTALL), timeout=0.5)
-
+            dev.spawn.read()  # Drain buffer
+    
             # Ctrl-Z to exit config
             dev.send('\x1A')
             time.sleep(0.1)
-            dev.expect(re.compile('.*', re.DOTALL), timeout=0.5)
-
+            dev.spawn.read()  # Drain buffer
+    
             # Ctrl-C to interrupt
             dev.send('\x03')
             time.sleep(0.1)
-            dev.expect(re.compile('.*', re.DOTALL), timeout=0.5)
-
+            dev.spawn.read()  # Drain buffer
+    
             if os_type != 'ios':
                 dev.sendline('clear')
                 time.sleep(0.1)
-                dev.expect(re.compile('.*', re.DOTALL), timeout=0.5)
+                dev.spawn.read()  # Drain buffer
         except:
             pass  # Best effort
 
