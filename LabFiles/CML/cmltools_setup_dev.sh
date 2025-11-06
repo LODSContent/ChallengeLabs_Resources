@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251105.2140
+# CML Tools v1.20251105.0145
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -612,105 +612,279 @@ class CMLClient:
             logging.error(f"Failed to apply device_info credentials: {e}")
             return testbed_yaml
 
-    def send_clear_sequence(self, dev):
-        """Clear screen and return to exec prompt without logging out."""
-        os_type = getattr(dev, 'os', '').lower()
+    def send_clear_sequence(self, dev, os_type):
+        # Send Ctrl-Z and clear/exit sequence to escape editors and clear screen
+        # Output is NOT captured — prevents contamination of raw output
         try:
-            dev.send('\x1A')  # Ctrl-Z
-            time.sleep(0.3)
+            dev.sendline('\x1A')  # Ctrl-Z
+            time.sleep(0.1)
             if os_type == 'ios':
-                dev.sendline('end')
-                time.sleep(0.3)
-                dev.sendline('term len 0')
-                time.sleep(0.2)
-                # Try clear line – ignore if not supported
-                try:
-                    dev.sendline('clear line')
-                    time.sleep(0.3)
-                except Exception:
-                    pass  # Best effort
+                dev.sendline('exit')
+                time.sleep(0.1)
             else:
                 dev.sendline('clear')
-                time.sleep(0.3)
-        except Exception:
-            pass
-
-    def execute_one_command(self, dev, cmd, timeout, clear_screen):
-        """Connect → clear → execute → capture clean output → disconnect."""
-        try:
-            dev.connect(
-                mit=True,
-                hostkey_verify=False,
-                allow_agent=False,
-                look_for_keys=False,
-                timeout=60
-            )
-        except Exception as e:
-            logging.error(f"Connect failed: {e}")
-            return ""
-
-        if clear_screen:
-            self.send_clear_sequence(dev)
-
-        try:
-            out = dev.execute(cmd, timeout=timeout)
-            lines = out.splitlines()
-            if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
-                lines.pop()
-            clean = '\n'.join(lines)
-        except Exception as e:
-            logging.error(f"Command '{cmd}' failed: {e}")
-            clean = ""
-
-        if clear_screen:
-            self.send_clear_sequence(dev)
-
-        try:
-            dev.disconnect()
-        except Exception:
-            pass
-
-        return clean
+                time.sleep(0.1)
+        except:
+            pass  # Best effort
 
     def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False):
+        results = []
+        raw_outputs = []
+        device_passed = True
         dev_name = device['device_name']
         dev = testbed.devices.get(actual_name)
         if not dev:
-            return [f"Incorrectly Configured - {dev_name} - not_in_testbed"], False, []
+            msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
+            results.append(msg)
+            return results, False, raw_outputs
 
-        raw_outputs = []
-        passed = True
+        # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
+        if clear_screen:
+            try:
+                connect_kwargs = {
+                    'mit': True,
+                    'hostkey_verify': False,
+                    'allow_agent': False,
+                    'look_for_keys': False,
+                    'timeout': 2
+                }
+                init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
+                dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
+                if self.debug:
+                    logging.info(f"Connected to {actual_name}")
+            except Exception as e:
+                msg = f"Incorrectly Configured - {dev_name} - connect_failed"
+                results.append(msg)
+                logging.error(f"Connect failed for {actual_name}: {e}")
+                return results, False, raw_outputs
+    
+            os_type = getattr(dev, 'os', '').lower()
+
+            self.send_clear_sequence(dev, os_type)
+    
+            try:
+                dev.disconnect()
+            except:
+                pass
+
+        try:
+            connect_kwargs = {
+                'mit': True,
+                'hostkey_verify': False,
+                'allow_agent': False,
+                'look_for_keys': False,
+                'timeout': 60
+            }
+            init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
+            dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
+            if self.debug:
+                logging.info(f"Connected to {actual_name}")
+        except Exception as e:
+            msg = f"Incorrectly Configured - {dev_name} - connect_failed"
+            results.append(msg)
+            logging.error(f"Connect failed for {actual_name}: {e}")
+            return results, False, raw_outputs
+
+        os_type = getattr(dev, 'os', '').lower()
+        merged_output = []
 
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
+            # === MERGE COMMAND: validate once on all output ===
             if cmd == "__MERGE_FOR_VALIDATION__":
+                combined = "\n\n".join(merged_output)
+                passed = True
+                for val in cmd_info.get('validations', []):
+                    ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
+                    if not ok:
+                        passed = False
+                status = "Correctly Configured" if passed else "Incorrectly Configured"
+                results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
+                device_passed = passed
                 continue
+            # === NORMAL COMMAND: collect output ===
+            try:
+                if timeout == 0:
+                    dev.sendline(cmd)
+                    merged_output.append("")
+                else:
+                    # === ENSURE PROMPT BEFORE COMMAND ===
+                    if clear_screen:
+                        dev.sendline('')
+                        time.sleep(0.5)
+                    output = dev.execute(cmd, timeout=timeout)
+                    # === STRIP FINAL PROMPT ===
+                    lines = output.splitlines()
+                    if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
+                        lines = lines[:-1]
+                    output = '\n'.join(lines)
+                    merged_output.append(output)
+            except Exception as e:
+                merged_output.append("")
+                logging.error(f"Command failed: {cmd} – {e}")
+                device_passed = False
 
-            out = self.execute_one_command(dev, cmd, timeout, clear_screen)
-            raw_outputs.append(out)
-            if not out.strip():
-                passed = False
+            # === CLEAR AFTER EACH COMMAND (if --clear) ===
+            #if clear_screen:
+                #self.send_clear_sequence(dev, os_type)
 
-        # MERGE VALIDATION
-        merge_idx = next((i for i, c in enumerate(device['commands'])
-                          if c['command'] == "__MERGE_FOR_VALIDATION__"), None)
-        if merge_idx is not None:
-            combined = "\n\n".join(raw_outputs)
-            merge_info = device['commands'][merge_idx]
-            ok = True
-            msgs = []
-            for v in merge_info.get('validations', []):
-                m, err = validate_pattern(v, combined, dev_name,
-                                          merge_info.get('original_cmd', 'MERGED'), self.debug)
-                ok &= m
-                msgs.extend(err)
-            status = "Correctly Configured" if ok else "Incorrectly Configured"
-            raw_outputs.append(f"{status} - {dev_name} - {merge_info.get('original_cmd','MERGED')}")
-            if msgs:
-                raw_outputs.extend(msgs)
-            passed &= ok
+        try:
+            dev.disconnect()
+        except:
+            pass
 
-        return raw_outputs, passed, raw_outputs
+        # === CLEAR AFTER LAST COMMAND (if --clear) ===
+        if clear_screen:
+            try:
+                connect_kwargs = {
+                    'mit': True,
+                    'hostkey_verify': False,
+                    'allow_agent': False,
+                    'look_for_keys': False,
+                    'timeout': 2
+                }
+                init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
+                dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
+                if self.debug:
+                    logging.info(f"Connected to {actual_name}")
+            except Exception as e:
+                msg = f"Incorrectly Configured - {dev_name} - connect_failed"
+                results.append(msg)
+                logging.error(f"Connect failed for {actual_name}: {e}")
+                return results, False, raw_outputs
+    
+            os_type = getattr(dev, 'os', '').lower()
+            self.send_clear_sequence(dev, os_type)
+
+            try:
+                dev.disconnect()
+            except:
+                pass
+
+        # === FINAL CLEAR AFTER LAST COMMAND (if --clear) ===
+        #if clear_screen:
+        #    self.send_clear_sequence(dev, os_type)
+
+        try:
+            dev.disconnect()
+        except:
+            pass
+        return results, device_passed, merged_output
+
+    def validate(self, lab_id, device_info=None, timeout=60, clear_screen=False):
+        # Validate device configurations
+        # Args:
+        #   lab_id: Lab ID or title
+        #   device_info: JSON string of device info (or None for default)
+        #   timeout: Per-command timeout in seconds (default: 60)
+        #   clear_screen: If True, send clear sequence before, after each, and after all commands
+        # Returns: results (list), overall_result (bool), raw_output (str if no validation)
+        if not lab_id:
+            lab_id = self.findlab()
+            if not lab_id:
+                msg = "Error: No lab ID provided and no default lab found"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False, ""
+        if not self._is_valid_lab_id(lab_id):
+            lab_id = self.findlab(lab_id)
+            if not lab_id:
+                msg = "Error: No lab found"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False, ""
+        if self.get_lab_state(lab_id) != "STARTED":
+            self.startlab(lab_id)
+            for _ in range(30):
+                time.sleep(10)
+                if self.get_lab_state(lab_id) == "STARTED":
+                    break
+        testbed_yaml = self.gettestbed(lab_id)
+        if not testbed_yaml:
+            msg = "Error: Failed to fetch testbed YAML"
+            logging.error(msg)
+            print(msg, file=sys.stderr)
+            return [msg], False, ""
+        if device_info:
+            try:
+                device_info_list = ast.literal_eval(device_info)
+                if isinstance(device_info_list, list):
+                    testbed_yaml = self.apply_device_info_credentials(testbed_yaml, device_info_list)
+            except Exception as e:
+                logging.warning(f"Failed to parse device_info for credentials: {e}")
+        try:
+            testbed_data = yaml.safe_load(testbed_yaml)
+        except Exception as e:
+            msg = "Error: Failed to parse testbed YAML"
+            logging.error(msg)
+            print(msg, file=sys.stderr)
+            return [msg], False, ""
+        device_map = {
+            k.lower(): k for k in testbed_data['devices']
+            if k != 'terminal_server'
+        }
+        if not device_info:
+            device_info_list = []
+            for name in device_map.values():
+                os_type = testbed_data['devices'][name].get('os', '').lower()
+                cmd = "show version" if os_type == 'ios' else "uname -a"
+                pattern = "Cisco IOS Software" if os_type == 'ios' else "Linux"
+                device_info_list.append({
+                    "device_name": name,
+                    "commands": [{
+                        "command": cmd,
+                        "validations": [{"pattern": pattern, "match_type": "wildcard"}]
+                    }]
+                })
+        else:
+            try:
+                device_info_list = ast.literal_eval(device_info)
+            except Exception as e:
+                msg = "Error: Invalid device_info"
+                logging.error(msg)
+                print(msg, file=sys.stderr)
+                return [msg], False, ""
+        has_validations = any(
+            any("validations" in cmd_info for cmd_info in dev.get("commands", []))
+            for dev in device_info_list
+        )
+        all_results = []
+        all_raw_outputs = []
+        overall_result = True
+        for device in device_info_list:
+            req = device['device_name'].lower()
+            actual = device_map.get(req)
+            if not actual:
+                msg = f"Incorrectly Configured - {device['device_name']} - not_in_testbed"
+                all_results.append(msg)
+                overall_result = False
+                continue
+            minimal = {
+                'devices': {
+                    actual: testbed_data['devices'][actual],
+                    'terminal_server': testbed_data['devices']['terminal_server']
+                }
+            }
+            try:
+                testbed = load(yaml.safe_dump(minimal))
+            except Exception as e:
+                msg = f"Incorrectly Configured - {device['device_name']} - testbed_load_failed"
+                all_results.append(msg)
+                logging.error(f"Load failed: {e}")
+                overall_result = False
+                continue
+            res, passed, raw_out = self.execute_commands_on_device(
+                device, testbed, actual, timeout=timeout, clear_screen=clear_screen
+            )
+            all_results.extend(res)
+            all_raw_outputs.extend(raw_out)
+            if not passed:
+                overall_result = False
+        if has_validations:
+            return all_results, overall_result, ""
+        else:
+            merged_raw = "\n\n".join(all_raw_outputs)
+            return all_results, overall_result, merged_raw
 
     def _is_valid_lab_id(self, lab_id):
         # Check if a lab_id matches the UUID format
