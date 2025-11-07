@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.2245
+# CML Tools v1.20251106.2252
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -1241,36 +1241,52 @@ def main():
             else:
                 print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
                 sys.exit(1)
-    
-        # Force stop
+
+        # --- 1. Ensure lab is stopped ---
         state = client.get_lab_state(labid)
-        if state != "DEFINED_ON_CORE":
+        if state == "STARTED":
             if not client.stoplab(labid):
                 print("Error: Failed to stop lab", file=sys.stderr)
                 sys.exit(1)
-            # Wait
-            for _ in range(30):
-                if client.get_lab_state(labid) == "DEFINED_ON_CORE":
+            # Wait for STOPPED or DEFINED_ON_CORE
+            for _ in range(int(os.getenv("RETRY_COUNT", 30))):
+                state = client.get_lab_state(labid)
+                if state in ("STOPPED", "DEFINED_ON_CORE"):
                     break
-                time.sleep(10)
-    
-        # Wipe (idempotent)
-        client.wipelab(labid)
-    
-        # Delete
+                time.sleep(int(os.getenv("RETRY_DELAY", 10)))
+            if state not in ("STOPPED", "DEFINED_ON_CORE"):
+                print("Error: Lab did not stop in time", file=sys.stderr)
+                sys.exit(1)
+
+        # --- 2. Wipe (idempotent) ---
+        if not client.wipelab(labid):
+            print("Error: Failed to wipe lab", file=sys.stderr)
+            sys.exit(1)
+
+        # --- 3. Delete: Accept STOPPED or DEFINED_ON_CORE ---
+        if state not in ("STOPPED", "DEFINED_ON_CORE"):
+            print(f"Error: Lab in invalid state for delete: {state}", file=sys.stderr)
+            sys.exit(1)
+
         try:
             client.ensure_jwt()
+            if client.debug:
+                logging.info(f"Deleting lab {labid} (state={state})")
             resp = requests.delete(
                 f"{client.cml_address}/api/v0/labs/{labid}",
                 headers={"Authorization": f"Bearer {client.jwt}"},
                 verify=False
             )
+            # 404 = already gone → success
+            if resp.status_code == 404:
+                print("true")
+                return
             resp.raise_for_status()
             print("true")
-        except Exception as e:
+        except requests.RequestException as e:
             print(f"Error: Delete failed: {e}", file=sys.stderr)
-            if hasattr(e, 'response') and e.response:
-                print(e.response.text, file=sys.stderr)
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"Response: {e.response.text}", file=sys.stderr)
             sys.exit(1)
     else:
         parser.print_help()
