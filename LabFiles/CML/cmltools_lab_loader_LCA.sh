@@ -4,15 +4,18 @@
 # Imports multiple labs from array of URLs. All must succeed → true
 # =============================================================================
 
-# Source environment
-source "$HOME/labfiles/cml_env.sh" 2>/dev/null || { echo false; return; }
-
 # === DEFINE YOUR LAB URLS HERE ===
 LAB_URLS=(
   "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CCNA.1/Sample_Lab_1.yaml"
-  "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CCNA.1/CCNA.1-LAB2.yaml"
+  "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LabFiles/CCNA.1/CCNA.1-002-1.yaml"
   # Add more URLs as needed
 )
+
+# Remove existing default lab?
+removedefault=true
+
+# Source environment
+source "$HOME/labfiles/cml_env.sh" 2>/dev/null || { echo false; return; }
 
 MAX_RETRIES=3
 RETRY_DELAY=5
@@ -36,8 +39,17 @@ import_single_lab() {
   return 1  # All retries failed
 }
 
-# Main: Try to import ALL labs
+# Main:
 main() {
+  # Wipe the current lab if removedefault is true
+  if [ "$removedefault" = true ]; then
+    echo "Removing default lab: CCNA Prep 2025 S2E4 Telnet to SSH" >&2
+    if ! cmltools deletelab "CCNA Prep 2025 S2E4 Telnet to SSH" 2>/dev/null; then
+      echo "WARNING: Failed to delete default lab – continuing" >&2
+    fi
+  fi
+  
+  # Import the new lab(s)
   for url in "${LAB_URLS[@]}"; do
     if ! import_single_lab "$url"; then
       return 1  # Any failure → overall failure
