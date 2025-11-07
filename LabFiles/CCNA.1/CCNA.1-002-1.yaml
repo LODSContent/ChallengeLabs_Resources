@@ -205,7 +205,7 @@ nodes:
     hide_links: false
     id: n0
     image_definition: null
-    label: SWITCH1
+    label: Switch1
     node_definition: ioll2-xe
     parameters: {}
     ram: null
@@ -336,14 +336,14 @@ nodes:
       - name: node.cfg
         content: |-
           # this is a shell script which will be sourced at boot
-          hostname HOST1
+          hostname Host1
     cpu_limit: null
     cpus: null
     data_volume: null
     hide_links: false
     id: n2
     image_definition: null
-    label: HOST1
+    label: Host1
     node_definition: desktop
     parameters: {}
     ram: null
@@ -376,14 +376,14 @@ nodes:
       - name: node.cfg
         content: |-
           # this is a shell script which will be sourced at boot
-          hostname HOST2
+          hostname Host2
     cpu_limit: null
     cpus: null
     data_volume: null
     hide_links: false
     id: n3
     image_definition: null
-    label: HOST2
+    label: Host2
     node_definition: desktop
     parameters: {}
     ram: null
@@ -401,7 +401,7 @@ nodes:
       - name: node.cfg
         content: |-
           # this is a shell script which will be sourced at boot
-          hostname FILE_SERVER
+          hostname FileServer
           sudo ifconfig eth0 10.1.10.100 netmask 255.255.255.0
           sudo ifconfig eth1 10.1.20.100 netmask 255.255.255.0
     cpu_limit: null
@@ -410,7 +410,7 @@ nodes:
     hide_links: false
     id: n4
     image_definition: null
-    label: FILE_SERVER
+    label: FileServer
     node_definition: desktop
     parameters: {}
     ram: null
