@@ -944,32 +944,49 @@ class CMLClient:
             return ""
 
     def wipelab(self, lab_id):
+        # Wipe a specific lab (remove configurations and reset to clean state)
+        # Args:
+        #   lab_id: UUID of the lab to wipe
+        # Returns: True on success, empty string on failure
         if not self._is_valid_lab_id(lab_id):
             logging.error(f"Invalid lab ID format: {lab_id}")
             print(f"Error: Invalid lab ID format: {lab_id}", file=sys.stderr)
             return ""
 
         try:
+            # --- 1. Get current state -------------------------------------------------
             state = self.get_lab_state(lab_id)
-            if state != "DEFINED_ON_CORE":
+            if self.debug:
+                logging.info(f"Lab {lab_id} current state: {state}")
+
+            # --- 2. STOP if it is STARTED --------------------------------------------
+            if state == "STARTED":
                 if self.debug:
-                    logging.info(f"Lab {lab_id} is {state}; stopping first")
+                    logging.info(f"Lab {lab_id} is STARTED – stopping first")
                 if not self.stoplab(lab_id):
                     print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
                     return ""
-                # Wait for stop
+
+                # Wait until it reports STOPPED or DEFINED_ON_CORE
                 for _ in range(int(os.getenv("RETRY_COUNT", 30))):
                     state = self.get_lab_state(lab_id)
-                    if state == "DEFINED_ON_CORE":
+                    if state in ("STOPPED", "DEFINED_ON_CORE"):
                         break
                     time.sleep(int(os.getenv("RETRY_DELAY", 10)))
-                if state != "DEFINED_ON_CORE":
+                if state not in ("STOPPED", "DEFINED_ON_CORE"):
                     print(f"Error: Lab {lab_id} did not stop in time", file=sys.stderr)
                     return ""
 
+            # --- 3. At this point the lab must be STOPPED or DEFINED_ON_CORE ----------
+            # (both are acceptable for a wipe)
+            if state not in ("STOPPED", "DEFINED_ON_CORE"):
+                logging.warning(f"Lab {lab_id} is in unexpected state {state} – skipping wipe")
+                return True   # nothing to wipe
+
+            # --- 4. Perform the wipe --------------------------------------------------
             self.ensure_jwt()
             if self.debug:
-                logging.info(f"Attempting wipe on stopped lab {lab_id}")
+                logging.info(f"Attempting wipe on lab {lab_id} (state={state})")
 
             response = requests.post(
                 f"{self.cml_address}/api/v0/labs/{lab_id}/wipe",
@@ -977,10 +994,10 @@ class CMLClient:
                 verify=False
             )
 
-            # 405 = wipe not applicable (already clean or unsupported) → treat as success
+            # 405 = wipe not applicable (already clean, no config, etc.) → treat as success
             if response.status_code == 405:
                 if self.debug:
-                    logging.info(f"Wipe skipped (405): lab {lab_id} already clean or unsupported")
+                    logging.info(f"Wipe skipped (405) – lab {lab_id} already clean")
                 return True
 
             response.raise_for_status()
@@ -989,11 +1006,12 @@ class CMLClient:
             return True
 
         except requests.RequestException as e:
+            # Non-405 errors are real failures
             if getattr(e.response, 'status_code', None) == 405:
                 if self.debug:
-                    logging.info(f"Wipe skipped (405): {lab_id}")
+                    logging.info(f"Wipe skipped (405) – lab {lab_id}")
                 return True
-            logging.error(f"Wipe failed: {e}")
+            logging.error(f"Wipe failed for {lab_id}: {e}")
             print(f"Error: Wipe failed for {lab_id}: {e}", file=sys.stderr)
             if e.response is not None:
                 print(f"Response: {e.response.text}", file=sys.stderr)
@@ -1215,7 +1233,6 @@ def main():
             print("Error: -labid or positional LABID required for deletelab", file=sys.stderr)
             sys.exit(1)
         if not client._is_valid_lab_id(labid):
-            # Allow title lookup only if a title was supplied
             if labid:
                 labid = client.findlab(labid)
                 if not labid:
@@ -1224,10 +1241,36 @@ def main():
             else:
                 print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
                 sys.exit(1)
-        result = client.deletelab(labid)
-        if result:
+    
+        # Force stop
+        state = client.get_lab_state(labid)
+        if state != "DEFINED_ON_CORE":
+            if not client.stoplab(labid):
+                print("Error: Failed to stop lab", file=sys.stderr)
+                sys.exit(1)
+            # Wait
+            for _ in range(30):
+                if client.get_lab_state(labid) == "DEFINED_ON_CORE":
+                    break
+                time.sleep(10)
+    
+        # Wipe (idempotent)
+        client.wipelab(labid)
+    
+        # Delete
+        try:
+            client.ensure_jwt()
+            resp = requests.delete(
+                f"{client.cml_address}/api/v0/labs/{labid}",
+                headers={"Authorization": f"Bearer {client.jwt}"},
+                verify=False
+            )
+            resp.raise_for_status()
             print("true")
-        else:
+        except Exception as e:
+            print(f"Error: Delete failed: {e}", file=sys.stderr)
+            if hasattr(e, 'response') and e.response:
+                print(e.response.text, file=sys.stderr)
             sys.exit(1)
     else:
         parser.print_help()
