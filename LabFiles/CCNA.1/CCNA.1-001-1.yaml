@@ -32,7 +32,7 @@ nodes:
     hide_links: false
     id: n0
     image_definition: null
-    label: Switch-1
+    label: Switch1
     node_definition: ioll2-xe
     parameters: {}
     ram: null
@@ -191,7 +191,7 @@ nodes:
     hide_links: false
     id: n1
     image_definition: null
-    label: Router-1
+    label: Router1
     node_definition: iol-xe
     parameters: {}
     ram: null
@@ -396,7 +396,7 @@ nodes:
     hide_links: false
     id: n2
     image_definition: null
-    label: THE_INTERNET
+    label: Internet
     node_definition: iol-xe
     parameters: {}
     ram: null
@@ -555,7 +555,7 @@ nodes:
     hide_links: false
     id: n3
     image_definition: null
-    label: Router-2
+    label: Router2
     node_definition: iol-xe
     parameters: {}
     ram: null
@@ -618,7 +618,7 @@ nodes:
     hide_links: false
     id: n4
     image_definition: null
-    label: Switch-2
+    label: Switch2
     node_definition: ioll2-xe
     parameters: {}
     ram: null
