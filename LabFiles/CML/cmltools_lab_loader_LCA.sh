@@ -39,32 +39,17 @@ import_single_lab() {
   return 1  # All retries failed
 }
 
-# Main:
-main() {
-  # Wipe the current lab if removedefault is true
-  if [ "$removedefault" = true ]; then
-    echo "Removing default lab: CCNA Prep 2025 S2E4 Telnet to SSH" >&2
-    if ! cmltools deletelab "CCNA Prep 2025 S2E4 Telnet to SSH" 2>/dev/null; then
-      echo "WARNING: Failed to delete default lab – continuing" >&2
-    fi
-  fi
-  
-  # Import the new lab(s)
-  for url in "${LAB_URLS[@]}"; do
-    if ! import_single_lab "$url"; then
-      return 1  # Any failure → overall failure
-    fi
-  done
-  return 0  # All succeeded
-}
-
-# Run and capture result
-main
-result=$?
-
-# Output ONLY true or false
-if [ $result -eq 0 ]; then
-  echo "true"
-else
-  echo "false"
+# Wipe the default lab if removedefault is true
+if [ "$removedefault" = true ]; then
+  output=$(cmltools deletelab "CCNA Prep 2025 S2E4 Telnet to SSH" 2>/dev/null)
 fi
+
+# Import the new lab(s)
+for url in "${LAB_URLS[@]}"; do
+  if ! import_single_lab "$url"; then
+    echo false  # Any failure → overall failure
+    return 1
+  fi
+done
+
+echo true  # All succeeded
