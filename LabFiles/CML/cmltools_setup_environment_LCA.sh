@@ -124,3 +124,5 @@ else
   echo false
   return 1
 fi
+
+echo true
