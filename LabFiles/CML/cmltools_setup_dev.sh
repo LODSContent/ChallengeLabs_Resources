@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.2318
+# CML Tools v1.20251106.2327
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -944,88 +944,99 @@ class CMLClient:
             return ""
 
     def wipelab(self, lab_id):
-        """
-        Mirror the GUI “Wipe” button:
-          1. Stop the lab (if not already stopped)
-          2. Wipe the lab (must be STOPPED)
-          3. Wait for state DEFINED_ON_CORE
-        Returns True only when the lab is in DEFINED_ON_CORE.
-        """
+        # Wipe a specific lab (remove configurations and reset to clean state)
+        # Args:
+        #   lab_id: UUID of the lab to wipe
+        # Returns: True on success, empty string on failure
         if not self._is_valid_lab_id(lab_id):
             logging.error(f"Invalid lab ID format: {lab_id}")
             print(f"Error: Invalid lab ID format: {lab_id}", file=sys.stderr)
             return ""
-
         try:
-            # --------------------------------------------------------------
-            # 1. Ensure lab is STOPPED
-            # --------------------------------------------------------------
+            # Ensure lab is stopped
             state = self.get_lab_state(lab_id)
-            if self.debug:
-                logging.info(f"wipelab: current state = {state}")
-
             if state == "STARTED":
                 if self.debug:
-                    logging.info("Lab is running – stopping first")
-                if not self.stoplab(lab_id):
+                    logging.info(f"Lab {lab_id} is running; stopping before wipe")
+                stop_result = self.stoplab(lab_id)
+                if not stop_result:
+                    logging.error(f"Failed to stop lab {lab_id} before wiping")
                     print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
                     return ""
-
-                # Wait for STOPPED or DEFINED_ON_CORE
+                # Wait for lab to stop
                 for _ in range(int(os.getenv("RETRY_COUNT", 30))):
                     state = self.get_lab_state(lab_id)
                     if state in ("STOPPED", "DEFINED_ON_CORE"):
                         break
                     time.sleep(int(os.getenv("RETRY_DELAY", 10)))
                 if state not in ("STOPPED", "DEFINED_ON_CORE"):
-                    print(f"Error: Lab did not stop in time", file=sys.stderr)
+                    logging.error(f"Lab {lab_id} failed to stop within timeout")
+                    print(f"Error: Lab {lab_id} failed to stop", file=sys.stderr)
                     return ""
-
-            if state == "DEFINED_ON_CORE":
-                if self.debug:
-                    logging.info("Lab already in DEFINED_ON_CORE")
-                return True
-
-            # --------------------------------------------------------------
-            # 2. Wipe while STOPPED
-            # --------------------------------------------------------------
             self.ensure_jwt()
             if self.debug:
-                logging.info(f"Sending wipe request (lab is {state})")
-
-            resp = requests.post(
+                logging.info(f"Attempting to wipe lab {lab_id}")
+            response = requests.post(
                 f"{self.cml_address}/api/v0/labs/{lab_id}/wipe",
                 headers={"Authorization": f"Bearer {self.jwt}"},
                 verify=False
             )
-
-            # 405 = nothing to wipe → still OK
-            if resp.status_code == 405:
+            is_405 = response.status_code == 405
+            if is_405:
                 if self.debug:
-                    logging.info("Wipe returned 405 – nothing to clear")
+                    logging.info(f"Wipe skipped (405): lab {lab_id} is already clean or stopped")
             else:
-                resp.raise_for_status()
-
-            # --------------------------------------------------------------
-            # 3. Wait for DEFINED_ON_CORE
-            # --------------------------------------------------------------
-            if self.debug:
-                logging.info("Waiting for lab to enter DEFINED_ON_CORE")
-
+                response.raise_for_status()
+                if self.debug:
+                    logging.info(f"Lab {lab_id} wiped successfully")
+            # After wipe, wait for DEFINED_ON_CORE
             for _ in range(int(os.getenv("RETRY_COUNT", 30))):
                 state = self.get_lab_state(lab_id)
                 if state == "DEFINED_ON_CORE":
-                    if self.debug:
-                        logging.info("Lab is now in DEFINED_ON_CORE")
                     return True
                 time.sleep(int(os.getenv("RETRY_DELAY", 10)))
-
-            print(f"Error: Lab did not reach DEFINED_ON_CORE after wipe", file=sys.stderr)
+            # If still not DEFINED_ON_CORE and was 405, force by start/stop cycle
+            if is_405:
+                if self.debug:
+                    logging.info(f"State still {state} after 405 – forcing cleanup with start/stop")
+                # Start the lab
+                if not self.startlab(lab_id):
+                    logging.error(f"Failed to start lab {lab_id} for force cleanup")
+                    print(f"Error: Failed to start lab {lab_id}", file=sys.stderr)
+                    return ""
+                # Wait for STARTED
+                for _ in range(int(os.getenv("RETRY_COUNT", 30))):
+                    state = self.get_lab_state(lab_id)
+                    if state == "STARTED":
+                        break
+                    time.sleep(int(os.getenv("RETRY_DELAY", 10)))
+                if state != "STARTED":
+                    logging.error(f"Lab {lab_id} failed to start for force cleanup")
+                    print(f"Error: Lab {lab_id} failed to start", file=sys.stderr)
+                    return ""
+                # Stop again
+                if not self.stoplab(lab_id):
+                    logging.error(f"Failed to stop lab {lab_id} after force start")
+                    print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
+                    return ""
+                # Wait for DEFINED_ON_CORE
+                for _ in range(int(os.getenv("RETRY_COUNT", 30))):
+                    state = self.get_lab_state(lab_id)
+                    if state == "DEFINED_ON_CORE":
+                        return True
+                    time.sleep(int(os.getenv("RETRY_DELAY", 10)))
+            logging.error(f"Lab {lab_id} failed to reach DEFINED_ON_CORE within timeout")
+            print(f"Error: Lab {lab_id} failed to reach DEFINED_ON_CORE", file=sys.stderr)
             return ""
-
+        except requests.RequestException as e:
+            logging.error(f"Failed to wipe lab {lab_id}: {e}")
+            print(f"Error: Failed to wipe lab {lab_id}: {e}", file=sys.stderr)
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"Response: {e.response.text}", file=sys.stderr)
+            return ""
         except Exception as e:
-            logging.error(f"Unexpected error in wipelab: {e}")
-            print(f"Error: {e}", file=sys.stderr)
+            logging.error(f"Unexpected error wiping lab {lab_id}: {e}")
+            print(f"Error: Unexpected error wiping lab {lab_id}: {e}", file=sys.stderr)
             return ""
 
     def deletelab(self, lab_id):
