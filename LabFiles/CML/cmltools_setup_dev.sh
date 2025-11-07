@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.2343
+# CML Tools v1.20251106.2357
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -956,13 +956,16 @@ class CMLClient:
                 if not self.stoplab(lab_id):
                     print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
                     return ""
-                for _ in range(int(os.getenv("RETRY_COUNT", 30))):
+                # Max 5 attempts to reach STOPPED/DEFINED_ON_CORE
+                for attempt in range(5):
                     state = self.get_lab_state(lab_id)
                     if state in ("STOPPED", "DEFINED_ON_CORE"):
                         break
-                    time.sleep(int(os.getenv("RETRY_DELAY", 10)))
-                if state not in ("STOPPED", "DEFINED_ON_CORE"):
-                    print(f"Error: Lab did not stop", file=sys.stderr)
+                    if self.debug:
+                        logging.info(f"Waiting for stop... attempt {attempt+1}/5")
+                    time.sleep(10)
+                else:
+                    print(f"Error: Lab did not stop after 5 attempts", file=sys.stderr)
                     return ""
 
             if state == "DEFINED_ON_CORE":
@@ -977,24 +980,26 @@ class CMLClient:
                 headers={"Authorization": f"Bearer {self.jwt}"},
                 verify=False
             )
-            resp.raise_for_status()   # 200 = wiped
+            resp.raise_for_status()
 
-            # 3. Wait for DEFINED_ON_CORE (usually instant)
-            for _ in range(int(os.getenv("RETRY_COUNT", 30))):
+            # 3. Wait for DEFINED_ON_CORE – max 5 attempts
+            for attempt in range(5):
                 state = self.get_lab_state(lab_id)
                 if state == "DEFINED_ON_CORE":
                     if self.debug:
                         logging.info("Lab reached DEFINED_ON_CORE")
                     return True
-                time.sleep(int(os.getenv("RETRY_DELAY", 10)))
+                if self.debug:
+                    logging.info(f"Waiting for DEFINED_ON_CORE... attempt {attempt+1}/5")
+                time.sleep(10)
 
-            print("Error: Lab did not reach DEFINED_ON_CORE after wipe", file=sys.stderr)
+            print("Error: Lab did not reach DEFINED_ON_CORE after 5 attempts", file=sys.stderr)
             return ""
 
         except Exception as e:
             print(f"Error in wipelab: {e}", file=sys.stderr)
             return ""
-
+            
     def deletelab(self, lab_id):
         # Delete a specific lab (must be stopped and wiped)
         # Args:
