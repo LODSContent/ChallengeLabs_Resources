@@ -106,7 +106,7 @@ PYTHON_SCRIPT_PATH="$HOME/labfiles/cmltools.py"
 # Generate the Python script file
 cat << 'EOF' > "$PYTHON_SCRIPT_PATH" || { echo "Error: Failed to write to $PYTHON_SCRIPT_PATH" >&2; echo false; return 1; }
 #!/usr/bin/env python3
-# CML Tools v1.20251106.2307
+# CML Tools v1.20251106.2318
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -944,78 +944,83 @@ class CMLClient:
             return ""
 
     def wipelab(self, lab_id):
+        """
+        Mirror the GUI “Wipe” button:
+          1. Stop the lab (if not already stopped)
+          2. Wipe the lab (must be STOPPED)
+          3. Wait for state DEFINED_ON_CORE
+        Returns True only when the lab is in DEFINED_ON_CORE.
+        """
         if not self._is_valid_lab_id(lab_id):
             logging.error(f"Invalid lab ID format: {lab_id}")
             print(f"Error: Invalid lab ID format: {lab_id}", file=sys.stderr)
             return ""
 
         try:
+            # --------------------------------------------------------------
+            # 1. Ensure lab is STOPPED
+            # --------------------------------------------------------------
             state = self.get_lab_state(lab_id)
             if self.debug:
-                logging.info(f"Initial lab state: {state}")
+                logging.info(f"wipelab: current state = {state}")
 
-            # --- 1. Stop if running ---
             if state == "STARTED":
+                if self.debug:
+                    logging.info("Lab is running – stopping first")
                 if not self.stoplab(lab_id):
                     print(f"Error: Failed to stop lab {lab_id}", file=sys.stderr)
                     return ""
+
+                # Wait for STOPPED or DEFINED_ON_CORE
                 for _ in range(int(os.getenv("RETRY_COUNT", 30))):
                     state = self.get_lab_state(lab_id)
                     if state in ("STOPPED", "DEFINED_ON_CORE"):
                         break
                     time.sleep(int(os.getenv("RETRY_DELAY", 10)))
                 if state not in ("STOPPED", "DEFINED_ON_CORE"):
-                    print(f"Error: Lab did not stop", file=sys.stderr)
+                    print(f"Error: Lab did not stop in time", file=sys.stderr)
                     return ""
 
-            # --- 2. If already DEFINED_ON_CORE, done ---
             if state == "DEFINED_ON_CORE":
                 if self.debug:
-                    logging.info(f"Lab {lab_id} already in DEFINED_ON_CORE")
+                    logging.info("Lab already in DEFINED_ON_CORE")
                 return True
 
-            # --- 3. Force full cleanup: start → wipe → stop ---
-            if self.debug:
-                logging.info(f"Forcing full cleanup on {lab_id} to reach DEFINED_ON_CORE")
-
-            # Start lab
-            if not self.startlab(lab_id):
-                print(f"Error: Failed to start lab {lab_id} for cleanup", file=sys.stderr)
-                return ""
-            for _ in range(30):
-                state = self.get_lab_state(lab_id)
-                if state == "STARTED":
-                    break
-                time.sleep(5)
-            else:
-                print(f"Error: Lab did not start for cleanup", file=sys.stderr)
-                return ""
-
-            # Wipe while running
+            # --------------------------------------------------------------
+            # 2. Wipe while STOPPED
+            # --------------------------------------------------------------
             self.ensure_jwt()
+            if self.debug:
+                logging.info(f"Sending wipe request (lab is {state})")
+
             resp = requests.post(
                 f"{self.cml_address}/api/v0/labs/{lab_id}/wipe",
                 headers={"Authorization": f"Bearer {self.jwt}"},
                 verify=False
             )
-            if resp.status_code not in (200, 405):
+
+            # 405 = nothing to wipe → still OK
+            if resp.status_code == 405:
+                if self.debug:
+                    logging.info("Wipe returned 405 – nothing to clear")
+            else:
                 resp.raise_for_status()
 
-            # Stop again
-            if not self.stoplab(lab_id):
-                print(f"Error: Failed to stop lab after wipe", file=sys.stderr)
-                return ""
+            # --------------------------------------------------------------
+            # 3. Wait for DEFINED_ON_CORE
+            # --------------------------------------------------------------
+            if self.debug:
+                logging.info("Waiting for lab to enter DEFINED_ON_CORE")
 
-            # Wait for DEFINED_ON_CORE
             for _ in range(int(os.getenv("RETRY_COUNT", 30))):
                 state = self.get_lab_state(lab_id)
                 if state == "DEFINED_ON_CORE":
                     if self.debug:
-                        logging.info(f"Lab {lab_id} reached DEFINED_ON_CORE")
+                        logging.info("Lab is now in DEFINED_ON_CORE")
                     return True
                 time.sleep(int(os.getenv("RETRY_DELAY", 10)))
 
-            print(f"Error: Lab did not reach DEFINED_ON_CORE after cleanup", file=sys.stderr)
+            print(f"Error: Lab did not reach DEFINED_ON_CORE after wipe", file=sys.stderr)
             return ""
 
         except Exception as e:
@@ -1244,12 +1249,16 @@ def main():
                 print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
                 sys.exit(1)
 
-        # --- Force full cleanup to DEFINED_ON_CORE ---
+        # --------------------------------------------------------------
+        # 1. Full wipe → DEFINED_ON_CORE
+        # --------------------------------------------------------------
         if not client.wipelab(labid):
-            print("Error: Failed to fully clean lab (reach DEFINED_ON_CORE)", file=sys.stderr)
+            print("Error: Failed to wipe lab into DEFINED_ON_CORE state", file=sys.stderr)
             sys.exit(1)
 
-        # --- Delete ---
+        # --------------------------------------------------------------
+        # 2. Delete
+        # --------------------------------------------------------------
         try:
             client.ensure_jwt()
             if client.debug:
