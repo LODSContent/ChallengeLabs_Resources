@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# CML Tools v1.20251107.2258
+# CML Tools v1.20251107.2319
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -564,7 +564,7 @@ class CMLClient:
         finally:
             client.close()
 
-    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False, use_direct=False):
+    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False, use_direct=False, lab_id=None):
         results = []
         raw_outputs = []
         device_passed = True
@@ -572,9 +572,10 @@ class CMLClient:
         dev = testbed.devices.get(actual_name)
 
         if use_direct:
-            # === DIRECT SSH MODE (NO PYATS) ===
+            if not lab_id:
+                raise ValueError("lab_id is required in direct SSH mode")
             try:
-                info = self.get_ssh_connection_info(testbed.lab_id, actual_name)
+                info = self.get_ssh_connection_info(lab_id, actual_name)
                 if self.debug:
                     logging.info(f"Direct SSH to {actual_name} via {info['host']}:{info['port']}")
             except Exception as e:
@@ -792,7 +793,6 @@ class CMLClient:
             }
             try:
                 testbed = load(yaml.safe_dump(minimal))
-                testbed.lab_id = lab_id  # <-- attach for direct mode
             except Exception as e:
                 msg = f"Incorrectly Configured - {device['device_name']} - testbed_load_failed"
                 all_results.append(msg)
@@ -800,7 +800,11 @@ class CMLClient:
                 overall_result = False
                 continue
             res, passed, raw_out = self.execute_commands_on_device(
-                device, testbed, actual, timeout=timeout, clear_screen=clear_screen, use_direct=use_direct
+                device, testbed, actual_name, 
+                timeout=timeout, 
+                clear_screen=clear_screen, 
+                use_direct=use_direct,
+                lab_id=lab_id  # PASS IT HERE
             )
             all_results.extend(res)
             all_raw_outputs.extend(raw_out)
