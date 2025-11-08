@@ -1,36 +1,35 @@
 #!/usr/bin/env python3
-# CML Tools v1.20251107.0005
+# CML Tools v1.20251107.2258
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
 #
 # Usage:
-#   cmltools.py [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug] [--clear]
-#   cmltools.py [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex] [--clear]
+# cmltools.py [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug] [--clear] [--direct]
+# cmltools.py [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex] [--clear] [--direct]
 #
 # Functions:
-#   authenticate: Authenticate with CML server and return JWT token
-#   findlab: Find a lab by title or return first running/available lab
-#   getlabs: Get a list of all lab IDs
-#   getdetails: Get detailed information about a specific lab
-#   getstate: Get the state of a specific lab
-#   startlab: Start a specific lab
-#   stoplab: Stop a specific lab
-#   gettestbed: Get PyATS testbed YAML for a lab
-#   validate: Validate device configurations or return raw command output
-#   importlab: Download lab from URL, convert, and import into CML (one step)
-#   wipelab: Wipe a specific lab (requires lab ID; lab must be stopped)
-#   deletelab: Delete a specific lab (requires lab ID; lab must be stopped and wiped)
+# authenticate: Authenticate with CML server and return JWT token
+# findlab: Find a lab by title or return first running/available lab
+# getlabs: Get a list of all lab IDs
+# getdetails: Get detailed information about a specific lab
+# getstate: Get the state of a specific lab
+# startlab: Start a specific lab
+# stoplab: Stop a specific lab
+# gettestbed: Get PyATS testbed YAML for a lab
+# validate: Validate device configurations or return raw command output
+# importlab: Download lab from URL, convert, and import into CML (one step)
+# wipelab: Wipe a specific lab (requires lab ID; lab must be stopped)
+# deletelab: Delete a specific lab (requires lab ID; lab must be stopped and wiped)
 #
 # Environment Variables:
-#   CML_ADDRESS: URL of the CML server (e.g., https://192.168.1.10)
-#   CML_IP: IP address of the CML server (e.g., 192.168.1.10)
-#   CML_USERNAME: Username for CML authentication
-#   CML_PASSWORD: Password for CML authentication
-#   SCRIPT_DEBUG: Set to 'true' for debug logging (default: false)
-#   RETRY_COUNT: Number of retries for lab state checks (default: 30)
-#   RETRY_DELAY: Delay between retries in seconds (default: 10)
-
+# CML_ADDRESS: URL of the CML server (e.g., https://192.168.1.10)
+# CML_IP: IP address of the CML server (e.g., 192.168.1.10)
+# CML_USERNAME: Username for CML authentication
+# CML_PASSWORD: Password for CML authentication
+# SCRIPT_DEBUG: Set to 'true' for debug logging (default: false)
+# RETRY_COUNT: Number of retries for lab state checks (default: 30)
+# RETRY_DELAY: Delay between retries in seconds (default: 10)
 import argparse
 import json
 import logging
@@ -46,27 +45,24 @@ from genie.testbed import load
 from unicon.core.errors import SubCommandFailure
 from zipfile import ZipFile
 from io import BytesIO
-
+import paramiko  # <-- NEW: for --direct SSH mode
 # Suppress InsecureRequestWarning from urllib3 due to verify=False in HTTPS requests
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 class CaseInsensitiveArgumentParser(argparse.ArgumentParser):
     # Custom ArgumentParser that makes option names case-insensitive
     # Normalizes option names (e.g., -COMMAND, -LabID) to lowercase
     def _get_option_tuples(self, option_string):
         # Normalize option string to lowercase for matching
         return super()._get_option_tuples(option_string.lower())
-
     def parse_known_args(self, args=None, namespace=None):
         # Convert all option names to lowercase before parsing
         args = [arg.lower() if arg.startswith('-') else arg for arg in (args or sys.argv[1:])]
         return super().parse_known_args(args, namespace)
-
 def setup_logging(logfile='/home/labuser/labfiles/script_log.txt', debug=False):
     # Configure logging for the script
     # Args:
-    #   logfile: Path to the log file (default: /home/labuser/labfiles/script_log.txt)
-    #   debug: Enable console logging if True
+    # logfile: Path to the log file (default: /home/labuser/labfiles/script_log.txt)
+    # debug: Enable console logging if True
     # If debug is True, logs to both file and console at INFO level
     # Otherwise, logs to file only at ERROR level
     # Suppresses verbose logging from requests, genie, and unicon
@@ -83,15 +79,13 @@ def setup_logging(logfile='/home/labuser/labfiles/script_log.txt', debug=False):
     logging.getLogger('requests').setLevel(logging.ERROR)
     logging.getLogger('genie').setLevel(logging.ERROR)
     logging.getLogger('unicon').setLevel(logging.ERROR)
-
 def convert_wildcard_to_regex(pattern):
     # Convert a wildcard pattern to a regex pattern
     # Args:
-    #   pattern: Wildcard pattern (e.g., "Cisco*Software")
+    # pattern: Wildcard pattern (e.g., "Cisco*Software")
     # Returns: Regex pattern with '*' replaced by '.*' and '?' by '.'
     escaped_pattern = re.escape(pattern)
     return escaped_pattern.replace('\\*', '.*').replace('\\?', '.')
-
 def validate_pattern(validation, data, device_name, command, debug=False):
     results = []
     if isinstance(validation, str):
@@ -117,7 +111,6 @@ def validate_pattern(validation, data, device_name, command, debug=False):
         if debug:
             results.append(error_msg)
         return False, results
-
     # === AUTO-CONVERT DATA TO STRING ===
     if isinstance(data, dict):
         try:
@@ -128,10 +121,8 @@ def validate_pattern(validation, data, device_name, command, debug=False):
         data = '\n'.join(str(item) for item in data)
     elif not isinstance(data, (str, bytes)):
         data = str(data)
-
     if isinstance(data, bytes):
         data = data.decode('utf-8', errors='ignore')
-
     try:
         regex = re.compile(regex_pattern, re.DOTALL | re.IGNORECASE)
         pattern_match = bool(regex.search(data))
@@ -141,25 +132,22 @@ def validate_pattern(validation, data, device_name, command, debug=False):
         if debug:
             results.append(error_msg)
         return False, results
-
     if not pattern_match:
         log_msg = f"Pattern '{pattern}' ({match_type}) not found in output of '{command}' on {device_name}"
         logging.info(log_msg)
         if debug:
             results.append(log_msg)
         return False, results
-
     return True, results
-
 class CMLClient:
     # Client for interacting with Cisco Modeling Labs (CML) API
     # Attributes:
-    #   cml_address: URL of the CML server (e.g., https://192.168.1.10)
-    #   cml_ip: IP address of the CML server (e.g., 192.168.1.10)
-    #   username: Username for CML authentication
-    #   password: Password for CML authentication
-    #   jwt: JWT token for authenticated API calls
-    #   debug: Enable debug logging if True
+    # cml_address: URL of the CML server (e.g., https://192.168.1.10)
+    # cml_ip: IP address of the CML server (e.g., 192.168.1.10)
+    # username: Username for CML authentication
+    # password: Password for CML authentication
+    # jwt: JWT token for authenticated API calls
+    # debug: Enable debug logging if True
     def __init__(self, cml_address, cml_ip, username, password, debug=False):
         self.cml_address = cml_address.rstrip('/')
         self.cml_ip = cml_ip
@@ -168,7 +156,6 @@ class CMLClient:
         self.jwt = None
         self.debug = debug
         setup_logging(debug=debug)
-
     def authenticate(self):
         # Authenticate with CML server and return JWT token
         # Returns: JWT token (str) on success, empty string on failure
@@ -193,7 +180,6 @@ class CMLClient:
             logging.error(f"Failed to authenticate with CML: {e}")
             print(f"Error: Failed to authenticate with CML: {e}", file=sys.stderr)
             return ""
-
     def ensure_jwt(self):
         # Ensure a valid JWT token is available
         # Exits with code 1 if authentication fails
@@ -204,7 +190,6 @@ class CMLClient:
             print("Error: No valid JWT token available", file=sys.stderr)
             sys.exit(1)
         return self.jwt
-
     def get_labs(self):
         # Get list of lab IDs from CML
         # Returns: List of lab IDs, or empty list on failure
@@ -228,11 +213,10 @@ class CMLClient:
             logging.error(f"Failed to get labs: {e}")
             print(f"Error: Failed to get labs: {e}", file=sys.stderr)
             return []
-
     def get_lab_state(self, lab_id):
         # Get the state of a specific lab
         # Args:
-        #   lab_id: UUID of the lab
+        # lab_id: UUID of the lab
         # Returns: Lab state (e.g., "STARTED"), or empty string on failure
         try:
             self.ensure_jwt()
@@ -254,11 +238,10 @@ class CMLClient:
             logging.error(f"Failed to get state for lab {lab_id}: {e}")
             print(f"Error: Failed to get state for lab {lab_id}: {e}", file=sys.stderr)
             return ""
-
     def get_lab_details(self, lab_id):
         # Get detailed information about a lab
         # Args:
-        #   lab_id: UUID of the lab
+        # lab_id: UUID of the lab
         # Returns: Dict with lab details, or empty dict on failure
         try:
             self.ensure_jwt()
@@ -280,11 +263,10 @@ class CMLClient:
             logging.error(f"Failed to get details for lab {lab_id}: {e}")
             print(f"Error: Failed to get details for lab {lab_id}: {e}", file=sys.stderr)
             return {}
-
     def get_default_lab_id(self, lab_ids):
         # Find the first started lab or first available lab
         # Args:
-        #   lab_ids: List of lab IDs
+        # lab_ids: List of lab IDs
         # Returns: Lab ID, or empty string if none available
         for lab_id in lab_ids:
             state = self.get_lab_state(lab_id)
@@ -293,11 +275,10 @@ class CMLClient:
                     logging.info(f"Found started lab: {lab_id}")
                 return lab_id
         return lab_ids[0] if lab_ids else ""
-
     def findlab(self, lab_title=None):
         # Find a lab by title or return the first running/available lab
         # Args:
-        #   lab_title: Title of the lab to find (optional, case-insensitive, whitespace-tolerant)
+        # lab_title: Title of the lab to find (optional, case-insensitive, whitespace-tolerant)
         # Returns: Lab ID, or empty string if not found
         lab_ids = self.get_labs()
         if not lab_ids:
@@ -324,11 +305,10 @@ class CMLClient:
         if self.debug:
             logging.info(f"Selected default lab: {lab_id}")
         return lab_id
-
     def startlab(self, lab_id=None):
         # Start a specific lab or the first available lab
         # Args:
-        #   lab_id: UUID or title of the lab (optional)
+        # lab_id: UUID or title of the lab (optional)
         # Returns: Lab ID on success, empty string on failure
         if not lab_id:
             lab_id = self.findlab()
@@ -381,11 +361,10 @@ class CMLClient:
             logging.error(f"Failed to start lab {lab_id}: {e}")
             print(f"Error: Failed to start lab {lab_id}: {e}", file=sys.stderr)
             return ""
-
     def stoplab(self, lab_id=None):
         # Stop a specific lab or the first available lab
         # Args:
-        #   lab_id: UUID or title of the lab (optional)
+        # lab_id: UUID or title of the lab (optional)
         # Returns: Lab ID on success, empty string on failure
         if not lab_id:
             lab_id = self.findlab()
@@ -416,11 +395,10 @@ class CMLClient:
             logging.error(f"Failed to stop lab {lab_id}: {e}")
             print(f"Error: Failed to stop lab {lab_id}: {e}", file=sys.stderr)
             return ""
-
     def gettestbed(self, lab_id=None):
         # Get PyATS testbed YAML for a lab
         # Args:
-        #   lab_id: UUID or title of the lab (optional)
+        # lab_id: UUID or title of the lab (optional)
         # Returns: Testbed YAML (str), or empty string on failure
         if not lab_id:
             lab_id = self.findlab()
@@ -453,14 +431,13 @@ class CMLClient:
             logging.error(f"Failed to fetch testbed YAML for lab {lab_id}: {e}")
             print(f"Error: Failed to fetch testbed YAML for lab {lab_id}: {e}", file=sys.stderr)
             return ""
-
     def update_testbed_device_credentials(self, testbed_yaml, device_name, username, password):
         # Update device credentials in a testbed YAML
         # Args:
-        #   testbed_yaml: YAML string of the testbed
-        #   device_name: Device to update (e.g., terminal_server)
-        #   username: Username to set
-        #   password: Password to set
+        # testbed_yaml: YAML string of the testbed
+        # device_name: Device to update (e.g., terminal_server)
+        # username: Username to set
+        # password: Password to set
         # Returns: Updated YAML string, or original YAML on failure
         try:
             data = yaml.safe_load(testbed_yaml)
@@ -475,7 +452,6 @@ class CMLClient:
             logging.error(f"Failed to update testbed YAML: {e}")
             print(f"Error: Failed to update testbed YAML: {e}", file=sys.stderr)
             return testbed_yaml
-
     def apply_device_info_credentials(self, testbed_yaml, device_info_list):
         # Apply optional username/password from device_info to the testbed
         # Only touches devices that have a 'credentials' block
@@ -506,7 +482,6 @@ class CMLClient:
         except Exception as e:
             logging.error(f"Failed to apply device_info credentials: {e}")
             return testbed_yaml
-
     def send_clear_sequence(self, dev, os_type):
         # Send sequence to escape editors/modes and clear screen/buffer
         # Output is consumed and NOT captured
@@ -514,121 +489,219 @@ class CMLClient:
             # Ctrl-Z to exit config
             dev.send('\x1A')
             time.sleep(0.1)
-            dev.spawn.read()  # Drain buffer
-
+            dev.spawn.read() # Drain buffer
             # Ctrl-C to interrupt
             dev.send('\x03')
             time.sleep(0.1)
-            dev.spawn.read()  # Drain buffer
-
+            dev.spawn.read() # Drain buffer
             if os_type == 'ios':
                 dev.sendline('exit')
                 time.sleep(0.5)
                 dev.sendline('')
                 time.sleep(0.1)
-                dev.spawn.read()  # Drain buffer
+                dev.spawn.read() # Drain buffer
             else:
                 dev.sendline('clear')
                 time.sleep(0.1)
-                dev.spawn.read()  # Drain buffer
+                dev.spawn.read() # Drain buffer
         except:
-            pass  # Best effort
+            pass # Best effort
 
-    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False):
+    # --------------------------------------------------------------------- #
+    # NEW: Direct SSH Helpers (for --direct mode)
+    # --------------------------------------------------------------------- #
+    def get_ssh_creds(self, node_definition: str) -> tuple:
+        """Return (username, password) based on node type."""
+        mapping = {
+            "ios": ("scoring", "SuperSecret123"),
+            "iosxrv": ("scoring", "SuperSecret123"),
+            "nxos": ("scoring", "SuperSecret123"),
+            "linux": ("ubuntu", "ubuntu"),
+            "ubuntu": ("ubuntu", "ubuntu"),
+            "csr1000v": ("scoring", "SuperSecret123"),
+        }
+        return mapping.get(node_definition.lower(), ("cisco", "cisco"))
+
+    def get_ssh_connection_info(self, lab_id: str, node_name: str) -> dict:
+        """Get external SSH port and credentials for a node."""
+        details = self.get_lab_details(lab_id)
+        for node in details.get("nodes", []):
+            if node.get("label", "").lower() == node_name.lower():
+                ext_port = node.get("external_ssh_port")
+                if not ext_port:
+                    raise ValueError(f"Node {node_name} has no external SSH port")
+                username, password = self.get_ssh_creds(node.get("node_definition", "ios"))
+                return {
+                    "host": self.cml_ip,
+                    "port": ext_port,
+                    "username": username,
+                    "password": password
+                }
+        raise ValueError(f"Node {node_name} not found in lab")
+
+    def ssh_command_direct(self, host, port, username, password, command, timeout=15):
+        """Execute command via direct SSH using paramiko."""
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            client.connect(
+                hostname=host,
+                port=port,
+                username=username,
+                password=password,
+                timeout=10,
+                auth_timeout=10,
+                banner_timeout=20,
+                look_for_keys=False,
+                allow_agent=False
+            )
+            stdin, stdout, stderr = client.exec_command(command, timeout=timeout)
+            out = stdout.read().decode('utf-8', errors='ignore').strip()
+            err = stderr.read().decode('utf-8', errors='ignore').strip()
+            return out, err
+        except Exception as e:
+            raise RuntimeError(f"Direct SSH failed: {e}")
+        finally:
+            client.close()
+
+    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False, use_direct=False):
         results = []
         raw_outputs = []
         device_passed = True
         dev_name = device['device_name']
         dev = testbed.devices.get(actual_name)
-        if not dev:
-            msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
-            results.append(msg)
-            return results, False, raw_outputs
-        try:
-            connect_kwargs = {
-                'mit': True,
-                'hostkey_verify': False,
-                'allow_agent': False,
-                'look_for_keys': False,
-                'timeout': 60
-            }
-            init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
-            dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
-            if self.debug:
-                logging.info(f"Connected to {actual_name}")
-        except Exception as e:
-            msg = f"Incorrectly Configured - {dev_name} - connect_failed"
-            results.append(msg)
-            logging.error(f"Connect failed for {actual_name}: {e}")
-            return results, False, raw_outputs
-        os_type = getattr(dev, 'os', '').lower()
-        # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
-        if clear_screen:
-            self.send_clear_sequence(dev, os_type)
-        # Disable pagination for IOS to handle large outputs
-        if os_type == 'ios':
-            try:
-                dev.execute('terminal length 0', timeout=5)
-            except:
-                pass  # Best effort
-        merged_output = []
-        for cmd_info in device['commands']:
-            cmd = cmd_info['command']
-            # === MERGE COMMAND: validate once on all output ===
-            if cmd == "__MERGE_FOR_VALIDATION__":
-                combined = "\n\n".join(merged_output)
-                passed = True
-                for val in cmd_info.get('validations', []):
-                    ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
-                    if not ok:
-                        passed = False
-                status = "Correctly Configured" if passed else "Incorrectly Configured"
-                results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
-                device_passed = passed
-                continue
-            # === NORMAL COMMAND: collect output ===
-            try:
-                if timeout == 0:
-                    dev.sendline(cmd)
-                    merged_output.append("")
-                else:
-                    # === ENSURE PROMPT BEFORE COMMAND ===
-                    #if clear_screen:
-                        #dev.sendline('')
-                        #time.sleep(0.1)
-                    output = dev.execute(cmd, timeout=timeout)
-                    # === STRIP FINAL PROMPT ===
-                    lines = output.splitlines()
-                    if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
-                        lines = lines[:-1]
-                    output = '\n'.join(lines)
-                    merged_output.append(output)
-            except Exception as e:
-                merged_output.append("")
-                logging.error(f"Command failed: {cmd} – {e}")
-                device_passed = False
-        # Restore pagination for IOS
-        if os_type == 'ios':
-            try:
-                dev.execute('terminal length 24', timeout=5)
-            except:
-                pass  # Best effort
-        # === CLEAR AFTER LAST COMMAND (if --clear) ===
-        if clear_screen:
-            self.send_clear_sequence(dev, os_type)
-        try:
-            dev.disconnect()
-        except:
-            pass
-        return results, device_passed, merged_output
 
-    def validate(self, lab_id, device_info=None, timeout=60, clear_screen=False):
+        if use_direct:
+            # === DIRECT SSH MODE (NO PYATS) ===
+            try:
+                info = self.get_ssh_connection_info(testbed.lab_id, actual_name)
+                if self.debug:
+                    logging.info(f"Direct SSH to {actual_name} via {info['host']}:{info['port']}")
+            except Exception as e:
+                msg = f"Incorrectly Configured - {dev_name} - ssh_port_missing"
+                results.append(msg)
+                logging.error(str(e))
+                return results, False, raw_outputs
+
+            merged_output = []
+            for cmd_info in device['commands']:
+                cmd = cmd_info['command']
+                if cmd == "__MERGE_FOR_VALIDATION__":
+                    combined = "\n\n".join(merged_output)
+                    passed = True
+                    for val in cmd_info.get('validations', []):
+                        ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
+                        if not ok:
+                            passed = False
+                    status = "Correctly Configured" if passed else "Incorrectly Configured"
+                    results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
+                    device_passed = passed
+                    continue
+                try:
+                    if timeout == 0:
+                        self.ssh_command_direct(**info, command=cmd, timeout=1)
+                        merged_output.append("")
+                    else:
+                        out, err = self.ssh_command_direct(**info, command=cmd, timeout=timeout)
+                        output = out + ("\n" + err if err else "")
+                        lines = output.splitlines()
+                        if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
+                            lines = lines[:-1]
+                        output = '\n'.join(lines)
+                        merged_output.append(output)
+                except Exception as e:
+                    merged_output.append("")
+                    logging.error(f"Direct SSH command failed: {cmd} – {e}")
+                    device_passed = False
+            return results, device_passed, merged_output
+
+        else:
+            # === ORIGINAL PYATS MODE ===
+            if not dev:
+                msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
+                results.append(msg)
+                return results, False, raw_outputs
+            try:
+                connect_kwargs = {
+                    'mit': True,
+                    'hostkey_verify': False,
+                    'allow_agent': False,
+                    'look_for_keys': False,
+                    'timeout': 60
+                }
+                init_cmds = ['\r'] if getattr(dev, 'os', '').lower() == 'ios' else []
+                dev.connect(init_exec_commands=init_cmds, **connect_kwargs)
+                if self.debug:
+                    logging.info(f"Connected to {actual_name}")
+            except Exception as e:
+                msg = f"Incorrectly Configured - {dev_name} - connect_failed"
+                results.append(msg)
+                logging.error(f"Connect failed for {actual_name}: {e}")
+                return results, False, raw_outputs
+            os_type = getattr(dev, 'os', '').lower()
+            # === CLEAR BEFORE FIRST COMMAND (if --clear) ===
+            if clear_screen:
+                self.send_clear_sequence(dev, os_type)
+            # Disable pagination for IOS to handle large outputs
+            if os_type == 'ios':
+                try:
+                    dev.execute('terminal length 0', timeout=5)
+                except:
+                    pass # Best effort
+            merged_output = []
+            for cmd_info in device['commands']:
+                cmd = cmd_info['command']
+                # === MERGE COMMAND: validate once on all output ===
+                if cmd == "__MERGE_FOR_VALIDATION__":
+                    combined = "\n\n".join(merged_output)
+                    passed = True
+                    for val in cmd_info.get('validations', []):
+                        ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
+                        if not ok:
+                            passed = False
+                    status = "Correctly Configured" if passed else "Incorrectly Configured"
+                    results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
+                    device_passed = passed
+                    continue
+                # === NORMAL COMMAND: collect output ===
+                try:
+                    if timeout == 0:
+                        dev.sendline(cmd)
+                        merged_output.append("")
+                    else:
+                        output = dev.execute(cmd, timeout=timeout)
+                        lines = output.splitlines()
+                        if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
+                            lines = lines[:-1]
+                        output = '\n'.join(lines)
+                        merged_output.append(output)
+                except Exception as e:
+                    merged_output.append("")
+                    logging.error(f"Command failed: {cmd} – {e}")
+                    device_passed = False
+            # Restore pagination for IOS
+            if os_type == 'ios':
+                try:
+                    dev.execute('terminal length 24', timeout=5)
+                except:
+                    pass # Best effort
+            # === CLEAR AFTER LAST COMMAND (if --clear) ===
+            if clear_screen:
+                self.send_clear_sequence(dev, os_type)
+            try:
+                dev.disconnect()
+            except:
+                pass
+            return results, device_passed, merged_output
+
+    def validate(self, lab_id, device_info=None, timeout=60, clear_screen=False, use_direct=False):
         # Validate device configurations
         # Args:
-        #   lab_id: Lab ID or title
-        #   device_info: JSON string of device info (or None for default)
-        #   timeout: Per-command timeout in seconds (default: 60)
-        #   clear_screen: If True, send clear sequence before, after each, and after all commands
+        # lab_id: Lab ID or title
+        # device_info: JSON string of device info (or None for default)
+        # timeout: Per-command timeout in seconds (default: 60)
+        # clear_screen: If True, send clear sequence before, after each, and after all commands
+        # use_direct: If True, use direct SSH instead of pyATS
         # Returns: results (list), overall_result (bool), raw_output (str if no validation)
         if not lab_id:
             lab_id = self.findlab()
@@ -714,10 +787,12 @@ class CMLClient:
                 'devices': {
                     actual: testbed_data['devices'][actual],
                     'terminal_server': testbed_data['devices']['terminal_server']
-                }
+                },
+                'lab_id': lab_id  # <-- needed for direct SSH
             }
             try:
                 testbed = load(yaml.safe_dump(minimal))
+                testbed.lab_id = lab_id  # <-- attach for direct mode
             except Exception as e:
                 msg = f"Incorrectly Configured - {device['device_name']} - testbed_load_failed"
                 all_results.append(msg)
@@ -725,7 +800,7 @@ class CMLClient:
                 overall_result = False
                 continue
             res, passed, raw_out = self.execute_commands_on_device(
-                device, testbed, actual, timeout=timeout, clear_screen=clear_screen
+                device, testbed, actual, timeout=timeout, clear_screen=clear_screen, use_direct=use_direct
             )
             all_results.extend(res)
             all_raw_outputs.extend(raw_out)
@@ -740,11 +815,10 @@ class CMLClient:
     def _is_valid_lab_id(self, lab_id):
         # Check if a lab_id matches the UUID format
         # Args:
-        #   lab_id: Lab ID to validate
+        # lab_id: Lab ID to validate
         # Returns: True if valid UUID, False otherwise
         uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         return bool(re.match(uuid_pattern, lab_id.lower()))
-
     def import_lab(self, source_url):
         # Unified import: download, convert, and upload to CML
         # Now idempotent: if lab with same title exists, return existing ID
@@ -835,13 +909,11 @@ class CMLClient:
         except Exception as e:
             print(f"Error: Import failed: {e}", file=sys.stderr)
             return ""
-
     def wipelab(self, lab_id):
         if not self._is_valid_lab_id(lab_id):
             logging.error(f"Invalid lab ID format: {lab_id}")
             print(f"Error: Invalid lab ID format: {lab_id}", file=sys.stderr)
             return ""
-
         try:
             # 1. Stop if running
             state = self.get_lab_state(lab_id)
@@ -860,10 +932,8 @@ class CMLClient:
                 else:
                     print(f"Error: Lab did not stop after 5 attempts", file=sys.stderr)
                     return ""
-
             if state == "DEFINED_ON_CORE":
                 return True
-
             # 2. OFFICIAL WIPE (PUT)
             self.ensure_jwt()
             if self.debug:
@@ -874,7 +944,6 @@ class CMLClient:
                 verify=False
             )
             resp.raise_for_status()
-
             # 3. Wait for DEFINED_ON_CORE – max 5 attempts
             for attempt in range(5):
                 state = self.get_lab_state(lab_id)
@@ -885,18 +954,16 @@ class CMLClient:
                 if self.debug:
                     logging.info(f"Waiting for DEFINED_ON_CORE... attempt {attempt+1}/5")
                 time.sleep(10)
-
             print("Error: Lab did not reach DEFINED_ON_CORE after 5 attempts", file=sys.stderr)
             return ""
-
         except Exception as e:
             print(f"Error in wipelab: {e}", file=sys.stderr)
             return ""
-            
+           
     def deletelab(self, lab_id):
         # Delete a specific lab (must be stopped and wiped)
         # Args:
-        #   lab_id: UUID of the lab to delete
+        # lab_id: UUID of the lab to delete
         # Returns: True on success, empty string on failure
         if not self._is_valid_lab_id(lab_id):
             logging.error(f"Invalid lab ID format: {lab_id}")
@@ -952,15 +1019,14 @@ class CMLClient:
         except Exception as e:
             logging.error(f"Unexpected error deleting lab {lab_id}: {e}")
             print(f"Error: Unexpected error deleting lab {lab_id}: {e}", file=sys.stderr)
-            return ""        
-
+            return ""
 def main():
     # Main function to handle command-line arguments and dispatch commands
     # Supports positional arguments (FUNCTION, LABID) and named arguments
     # All parameter names and command values are case-insensitive
     parser = CaseInsensitiveArgumentParser(
         description="CML Tools for lab management and validation",
-        usage="\n%(prog)s [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug] [--clear]\n%(prog)s [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex] [--clear]"
+        usage="\n%(prog)s [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug] [--clear] [--direct]\n%(prog)s [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex] [--clear] [--direct]"
     )
     parser.add_argument("function", nargs="?", help="Function to execute")
     parser.add_argument("labid", nargs="?", help="Lab ID or title")
@@ -977,19 +1043,17 @@ def main():
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--regex", action="store_true", help="Use regex instead of wildcard for -pattern (default: wildcard)")
     parser.add_argument("--clear", action="store_true", help="Escape editors and clear screen before, after each, and after all commands")
-
+    parser.add_argument("--direct", action="store_true", help="Use direct SSH (invisible to student) instead of pyATS")  # <-- NEW
     args = parser.parse_args()
     function = (args.function or args.named_function or "").lower()
     labid = args.labid or args.named_labid
     if not function:
         parser.print_help()
         sys.exit(1)
-
     valid_functions = ["authenticate", "findlab", "getlabs", "getdetails", "getstate", "startlab", "stoplab", "gettestbed", "validate", "importlab", "wipelab", "deletelab"]
     if function not in valid_functions:
         print(f"Error: Invalid function '{function}'. Valid: {', '.join(valid_functions)}", file=sys.stderr)
         sys.exit(1)
-
     cml_address = os.environ.get("CML_ADDRESS", "https://192.168.1.10")
     cml_ip = os.environ.get("CML_IP", "192.168.1.10")
     username = os.environ.get("CML_USERNAME", "")
@@ -997,9 +1061,7 @@ def main():
     if not username or not password:
         print("Error: CML_USERNAME and CML_PASSWORD must be set", file=sys.stderr)
         sys.exit(1)
-
     client = CMLClient(cml_address, cml_ip, username, password, args.debug)
-
     if function == "authenticate":
         print(client.authenticate())
     elif function == "findlab":
@@ -1062,9 +1124,9 @@ def main():
                     "original_cmd": original_cmd
                 })
             device_info = json.dumps([device])
-        # === CALL VALIDATE WITH CLEAR OPTION ===
+        # === CALL VALIDATE WITH DIRECT OPTION ===
         results, overall_result, merged_raw = client.validate(
-            labid, device_info, timeout=args.timeout, clear_screen=args.clear
+            labid, device_info, timeout=args.timeout, clear_screen=args.clear, use_direct=args.direct
         )
         # === OUTPUT HANDLING ===
         if args.pattern:
@@ -1113,14 +1175,12 @@ def main():
             else:
                 print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
                 sys.exit(1)
-
         # --------------------------------------------------------------
         # 1. Full wipe → DEFINED_ON_CORE
         # --------------------------------------------------------------
         if not client.wipelab(labid):
             print("Error: Failed to wipe lab into DEFINED_ON_CORE state", file=sys.stderr)
             sys.exit(1)
-
         # --------------------------------------------------------------
         # 2. Delete
         # --------------------------------------------------------------
@@ -1146,6 +1206,5 @@ def main():
     else:
         parser.print_help()
         sys.exit(1)
-
 if __name__ == "__main__":
     main()
