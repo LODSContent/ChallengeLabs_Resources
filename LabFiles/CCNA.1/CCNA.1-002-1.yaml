@@ -198,7 +198,7 @@ nodes:
   - boot_disk_size: null
     configuration:
       - name: ios_config.txt
-        content: hostname SWITCH1
+        content: hostname Switch1
     cpu_limit: null
     cpus: null
     data_volume: null
