@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# CML Tools v1.20251107.2319
+# CML Tools v1.20251107.2322
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -572,6 +572,7 @@ class CMLClient:
         dev = testbed.devices.get(actual_name)
 
         if use_direct:
+            # === DIRECT SSH MODE (NO PYATS) ===
             if not lab_id:
                 raise ValueError("lab_id is required in direct SSH mode")
             try:
@@ -788,11 +789,11 @@ class CMLClient:
                 'devices': {
                     actual: testbed_data['devices'][actual],
                     'terminal_server': testbed_data['devices']['terminal_server']
-                },
-                'lab_id': lab_id  # <-- needed for direct SSH
+                }
             }
             try:
                 testbed = load(yaml.safe_dump(minimal))
+                # REMOVED: testbed.lab_id = lab_id  # <-- This was the bug!
             except Exception as e:
                 msg = f"Incorrectly Configured - {device['device_name']} - testbed_load_failed"
                 all_results.append(msg)
@@ -804,7 +805,7 @@ class CMLClient:
                 timeout=timeout, 
                 clear_screen=clear_screen, 
                 use_direct=use_direct,
-                lab_id=lab_id  # PASS IT HERE
+                lab_id=lab_id  # <-- PASS lab_id here
             )
             all_results.extend(res)
             all_raw_outputs.extend(raw_out)
