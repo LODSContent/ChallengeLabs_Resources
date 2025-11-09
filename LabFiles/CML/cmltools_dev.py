@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# CML Tools v1.20251108.0215
+# CML Tools v1.20251107.0005
 # Script for lab management, import, and validation
 # Interacts with Cisco Modeling Labs (CML) to manage labs and validate device configurations
 # Supports case-insensitive commands and parameter names
@@ -42,9 +42,6 @@ import yaml
 import ast
 import requests
 import urllib3
-# pip install websocket-client
-import websocket
-import threading
 from genie.testbed import load
 from unicon.core.errors import SubCommandFailure
 from zipfile import ZipFile
@@ -537,130 +534,11 @@ class CMLClient:
         except:
             pass  # Best effort
 
-    def get_serial_ws_url(self, lab_id: str, testbed_name: str) -> str:
-        """
-        Return the WebSocket URL for the serial console of a node.
-        The testbed entry contains the command ``open /LAB/.../NODE_ID/0``.
-        """
-        testbed_yaml = self.gettestbed(lab_id)
-        testbed_data = yaml.safe_load(testbed_yaml)
-        device_entry = testbed_data['devices'].get(testbed_name)
-        if not device_entry:
-            raise ValueError(f"Device {testbed_name} not in testbed")
-
-        cmd = device_entry.get('connections', {}).get('a', {}).get('command', '')
-        if not cmd.startswith('open /'):
-            raise ValueError(f"Invalid serial command for {testbed_name}: {cmd}")
-
-        # open /LAB/TOPO/NODE_LABEL/NODE_ID/0  → index 4 = NODE_ID
-        try:
-            node_id = cmd.split('/')[4]
-        except IndexError:
-            raise ValueError(f"Cannot parse node ID from command: {cmd}")
-
-        url = f"{self.cml_address}/api/v0/labs/{lab_id}/nodes/{node_id}/serial"
-        resp = requests.get(url, headers={"Authorization": f"Bearer {self.jwt}"}, verify=False)
-        resp.raise_for_status()
-        return resp.json().get("websocket_url")
-
-    def execute_command_serial(self, ws_url: str, command: str, timeout: int = 15) -> str:
-        """
-        Send a command over the serial WebSocket and return the captured output.
-        The connection is closed automatically when the prompt is seen.
-        """
-        output = []
-        done = threading.Event()
-
-        def on_message(ws, message):
-            output.append(message)
-            # Prompt detection – works for IOS, NX-OS, Linux, etc.
-            if re.search(r'[>#]\s*$', message.strip()):
-                done.set()
-
-        def on_error(ws, err):
-            logging.error(f"Serial WS error: {err}")
-
-        def on_close(ws, *args):
-            done.set()
-
-        ws = websocket.WebSocketApp(
-            ws_url.replace("http", "ws"),
-            on_message=on_message,
-            on_error=on_error,
-            on_close=on_close,
-        )
-        wst = threading.Thread(target=ws.run_forever, daemon=True)
-        wst.start()
-        time.sleep(1)                     # give the socket time to open
-        ws.send(command + "\r")
-
-        if not done.wait(timeout):
-            ws.close()
-            raise TimeoutError(f"Serial command timed out after {timeout}s")
-
-        ws.close()
-        raw = "\n".join(output)
-
-        # Strip the final prompt line (e.g. "Switch1#")
-        lines = raw.splitlines()
-        if lines and re.search(r'[>#]\s*$', lines[-1].strip()):
-            lines = lines[:-1]
-        return "\n".join(lines)  
-
-    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60,
-                                   clear_screen=False, use_direct=False, lab_id=None):
+    def execute_commands_on_device(self, device, testbed, actual_name, timeout=60, clear_screen=False):
         results = []
         raw_outputs = []
         device_passed = True
         dev_name = device['device_name']
-
-        # ------------------------------------------------------------------
-        # DIRECT SERIAL MODE (no PyATS, no --clear needed)
-        # ------------------------------------------------------------------
-        if use_direct:
-            if not lab_id:
-                raise ValueError("lab_id is required in direct serial mode")
-            try:
-                ws_url = self.get_serial_ws_url(lab_id, actual_name)
-                if self.debug:
-                    logging.info(f"Direct serial console to {actual_name} via {ws_url}")
-            except Exception as e:
-                msg = f"Incorrectly Configured - {dev_name} - serial_failed"
-                results.append(msg)
-                logging.error(str(e))
-                return results, False, raw_outputs
-
-            merged_output = []
-            for cmd_info in device['commands']:
-                cmd = cmd_info['command']
-
-                # MERGE VALIDATION
-                if cmd == "__MERGE_FOR_VALIDATION__":
-                    combined = "\n\n".join(merged_output)
-                    passed = True
-                    for val in cmd_info.get('validations', []):
-                        ok, _ = validate_pattern(val, combined, dev_name, "MERGED", self.debug)
-                        if not ok:
-                            passed = False
-                    status = "Correctly Configured" if passed else "Incorrectly Configured"
-                    results.append(f"{status} - {dev_name} - {cmd_info.get('original_cmd', 'UNKNOWN')}")
-                    device_passed = passed
-                    continue
-
-                # NORMAL COMMAND
-                try:
-                    out = self.execute_command_serial(ws_url, cmd, timeout=timeout)
-                    merged_output.append(out)
-                except Exception as e:
-                    merged_output.append("")
-                    logging.error(f"Serial command failed: {cmd} – {e}")
-                    device_passed = False
-
-            return results, device_passed, merged_output
-
-        # ------------------------------------------------------------------
-        # ORIGINAL PYATS MODE (unchanged except the call signature)
-        # ------------------------------------------------------------------
         dev = testbed.devices.get(actual_name)
         if not dev:
             msg = f"Incorrectly Configured - {dev_name} - not_in_testbed"
@@ -692,7 +570,7 @@ class CMLClient:
             try:
                 dev.execute('terminal length 0', timeout=5)
             except:
-                pass # Best effort
+                pass  # Best effort
         merged_output = []
         for cmd_info in device['commands']:
             cmd = cmd_info['command']
@@ -714,7 +592,12 @@ class CMLClient:
                     dev.sendline(cmd)
                     merged_output.append("")
                 else:
+                    # === ENSURE PROMPT BEFORE COMMAND ===
+                    #if clear_screen:
+                        #dev.sendline('')
+                        #time.sleep(0.1)
                     output = dev.execute(cmd, timeout=timeout)
+                    # === STRIP FINAL PROMPT ===
                     lines = output.splitlines()
                     if lines and re.match(r'^[A-Z0-9_-]+[>#]', lines[-1].strip()):
                         lines = lines[:-1]
@@ -729,7 +612,7 @@ class CMLClient:
             try:
                 dev.execute('terminal length 24', timeout=5)
             except:
-                pass # Best effort
+                pass  # Best effort
         # === CLEAR AFTER LAST COMMAND (if --clear) ===
         if clear_screen:
             self.send_clear_sequence(dev, os_type)
@@ -739,15 +622,13 @@ class CMLClient:
             pass
         return results, device_passed, merged_output
 
-    def validate(self, lab_id, device_info=None, timeout=60,
-                 clear_screen=False, use_direct=False):
+    def validate(self, lab_id, device_info=None, timeout=60, clear_screen=False):
         # Validate device configurations
         # Args:
-        # lab_id: Lab ID or title
-        # device_info: JSON string of device info (or None for default)
-        # timeout: Per-command timeout in seconds (default: 60)
-        # clear_screen: If True, send clear sequence before, after each, and after all commands
-        # use_direct: If True, use serial-console WebSocket instead of PyATS
+        #   lab_id: Lab ID or title
+        #   device_info: JSON string of device info (or None for default)
+        #   timeout: Per-command timeout in seconds (default: 60)
+        #   clear_screen: If True, send clear sequence before, after each, and after all commands
         # Returns: results (list), overall_result (bool), raw_output (str if no validation)
         if not lab_id:
             lab_id = self.findlab()
@@ -844,8 +725,7 @@ class CMLClient:
                 overall_result = False
                 continue
             res, passed, raw_out = self.execute_commands_on_device(
-                device, testbed, actual, timeout=timeout,
-                clear_screen=clear_screen, use_direct=use_direct, lab_id=lab_id
+                device, testbed, actual, timeout=timeout, clear_screen=clear_screen
             )
             all_results.extend(res)
             all_raw_outputs.extend(raw_out)
@@ -1080,7 +960,7 @@ def main():
     # All parameter names and command values are case-insensitive
     parser = CaseInsensitiveArgumentParser(
         description="CML Tools for lab management and validation",
-        usage="\n%(prog)s [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug] [--clear] [--direct]\n%(prog)s [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex] [--clear] [--direct]"
+        usage="\n%(prog)s [FUNCTION] [LABID] [-deviceinfo JSON] [-source URL] [--debug] [--clear]\n%(prog)s [-function FUNCTION] [-labid LABID] [-devicename NAME] [-command CMD] [-pattern PAT] [-timeout SEC] [--debug] [--regex] [--clear]"
     )
     parser.add_argument("function", nargs="?", help="Function to execute")
     parser.add_argument("labid", nargs="?", help="Lab ID or title")
@@ -1097,17 +977,19 @@ def main():
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("--regex", action="store_true", help="Use regex instead of wildcard for -pattern (default: wildcard)")
     parser.add_argument("--clear", action="store_true", help="Escape editors and clear screen before, after each, and after all commands")
-    parser.add_argument("--direct", action="store_true", help="Use direct serial-console WebSocket instead of PyATS")
+
     args = parser.parse_args()
     function = (args.function or args.named_function or "").lower()
     labid = args.labid or args.named_labid
     if not function:
         parser.print_help()
         sys.exit(1)
+
     valid_functions = ["authenticate", "findlab", "getlabs", "getdetails", "getstate", "startlab", "stoplab", "gettestbed", "validate", "importlab", "wipelab", "deletelab"]
     if function not in valid_functions:
         print(f"Error: Invalid function '{function}'. Valid: {', '.join(valid_functions)}", file=sys.stderr)
         sys.exit(1)
+
     cml_address = os.environ.get("CML_ADDRESS", "https://192.168.1.10")
     cml_ip = os.environ.get("CML_IP", "192.168.1.10")
     username = os.environ.get("CML_USERNAME", "")
@@ -1115,7 +997,9 @@ def main():
     if not username or not password:
         print("Error: CML_USERNAME and CML_PASSWORD must be set", file=sys.stderr)
         sys.exit(1)
+
     client = CMLClient(cml_address, cml_ip, username, password, args.debug)
+
     if function == "authenticate":
         print(client.authenticate())
     elif function == "findlab":
@@ -1178,10 +1062,9 @@ def main():
                     "original_cmd": original_cmd
                 })
             device_info = json.dumps([device])
-        # === CALL VALIDATE WITH DIRECT OPTION ===
+        # === CALL VALIDATE WITH CLEAR OPTION ===
         results, overall_result, merged_raw = client.validate(
-            labid, device_info, timeout=args.timeout,
-            clear_screen=args.clear, use_direct=args.direct
+            labid, device_info, timeout=args.timeout, clear_screen=args.clear
         )
         # === OUTPUT HANDLING ===
         if args.pattern:
@@ -1230,12 +1113,14 @@ def main():
             else:
                 print(f"Error: Invalid lab ID format: {labid}", file=sys.stderr)
                 sys.exit(1)
+
         # --------------------------------------------------------------
         # 1. Full wipe → DEFINED_ON_CORE
         # --------------------------------------------------------------
         if not client.wipelab(labid):
             print("Error: Failed to wipe lab into DEFINED_ON_CORE state", file=sys.stderr)
             sys.exit(1)
+
         # --------------------------------------------------------------
         # 2. Delete
         # --------------------------------------------------------------
