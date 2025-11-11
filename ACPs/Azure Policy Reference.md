@@ -26,6 +26,8 @@
 - [Microsoft.Web/serverfarms](#microsoftwebserverfarms)
 - [Microsoft.Web/sites](#microsoftwebsites)
 - [Microsoft.web/serverfarms](#microsoftwebserverfarms)
+---
+<br>
 
 ## Resource Group id Examples
 
@@ -71,6 +73,7 @@
 > *Note*: `// Allowing CSS and CSR variations in the same ACP. This should be used whenever possible.`
 ---
 [Back to TOC:](#table-of-contents)
+<br>
 
 ## Location (region) examples
 
@@ -111,6 +114,9 @@
 
 > *Note*: `// location based upon the location of the current resource group`  
 > *Note*: `// Allowing alternate locations`
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.App/containerApps
 
@@ -211,6 +217,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.CognitiveServices
 
@@ -652,6 +661,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Automation
 
@@ -893,6 +905,9 @@
 ```
 
 > *Note*: `------------------------------------`
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Compute/virtualMachines
 
@@ -975,6 +990,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Compute/virtualMachineScaleSets
 
@@ -1157,6 +1175,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.ContainerInstance/containerGroups
 
@@ -1247,6 +1268,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.ContainerRegistry
 
@@ -1321,6 +1345,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.DataFactory
 
@@ -1482,6 +1509,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.DBforMySQL
 
@@ -1562,6 +1592,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.DocumentDB
 
@@ -1632,6 +1665,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.EventGrid/topics
 
@@ -1712,6 +1748,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.EventGrid/systemTopics
 
@@ -1784,6 +1823,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.EventHub
 
@@ -1868,6 +1910,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.OperationalInsights
 
@@ -1944,6 +1989,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Search
 
@@ -2004,6 +2052,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Sql/servers
 
@@ -2134,6 +2185,9 @@
 > *Note*: The “master” database “name” property must always be present in addition to whatever DB name the student will be creating.  
 > *Note*: To get the current list of Microsoft.Sql/servers/databases Sku Data, run the following command:  
 > o   Get-AzSqlServerServiceObjective -Location <location>
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.SqlVirtualMachines
 
@@ -2212,6 +2266,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Synapse
 
@@ -2350,6 +2407,9 @@
     }
 }
 ```
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Web - Function App
 
@@ -2519,6 +2579,9 @@
 ```
 
 > *Note*: When a “function app” is being created, the “kind” - “functionapp” AND the blank value must be present.
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Web/serverfarms
 
@@ -2688,6 +2751,9 @@
 ```
 
 > *Note*: From Azure: “If the value of the kind property is null, empty, or not on this list, the portal treats the resource as Web App.”
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.Web/sites
 
@@ -2821,6 +2887,9 @@
 ```
 
 > *Note*: Notes: the empty quotes "" in field: kind are necessary.
+---
+[Back to TOC:](#table-of-contents)
+<br>
 
 ## Microsoft.web/serverfarms
 
