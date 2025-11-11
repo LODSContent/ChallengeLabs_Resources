@@ -1,5 +1,32 @@
 # Skillable Approved - Azure Policy Reference
 
+## Table of Contents
+
+- [Resource Group id Examples](#resource-group-id-examples)
+- [Location (region) examples](#location-region-examples)
+- [Microsoft.App/containerApps](#microsoftappcontainerapps)
+- [Microsoft.CognitiveServices](#microsoftcognitiveservices)
+- [Microsoft.Automation](#microsoftautomation)
+- [Microsoft.Compute/virtualMachines](#microsoftcomputevirtualmachines)
+- [Microsoft.Compute/virtualMachineScaleSets](#microsoftcomputevirtualmachinescalesets)
+- [Microsoft.ContainerInstance/containerGroups](#microsoftcontainerinstancecontainergroups)
+- [Microsoft.ContainerRegistry](#microsoftcontainerregistry)
+- [Microsoft.DataFactory](#microsoftdatafactory)
+- [Microsoft.DBforMySQL](#microsoftdbformysql)
+- [Microsoft.DocumentDB](#microsoftdocumentdb)
+- [Microsoft.EventGrid/topics](#microsofteventgridtopics)
+- [Microsoft.EventGrid/systemTopics](#microsofteventgridsystemtopics)
+- [Microsoft.EventHub](#microsofteventhub)
+- [Microsoft.OperationalInsights](#microsoftoperationalinsights)
+- [Microsoft.Search](#microsoftsearch)
+- [Microsoft.Sql/servers](#microsoftsqlservers)
+- [Microsoft.SqlVirtualMachines](#microsoftsqlvirtualmachines)
+- [Microsoft.Synapse](#microsoftsynapse)
+- [Microsoft.Web - Function App](#microsoftweb---function-app)
+- [Microsoft.Web/serverfarms](#microsoftwebserverfarms)
+- [Microsoft.Web/sites](#microsoftwebsites)
+- [Microsoft.web/serverfarms](#microsoftwebserverfarms)
+
 ## Resource Group id Examples
 
 > **Purpose**: These are policy fragments used to restrict resource placement by Resource Group ID. They support dynamic naming (using `corp-data` + tags `LODManaged` and `LabInstance`), static names (`rg1`), or multiple allowed patterns (RG1 with or without tags). Use in combination with other policies.
