@@ -69,6 +69,8 @@
 ```
 
 > *Note*: `// Allowing CSS and CSR variations in the same ACP. This should be used whenever possible.`
+---
+[Back to TOC:](#table-of-contents)
 
 ## Location (region) examples
 
