@@ -285,6 +285,7 @@
     }
 }
 ```
+---
 
 > **Purpose**: Allows only one Azure Cognitive Search service named `search-realestate{LabInstance}` on the `basic` SKU. Supporting resources allowed.
 
@@ -337,6 +338,7 @@
     }
 }
 ```
+---
 
 > **Purpose**: Permits only a specific AML workspace (`HexeloAML-workspace{LabInstance}`) and compute instance (`hexelo-aai-mls{LabInstance}`), plus required supporting services: Storage, Key Vault, Log Analytics, App Insights.
 
@@ -405,6 +407,7 @@
     }
 }
 ```
+---
 
 > **Purpose**: Allows Document Intelligence services (Text Analytics, Form Recognizer, Computer Vision) under a single name `Hexelo-Doc-Intel{LabInstance}` and SKUs S, S0, S1, F0. Storage support included.
 
@@ -468,6 +471,7 @@
     }
 }
 ```
+---
 
 > **Purpose**: Allows specific Computer Vision instances and their deployments with names like `AITan-`, `ExtractiveSummarization`, or `ComputerVision` + `labInstance`. SKUs S and F0.
 
@@ -533,6 +537,7 @@
     }
 }
 ```
+---
 
 > **Purpose**: Permits Vision-related Cognitive Services (`VisionResource`, `ComputerVision`) + `labInstance` with SKUs S, F0, S1, S0. Includes deployments and Storage.
 
@@ -593,6 +598,7 @@
     }
 }
 ```
+---
 
 > **Purpose**: Allows OpenAI (`OpenAI{LabInstance}`, S0) and Azure Cognitive Search (`azuresearch{LabInstance}`, basic) with storage support.
 
@@ -747,6 +753,7 @@
     }
 }
 ```
+---
 
 > **Purpose**: Permits specific runbooks (`runbook1`, tutorial scripts) of types Python, PowerShell, GraphPowerShell in approved Automation Accounts.
 
@@ -819,6 +826,7 @@
     }
 }
 ```
+---
 
 > **Purpose**: Allows ASR recovery Automation Accounts named `remoterec-*-asr-automationaccount` in RG1 or RG2, Basic SKU, in `eastus`, `westus2`, or RG region.
 
