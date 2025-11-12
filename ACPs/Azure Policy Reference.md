@@ -28,6 +28,24 @@
 ---
 <br><br>
 
+## High-Threat Resources
+
+> The following resources are considered "High-Threat" by the security team and are discouraged for use by Challenge Labs.
+
+| Resource Type                                      | Severity    | Status                  | Notes                          |
+|----------------------------------------------------|-------------|-------------------------|--------------------------------|
+| Microsoft.AzureActiveDirectory/ciamDirectories     | Blocked     | Restricted              | All Labs, Threat to platform availability - id_202 |
+| Microsoft.ContainerRegistry/registries             | Very High   | Restricted              | Unmitigated                    |
+| Microsoft.Databricks                               | Very High   | Under Review            |                                |
+| Microsoft.Databricks/workspaces                    | Very High   | Under Review            |                                |
+| Microsoft.Fabric/capacities                        | Very High   | Restricted              | (Crypto/Compute)               |
+| Microsoft.MachineLearningServices/workspaces       | Very High   | Restricted              | (Crypto/Compute)               |
+| Microsoft.Synapse/workspaces                       | Very High   | Restricted              | Unmitigated                    |
+
+---
+[Back to TOC:](#table-of-contents)
+<br><br>
+
 ## Resource Group id Examples
 
 > **Purpose**: These are policy fragments used to restrict resource placement by Resource Group ID. They support dynamic naming (using `corp-data` + tags `LODManaged` and `LabInstance`), static names (`rg1`), or multiple allowed patterns (RG1 with or without tags). Use in combination with other policies.
