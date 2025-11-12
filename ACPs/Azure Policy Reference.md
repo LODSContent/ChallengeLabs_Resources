@@ -31,6 +31,7 @@
 ## High-Threat Resources
 
 > The following resources are considered "High-Threat" by the security team and are discouraged for use by Challenge Labs.
+<br>
 
 | Resource Type                                      | Severity    | Status                  | Notes                          |
 |----------------------------------------------------|-------------|-------------------------|--------------------------------|
