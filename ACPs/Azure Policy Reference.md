@@ -25,7 +25,6 @@
 - [Microsoft.Web - Function App](#microsoftweb---function-app)
 - [Microsoft.Web/serverfarms](#microsoftwebserverfarms)
 - [Microsoft.Web/sites](#microsoftwebsites)
-- [Microsoft.web/serverfarms](#microsoftwebserverfarms)
 ---
 <br><br>
 
@@ -2760,6 +2759,76 @@
 
 > *Note*: From Azure: “If the value of the kind property is null, empty, or not on this list, the portal treats the resource as Web App.”
 ---
+
+> **Purpose**: Allows B1/S1 App Service Plan named `asp-AIApp{LabInstance}` for AI apps (e.g., OpenAI Chat Playground). Do not use `id` field when deployed from OpenAI.
+
+```json
+{
+    "if": {
+        "not": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.web/serverfarms"
+                        },
+                        {
+                            "field": "Microsoft.web/serverfarms/sku.name",
+                            "in": [
+                                "B1",
+                                "S1"
+                            ]
+                        },
+                        {
+                            "field": "Microsoft.web/serverfarms/sku.capacity",
+                            "lessOrEquals": 1
+                        },
+                        {
+                            "field": "name",
+                            "equals": "[concat('asp-AIApp',resourcegroup().tags.LabInstance)]"
+                        },
+                        {
+                            "field": "location",
+                            "in": [
+                                "[resourceGroup().location]"
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "notEquals": "global"
+                        }
+                    ]
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.Storage/storageAccounts"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.EventHub"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.EventGrid"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.Network"
+                }
+            ]
+        }
+    },
+    "then": {
+        "effect": "deny"
+    }
+}
+```
+
+> *Note*: Note: this is for when creating a web app through the Chat Playground in an OpenAI service.  
+> *Note*: Note: Do not include the field: id when Microsoft.web/serverfarms is deployed as a web app from an OpenAI service (chat playground).
+
+---
 [Back to TOC:](#table-of-contents)
 <br><br>
 
@@ -2899,72 +2968,4 @@
 [Back to TOC:](#table-of-contents)
 <br><br>
 
-## Microsoft.web/serverfarms
 
-> **Purpose**: Allows B1/S1 App Service Plan named `asp-AIApp{LabInstance}` for AI apps (e.g., OpenAI Chat Playground). Do not use `id` field when deployed from OpenAI.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.web/serverfarms"
-                        },
-                        {
-                            "field": "Microsoft.web/serverfarms/sku.name",
-                            "in": [
-                                "B1",
-                                "S1"
-                            ]
-                        },
-                        {
-                            "field": "Microsoft.web/serverfarms/sku.capacity",
-                            "lessOrEquals": 1
-                        },
-                        {
-                            "field": "name",
-                            "equals": "[concat('asp-AIApp',resourcegroup().tags.LabInstance)]"
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "notEquals": "global"
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "deny"
-    }
-}
-```
-
-> *Note*: Note: this is for when creating a web app through the Chat Playground in an OpenAI service.  
-> *Note*: Note: Do not include the field: id when Microsoft.web/serverfarms is deployed as a web app from an OpenAI service (chat playground).
