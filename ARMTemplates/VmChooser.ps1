@@ -9,6 +9,8 @@ param(
 
 Write-Output "[INFO] Starting VM size selection for location: $location"
 
+throw "[TEST] Attempting to set context with SubscriptionId: $subscriptionId"
+
 # Authenticate with current identity
 Connect-AzAccount -Identity | Out-Null
 
