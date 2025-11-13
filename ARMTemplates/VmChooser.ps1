@@ -72,8 +72,7 @@ $allSkus = Get-AzComputeResourceSku -Location $location | Where-Object {
 
 if (-not $allSkus) {
     Write-Output "[ERROR] No zonal sizes found matching allowed list."
-    $skuResult = $allSkus | out-string
-    throw "No zonal VM sizes available: SKUs: $skuResult"
+    throw "No zonal VM sizes available."
 }
 
 # === PER-ZONE QUOTA FILTERING ===
