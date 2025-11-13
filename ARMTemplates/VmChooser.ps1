@@ -34,6 +34,17 @@ if ($allowedSizes.Count -eq 0) {
     throw "No allowed sizes available."
 }
 
+# Test Break:
+# === OUTPUT ===
+$DeploymentScriptOutputs = @{
+    vmSize   = "Standard_B1ls"
+    zone     = "3"
+    vCPUs    = 0
+    memoryGB = 0
+}
+Return
+
+
 # === GET ZONAL + QUOTA-FREE SKUs ===
 Write-Output "[INFO] Querying zonal VM sizes in $location..."
 $allSkus = Get-AzComputeResourceSku -Location $location | Where-Object {
