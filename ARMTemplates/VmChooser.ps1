@@ -12,6 +12,8 @@ Write-Output "[INFO] Starting VM size selection for location: $location"
 # Authenticate with current identity
 # Connect-AzAccount -Identity | Out-Null
 
+Get-AzContext
+
 <# Try to set the subscription context
 try {
     Write-Output "[INFO] Attempting to set context with SubscriptionId: $subscriptionId"
