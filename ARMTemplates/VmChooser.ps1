@@ -1,5 +1,4 @@
 param(
-    [string]$subscriptionId,
     [string]$location = "eastus2",
     [string]$preferredSize = "",
     [string]$allowedSizes = "",
@@ -8,23 +7,6 @@ param(
 )
 
 Write-Output "[INFO] Starting VM size selection for location: $location"
-
-<#
-# Authenticate with current identity
-Connect-AzAccount -Identity | Out-Null
-try {
-    Write-Output "[INFO] Attempting to set context with SubscriptionId: $subscriptionId"
-    Set-AzContext -Subscription $subscriptionId -ErrorAction Stop
-    Write-Output "[INFO] Successfully set context to subscription $subscriptionId"
-}
-catch {
-    Write-Output "[ERROR] Failed to set context."
-    throw  "[ERROR] Attempting to set context with SubscriptionId: $subscriptionId\n\nException details: $($_.Exception.Message)"
-}
-#>
-
-$result = Get-AzResource
-throw "[TEST]: $result"
 
 # === GET ALLOWED SIZES ===
 if ([string]::IsNullOrWhiteSpace($allowedSizes)) {
