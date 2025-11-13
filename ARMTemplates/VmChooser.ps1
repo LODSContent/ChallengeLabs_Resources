@@ -1,4 +1,5 @@
 param(
+    [string]$subscriptionId,
     [string]$location = "eastus2",
     [string]$preferredSize = "",
     [string]$allowedSizes = "",
@@ -11,7 +12,7 @@ Write-Output "[INFO] Starting VM size selection for location: $location"
 # Authenticate with current identity
 Connect-AzAccount -Identity | Out-Null
 # Set the subscription explicitly
-Set-AzContext -SubscriptionId $env:AZURE_SUBSCRIPTION_ID
+Set-AzContext -SubscriptionId $subscriptionId
 
 # === GET ALLOWED SIZES ===
 if ([string]::IsNullOrWhiteSpace($allowedSizes)) {
