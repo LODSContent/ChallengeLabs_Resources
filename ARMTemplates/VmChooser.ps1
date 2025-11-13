@@ -12,7 +12,7 @@ Write-Output "[INFO] Starting VM size selection for location: $location"
 # Authenticate with current identity
 # Connect-AzAccount -Identity | Out-Null
 
-# Try to set the subscription context
+<# Try to set the subscription context
 try {
     Write-Output "[INFO] Attempting to set context with SubscriptionId: $subscriptionId"
     Set-AzContext -Subscription $subscriptionId -ErrorAction Stop
@@ -22,6 +22,7 @@ catch {
     Write-Output "[ERROR] Failed to set context."
     throw  "[ERROR] Attempting to set context with SubscriptionId: $subscriptionId\n\nException details: $($_.Exception.Message)"
 }
+#>
 
 # === GET ALLOWED SIZES ===
 if ([string]::IsNullOrWhiteSpace($allowedSizes)) {
