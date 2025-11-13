@@ -8,6 +8,9 @@ param(
 
 Write-Output "[INFO] Starting VM size selection for location: $location"
 
+# Authenticate with current identity
+Connect-AzAccount -Identity | Out-Null
+
 # === GET ALLOWED SIZES ===
 if ([string]::IsNullOrWhiteSpace($allowedSizes)) {
     Write-Output "[INFO] Downloading allowed sizes from GitHub..."
