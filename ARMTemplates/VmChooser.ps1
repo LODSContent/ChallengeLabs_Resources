@@ -10,7 +10,7 @@ param(
 Write-Output "[INFO] Starting VM size selection for location: $location"
 
 # Authenticate with current identity
-# Connect-AzAccount -Identity | Out-Null
+Connect-AzAccount -Identity | Out-Null
 
 $context = Get-AzContext | Out-String
 throw "[STOPPING] Context is: $context"
