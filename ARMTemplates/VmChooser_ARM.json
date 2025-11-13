@@ -1,0 +1,329 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String"
+        },
+        "vmName": {
+            "defaultValue": "LabVM",
+            "type": "String"
+        },
+        "preferredSize": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "allowedSizes": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "cpu": {
+            "defaultValue": 0,
+            "type": "Int"
+        },
+        "memory": {
+            "defaultValue": 0,
+            "type": "Int"
+        },
+        "adminUsername": {
+            "defaultValue": "azureadmin",
+            "type": "String"
+        },
+        "adminPassword": {
+            "defaultValue": "AzurePa$$w0rd20251111",
+            "type": "SecureString"
+        }
+    },
+    "variables": {
+        "identityName": "[concat(parameters('vmName'), '-identity')]",
+        "scriptName": "PickSizeAndZone",
+        "vmChooserScriptUri": "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/ARMTemplates/VmChooser.ps1",
+        "vnetName": "[concat(parameters('vmName'), '-vnet')]",
+        "publicIpName": "[concat(parameters('vmName'), '-pip')]",
+        "nsgName": "[concat(parameters('vmName'), '-nsg')]",
+        "nicName": "[concat(parameters('vmName'), '-nic')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+            "apiVersion": "2023-01-31",
+            "name": "[variables('identityName')]",
+            "location": "[parameters('location')]"
+        },
+        {
+            "type": "Microsoft.Resources/deploymentScripts",
+            "apiVersion": "2020-10-01",
+            "name": "[variables('scriptName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
+            ],
+            "kind": "AzurePowerShell",
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]": {}
+                }
+            },
+            "properties": {
+                "azPowerShellVersion": "7.2",
+                "timeout": "PT10M",
+                "retentionInterval": "PT1H",
+                "cleanupPreference": "OnSuccess",
+                "arguments": "[concat(' -location \"', parameters('location'), '\" -preferredSize ', if(empty(parameters('preferredSize')), ':$null', concat('\"', parameters('preferredSize'), '\"')), ' -allowedSizes ', if(empty(parameters('allowedSizes')), ':$null', concat('\"', parameters('allowedSizes'), '\"')), ' -cpu ', parameters('cpu'), ' -memory ', parameters('memory'))]",
+                "primaryScriptUri": "[variables('vmChooserScriptUri')]"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2023-07-01",
+            "name": "createLabVm",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/deploymentScripts', variables('scriptName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "expressionEvaluationOptions": {
+                    "scope": "inner"
+                },
+                "parameters": {
+                    "vmSize": {
+                        "value": "[reference(variables('scriptName')).outputs.vmSize]"
+                    },
+                    "zone": {
+                        "value": "[reference(variables('scriptName')).outputs.zone]"
+                    },
+                    "vmName": {
+                        "value": "[parameters('vmName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "vnetName": {
+                        "value": "[variables('vnetName')]"
+                    },
+                    "publicIpName": {
+                        "value": "[variables('publicIpName')]"
+                    },
+                    "nsgName": {
+                        "value": "[variables('nsgName')]"
+                    },
+                    "nicName": {
+                        "value": "[variables('nicName')]"
+                    }
+                },
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "vmSize": {
+                            "type": "string"
+                        },
+                        "zone": {
+                            "type": "string"
+                        },
+                        "vmName": {
+                            "type": "string"
+                        },
+                        "adminUsername": {
+                            "type": "string"
+                        },
+                        "adminPassword": {
+                            "type": "secureString"
+                        },
+                        "location": {
+                            "type": "string"
+                        },
+                        "vnetName": {
+                            "type": "string"
+                        },
+                        "publicIpName": {
+                            "type": "string"
+                        },
+                        "nsgName": {
+                            "type": "string"
+                        },
+                        "nicName": {
+                            "type": "string"
+                        }
+                    },
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks",
+                            "apiVersion": "2023-05-01",
+                            "name": "[parameters('vnetName')]",
+                            "location": "[parameters('location')]",
+                            "properties": {
+                                "addressSpace": {
+                                    "addressPrefixes": [
+                                        "10.0.0.0/16"
+                                    ]
+                                },
+                                "subnets": [
+                                    {
+                                        "name": "default",
+                                        "properties": {
+                                            "addressPrefix": "10.0.0.0/24"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/publicIPAddresses",
+                            "apiVersion": "2023-05-01",
+                            "name": "[parameters('publicIpName')]",
+                            "location": "[parameters('location')]",
+                            "sku": {
+                                "name": "Standard"
+                            },
+                            "properties": {
+                                "publicIPAllocationMethod": "Static"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/networkSecurityGroups",
+                            "apiVersion": "2023-05-01",
+                            "name": "[parameters('nsgName')]",
+                            "location": "[parameters('location')]",
+                            "properties": {
+                                "securityRules": [
+                                    {
+                                        "name": "RDP",
+                                        "properties": {
+                                            "priority": 1000,
+                                            "protocol": "Tcp",
+                                            "access": "Allow",
+                                            "direction": "Inbound",
+                                            "sourcePortRange": "*",
+                                            "destinationPortRange": "3389",
+                                            "sourceAddressPrefix": "*",
+                                            "destinationAddressPrefix": "*"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/networkInterfaces",
+                            "apiVersion": "2023-05-01",
+                            "name": "[parameters('nicName')]",
+                            "location": "[parameters('location')]",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+                                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
+                                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                            ],
+                            "properties": {
+                                "ipConfigurations": [
+                                    {
+                                        "name": "ipconfig1",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), 'default')]"
+                                            },
+                                            "publicIPAddress": {
+                                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
+                                            },
+                                            "privateIPAllocationMethod": "Dynamic"
+                                        }
+                                    }
+                                ],
+                                "networkSecurityGroup": {
+                                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                                }
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Compute/virtualMachines",
+                            "apiVersion": "2022-11-01",
+                            "name": "[parameters('vmName')]",
+                            "location": "[parameters('location')]",
+                            "zones": [
+                                "[parameters('zone')]"
+                            ],
+                            "dependsOn": [
+                                "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
+                            ],
+                            "properties": {
+                                "hardwareProfile": {
+                                    "vmSize": "[parameters('vmSize')]"
+                                },
+                                "osProfile": {
+                                    "computerName": "[parameters('vmName')]",
+                                    "adminUsername": "[parameters('adminUsername')]",
+                                    "adminPassword": "[parameters('adminPassword')]"
+                                },
+                                "storageProfile": {
+                                    "imageReference": {
+                                        "publisher": "MicrosoftWindowsServer",
+                                        "offer": "WindowsServer",
+                                        "sku": "2022-datacenter-azure-edition-hotpatch",
+                                        "version": "latest"
+                                    },
+                                    "osDisk": {
+                                        "createOption": "FromImage",
+                                        "managedDisk": {
+                                            "storageAccountType": "Premium_LRS"
+                                        }
+                                    }
+                                },
+                                "networkProfile": {
+                                    "networkInterfaces": [
+                                        {
+                                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
+                                        }
+                                    ]
+                                },
+                                "diagnosticsProfile": {
+                                    "bootDiagnostics": {
+                                        "enabled": true
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "outputs": {
+                        "publicIp": {
+                            "type": "string",
+                            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))).ipAddress]"
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "Login": {
+            "type": "String",
+            "value": "[concat(parameters('adminUsername'), ' / ', parameters('adminPassword'))]"
+        },
+        "DeployedSize": {
+            "type": "String",
+            "value": "[reference(variables('scriptName')).outputs.vmSize]"
+        },
+        "DeployedZone": {
+            "type": "String",
+            "value": "[reference(variables('scriptName')).outputs.zone]"
+        },
+        "vCPUs": {
+            "type": "String",
+            "value": "[reference(variables('scriptName')).outputs.vCPUs]"
+        },
+        "MemoryGB": {
+            "type": "String",
+            "value": "[reference(variables('scriptName')).outputs.memoryGB]"
+        },
+        "PublicIP": {
+            "type": "String",
+            "value": "[reference('createLabVm').outputs.publicIp]"
+        }
+    }
+}
