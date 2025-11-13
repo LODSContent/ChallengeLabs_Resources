@@ -149,8 +149,8 @@ Write-Output "[SUCCESS] Selected: $($selected.Name) in Zone $zone"
 
 # === OUTPUT ===
 $DeploymentScriptOutputs = @{
-    vmSize   = $selected.Name
-    zone     = $zone
-    vCPUs    = $selected.vCPUs
-    memoryGB = $selected.MemoryGB
+    vmSize   = [string]$selected.Name
+    zone     = [string]$zone
+    vCPUs    = [string]$selected.vCPUs
+    memoryGB = [string]$selected.MemoryGB
 }
