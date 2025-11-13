@@ -2,8 +2,8 @@ param(
     [string]$location = "eastus2",
     [string]$preferredSize = "",
     [string]$allowedSizes = "",
-    [int]$cpu = 0,
-    [int]$memory = 0
+    [int]$cpu = "0",
+    [int]$memory = "0"
 )
 
 Write-Output "[INFO] Starting VM size selection for location: $location"
@@ -34,7 +34,7 @@ if ($allowedSizes.Count -eq 0) {
     throw "No allowed sizes available."
 }
 
-# Test Break:
+<# Test Break:
 # === OUTPUT ===
 $DeploymentScriptOutputs = @{
     vmSize   = "Standard_B1ls"
@@ -43,7 +43,7 @@ $DeploymentScriptOutputs = @{
     memoryGB = 0
 }
 Return
-
+#>
 
 # === GET ZONAL + QUOTA-FREE SKUs ===
 Write-Output "[INFO] Querying zonal VM sizes in $location..."
