@@ -23,6 +23,9 @@ catch {
 }
 #>
 
+$result = Get-AzResource
+throw "[TEST]: $result"
+
 # === GET ALLOWED SIZES ===
 if ([string]::IsNullOrWhiteSpace($allowedSizes)) {
     Write-Output "[INFO] Downloading allowed sizes from GitHub..."
