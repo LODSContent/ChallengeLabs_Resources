@@ -2358,6 +2358,50 @@
                     "allOf": [
                         {
                             "field": "type",
+                            "equals": "Microsoft.Synapse/workspaces"
+                        },
+                        {
+                            "field": "name",
+                            "equals": "[concat('synws',resourcegroup().tags.LabInstance)]"
+                        },
+                        {
+                            "field": "location",
+                            "in": [
+                                "[resourceGroup().location]",
+                                "eastus",
+                                "eastus2"
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "notEquals": "global"
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Synapse/workspaces/bigDataPools"
+                        },
+                        {
+                            "field": "Microsoft.Synapse/workspaces/bigDataPools/autoScale.enabled",
+                            "equals": false
+                        },
+                        {
+                            "field": "Microsoft.Synapse/workspaces/bigDataPools/nodeSize",
+                            "equals": "Small"
+                        },
+                        {
+                            "field": "Microsoft.Synapse/workspaces/bigDataPools/nodeCount",
+                            "lessOrEquals": 10
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
                             "equals": "Microsoft.Sql/servers"
                         },
                         {
@@ -2403,50 +2447,6 @@
                         {
                             "field": "Microsoft.Sql/servers/databases/sku.capacity",
                             "lessOrEquals": 900
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Synapse/workspaces"
-                        },
-                        {
-                            "field": "name",
-                            "equals": "[concat('synws',resourcegroup().tags.LabInstance)]"
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "[resourceGroup().location]",
-                                "eastus",
-                                "eastus2"
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "notEquals": "global"
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Synapse/workspaces/bigDataPools"
-                        },
-                        {
-                            "field": "Microsoft.Synapse/workspaces/bigDataPools/autoScale.enabled",
-                            "equals": false
-                        },
-                        {
-                            "field": "Microsoft.Synapse/workspaces/bigDataPools/nodeSize",
-                            "equals": "Small"
-                        },
-                        {
-                            "field": "Microsoft.Synapse/workspaces/bigDataPools/nodeCount",
-                            "lessOrEquals": 10
                         }
                     ]
                 },
