@@ -2043,6 +2043,22 @@
                             "equals": "basic"
                         },
                         {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        },
+                        {
                             "field": "location",
                             "in": [
                                 "[resourceGroup().location]"
