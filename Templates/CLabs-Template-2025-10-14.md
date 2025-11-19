@@ -15,6 +15,13 @@ Each individual task should be followed by a corresponding "Hint" as a "Show Gui
 
 Inside the tasks, the steps should be formatted as a markdown bulleted list. Add tables, images and codeblocks as needed for clarity.
 
+Do not use numbering on any tasks or steps. The numbers in this template are just for reference.
+
+The "Overview" section should be formatted EXACTLY as it is shown below, but updated with the particulars for this lab.
+
+If we are converting an existing lab that already has some of this structure (Overview, tasks, steps, summary), make sure to preserve the verbiage and order of the existing content, while adding the additional markdown structure and conten to align with this template format.
+
+
 Below is the markdown template:
 
 <!-- Current Challenge Lab Template v4 - as of - 10/14/2025 -->
