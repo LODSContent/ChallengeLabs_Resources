@@ -194,10 +194,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         }
@@ -720,10 +716,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -795,10 +787,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -998,10 +986,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1148,10 +1132,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1270,10 +1250,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1355,10 +1331,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1483,10 +1455,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1527,10 +1495,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         }
@@ -1592,10 +1556,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1675,10 +1635,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1748,10 +1704,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1831,10 +1783,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1906,10 +1854,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -1997,10 +1941,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2076,10 +2016,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2154,10 +2090,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2208,10 +2140,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         }
@@ -2286,10 +2214,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2516,10 +2440,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         }
@@ -2561,10 +2481,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2601,10 +2517,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2688,10 +2600,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         }
@@ -2733,10 +2641,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2773,10 +2677,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2857,10 +2757,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2938,10 +2834,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
@@ -2995,10 +2887,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         },
