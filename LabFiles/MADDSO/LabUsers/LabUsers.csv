@@ -1,0 +1,6 @@
+firstname,middleInitial,lastname,username,email,streetaddress,city,zipcode,state,country,description,office,department,password,telephone,jobtitle,ou
+Beth,A.,Quinlan,BethQ,BethQ,123 Any Street,Slidell,70458,LA,United States,,123451,ITPro,CHANGE!Me1,985-555-1211,IT,"OU=Users,OU=Corp"
+Riley,,Burges,RileyB,RileyB,456 Any Street,Slidell,70459,LA,United States,,123451,CEO,CHANGE!Me2,985-555-1212,Executives,"OU=Users,OU=Corp"
+Keith,,Burges,KeithB,KeithB,789 Any Street,Slidell,70460,LA,United States,,123451,Sales Rep,CHANGE!Me3,985-555-1213,Sales,"OU=Users,OU=Corp"
+Carla,,Smith,CarlaS,CarlaS,1126 Any Street,New Orleans,70112,LA,United States,,123452,HR Admin,CHANGE!Me4,985-555-1214,Human Resources,"OU=Users,OU=Corp"
+Terry,,Jones,TerryJ,TerryJ,127 Any Street,Lewis Center,43035,OH,United States,,123834,Sales Rep,CHANGE!Me5,617-555-1215,Sales,"OU=Users,OU=Corp"
