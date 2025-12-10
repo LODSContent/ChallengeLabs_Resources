@@ -92,6 +92,8 @@
 ## Location (region) examples
 
 > **Purpose**: Ensures resources are deployed in the same region as their Resource Group (`[resourceGroup().location]`) and never in the invalid `global` region. Optionally allows `eastus2` as an alternate approved region to prevent deployment drift and enforce regional compliance.
+>
+> In general, only the `[resourceGroup().location]` should be used for the resource's region. The only time an alternate region should be used is if a secondary region is used as part of the lab itself.
 
 ```json
 {
@@ -933,40 +935,30 @@
                         {
                             "field": "Microsoft.Compute/virtualMachines/sku.name",
                             "in": [
-                                "Standard_B1ls",
-                                "Standard_B1s",
-                                "Standard_B1ms", 
-                                "Standard_B4ms", 
-                                "Standard_B2ats_v2", 
-                                "Standard_B2ts_v2", 
-                                "Standard_B2als_v2", 
-                                "Standard_B2ls_v2", 
-                                "Standard_B2as_v2", 
-                                "Standard_B2ms", 
-                                "Standard_B2s", 
-                                "Standard_B2s_v2", 
-                                "Standard_B2ts_v2", 
-                                "Standard_B4als_v2", 
-                                "Standard_B4ls_v2", 
-                                "Standard_B4as_v2", 
-                                "Standard_B4ms", 
+                                "Standard_B2als_v2",
+                                "Standard_B2as_v2",
+                                "Standard_B2ats_v2",
+                                "Standard_B2ls_v2",
+                                "Standard_B2s_v2",
+                                "Standard_B2ts_v2",
+                                "Standard_B4als_v2",
+                                "Standard_B4as_v2",
+                                "Standard_B4ls_v2",
                                 "Standard_B4s_v2",
-                                "Standard_D2_v4",
-                                "Standard_D2d_v4", 
-                                "Standard_D2s_v3",
-                                "Standard_D4s_v3",
-                                "Standard_D2als_v6", 
-                                "Standard_D2ds_v4",
-                                "Standard_D2ls_v6", 
-                                "Standard_D2as_v6", 
-                                "Standard_D2alds_v6", 
-                                "Standard_D2S_v3", 
-                                "Standard_D2s_v4", 
-                                "Standard_D2s_v6", 
-                                "Standard_D3_v1", 
-                                "Standard_D3_v2", 
-                                "Standard_DS1_v2", 
-                                "Standard_DS3_v2" 
+                                "Standard_D2ads_v5",
+                                "Standard_D2ads_v6",
+                                "Standard_D2alds_v6",
+                                "Standard_D2als_v6",
+                                "Standard_D2as_v5",
+                                "Standard_D2as_v6",
+                                "Standard_D2ds_v5",
+                                "Standard_D2ds_v6",
+                                "Standard_D2lds_v5",
+                                "Standard_D2lds_v6",
+                                "Standard_D2ls_v5",
+                                "Standard_D2ls_v6",
+                                "Standard_D2s_v5",
+                                "Standard_D2s_v6"
                             ]
                         },
                         {
@@ -1047,7 +1039,30 @@
                         {
                             "field": "Microsoft.Compute/virtualMachines/sku.name",
                             "in": [
-                                "Standard_B1s", "Standard_B1ls", "Standard_B1ms", "Standard_B4ms", "Standard_B2ats_v2", "Standard_B2ts_v2", "Standard_B2als_v2", "Standard_B2ls_v2", "Standard_B2as_v2", "Standard_B2ms", "Standard_B2s", "Standard_B2s_v2", "Standard_B2ts_v2", "Standard_B4als_v2", "Standard_B4ls_v2", "Standard_B4as_v2", "Standard_B4ms", "Standard_B4s_v2", "Standard_D2als_v6", "Standard_D2ls_v6", "Standard_D2as_v6", "Standard_D2alds_v6", "Standard_D2S_v3", "Standard_D2s_v4", "Standard_D2s_v6", "Standard_D3_v1", "Standard_D3_v2", "Standard_DS1_v2", "Standard_DS3_v2"
+                                "Standard_B2als_v2",
+                                "Standard_B2as_v2",
+                                "Standard_B2ats_v2",
+                                "Standard_B2ls_v2",
+                                "Standard_B2s_v2",
+                                "Standard_B2ts_v2",
+                                "Standard_B4als_v2",
+                                "Standard_B4as_v2",
+                                "Standard_B4ls_v2",
+                                "Standard_B4s_v2",
+                                "Standard_D2ads_v5",
+                                "Standard_D2ads_v6",
+                                "Standard_D2alds_v6",
+                                "Standard_D2als_v6",
+                                "Standard_D2as_v5",
+                                "Standard_D2as_v6",
+                                "Standard_D2ds_v5",
+                                "Standard_D2ds_v6",
+                                "Standard_D2lds_v5",
+                                "Standard_D2lds_v6",
+                                "Standard_D2ls_v5",
+                                "Standard_D2ls_v6",
+                                "Standard_D2s_v5",
+                                "Standard_D2s_v6"
                             ]
                         },
                         {
@@ -1077,7 +1092,30 @@
                         {
                             "field": "Microsoft.Compute/virtualMachines/sku.name",
                             "in": [
-                                "Standard_B1s", "Standard_B1ls", "Standard_B1ms", "Standard_B4ms", "Standard_B2ats_v2", "Standard_B2ts_v2", "Standard_B2als_v2", "Standard_B2ls_v2", "Standard_B2as_v2", "Standard_B2ms", "Standard_B2s", "Standard_B2s_v2", "Standard_B2ts_v2", "Standard_B4als_v2", "Standard_B4ls_v2", "Standard_B4as_v2", "Standard_B4ms", "Standard_B4s_v2", "Standard_D2als_v6", "Standard_D2ls_v6", "Standard_D2as_v6", "Standard_D2alds_v6", "Standard_D2S_v3", "Standard_D2s_v4", "Standard_D2s_v6", "Standard_D3_v1", "Standard_D3_v2", "Standard_DS1_v2", "Standard_DS3_v2"
+                                "Standard_B2als_v2",
+                                "Standard_B2as_v2",
+                                "Standard_B2ats_v2",
+                                "Standard_B2ls_v2",
+                                "Standard_B2s_v2",
+                                "Standard_B2ts_v2",
+                                "Standard_B4als_v2",
+                                "Standard_B4as_v2",
+                                "Standard_B4ls_v2",
+                                "Standard_B4s_v2",
+                                "Standard_D2ads_v5",
+                                "Standard_D2ads_v6",
+                                "Standard_D2alds_v6",
+                                "Standard_D2als_v6",
+                                "Standard_D2as_v5",
+                                "Standard_D2as_v6",
+                                "Standard_D2ds_v5",
+                                "Standard_D2ds_v6",
+                                "Standard_D2lds_v5",
+                                "Standard_D2lds_v6",
+                                "Standard_D2ls_v5",
+                                "Standard_D2ls_v6",
+                                "Standard_D2s_v5",
+                                "Standard_D2s_v6"
                             ]
                         },
                         {
@@ -1116,7 +1154,30 @@
                         {
                             "field": "Microsoft.Compute/virtualMachineScaleSets/sku.name",
                             "in": [
-                                "Standard_B1s", "Standard_B1ls", "Standard_B1ms", "Standard_B4ms", "Standard_B2ats_v2", "Standard_B2ts_v2", "Standard_B2als_v2", "Standard_B2ls_v2", "Standard_B2as_v2", "Standard_B2ms", "Standard_B2s", "Standard_B2s_v2", "Standard_B2ts_v2", "Standard_B4als_v2", "Standard_B4ls_v2", "Standard_B4as_v2", "Standard_B4ms", "Standard_B4s_v2", "Standard_D2als_v6", "Standard_D2ls_v6", "Standard_D2as_v6", "Standard_D2alds_v6", "Standard_D2S_v3", "Standard_D2s_v4", "Standard_D2s_v6", "Standard_D3_v1", "Standard_D3_v2", "Standard_DS1_v2", "Standard_DS3_v2"
+                                "Standard_B2als_v2",
+                                "Standard_B2as_v2",
+                                "Standard_B2ats_v2",
+                                "Standard_B2ls_v2",
+                                "Standard_B2s_v2",
+                                "Standard_B2ts_v2",
+                                "Standard_B4als_v2",
+                                "Standard_B4as_v2",
+                                "Standard_B4ls_v2",
+                                "Standard_B4s_v2",
+                                "Standard_D2ads_v5",
+                                "Standard_D2ads_v6",
+                                "Standard_D2alds_v6",
+                                "Standard_D2als_v6",
+                                "Standard_D2as_v5",
+                                "Standard_D2as_v6",
+                                "Standard_D2ds_v5",
+                                "Standard_D2ds_v6",
+                                "Standard_D2lds_v5",
+                                "Standard_D2lds_v6",
+                                "Standard_D2ls_v5",
+                                "Standard_D2ls_v6",
+                                "Standard_D2s_v5",
+                                "Standard_D2s_v6"
                             ]
                         },
                         {
@@ -1566,7 +1627,30 @@
                         {
                             "field": "Microsoft.DBForMySql/flexibleServers/sku.name",
                             "in": [
-                                "Standard_B1s", "Standard_B1ls", "Standard_B1ms", "Standard_B4ms", "Standard_B2ats_v2", "Standard_B2ts_v2", "Standard_B2als_v2", "Standard_B2ls_v2", "Standard_B2as_v2", "Standard_B2ms", "Standard_B2s", "Standard_B2s_v2", "Standard_B2ts_v2", "Standard_B4als_v2", "Standard_B4ls_v2", "Standard_B4as_v2", "Standard_B4ms", "Standard_B4s_v2", "Standard_D2als_v6", "Standard_D2ls_v6", "Standard_D2as_v6", "Standard_D2alds_v6", "Standard_D2S_v3", "Standard_D2s_v4", "Standard_D2s_v6", "Standard_D3_v1", "Standard_D3_v2", "Standard_DS1_v2", "Standard_DS3_v2"
+                                "Standard_B2als_v2",
+                                "Standard_B2as_v2",
+                                "Standard_B2ats_v2",
+                                "Standard_B2ls_v2",
+                                "Standard_B2s_v2",
+                                "Standard_B2ts_v2",
+                                "Standard_B4als_v2",
+                                "Standard_B4as_v2",
+                                "Standard_B4ls_v2",
+                                "Standard_B4s_v2",
+                                "Standard_D2ads_v5",
+                                "Standard_D2ads_v6",
+                                "Standard_D2alds_v6",
+                                "Standard_D2als_v6",
+                                "Standard_D2as_v5",
+                                "Standard_D2as_v6",
+                                "Standard_D2ds_v5",
+                                "Standard_D2ds_v6",
+                                "Standard_D2lds_v5",
+                                "Standard_D2lds_v6",
+                                "Standard_D2ls_v5",
+                                "Standard_D2ls_v6",
+                                "Standard_D2s_v5",
+                                "Standard_D2s_v6"
                             ]
                         },
                         {
