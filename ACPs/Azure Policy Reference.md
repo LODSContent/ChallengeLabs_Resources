@@ -1377,11 +1377,11 @@
                         },
                         {
                             "field": "name",
-                            "like": "crpyritlab*"
+                            "equals": "[concat('labregistry',resourcegroup().tags.LabInstance)]"
                         },
                         {
                             "field": "Microsoft.ContainerRegistry/registries/sku.name",
-                            "equals": "Premium"
+                            "equals": "Standard"
                         },
                         {
                             "anyOf": [
