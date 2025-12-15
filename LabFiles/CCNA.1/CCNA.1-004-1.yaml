@@ -1,0 +1,720 @@
+annotations:
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: false
+    text_content: |-
+      IP: 192.168.90.98
+      VLAN: 90
+      DMZ
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -720.0
+    y1: -240.0
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: false
+    text_content: |-
+      IP: 192.168.90.99
+      VLAN: 90
+      DMZ
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -520.0
+    y1: -240.0
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: Server Room
+    text_font: sans-serif
+    text_italic: false
+    text_size: 35
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -800.0
+    y1: -760.0
+    z_index: 5
+  - border_color: '#808080FF'
+    border_radius: 0
+    border_style: ''
+    color: '#FFFFFFFF'
+    rotation: 0
+    thickness: 1
+    type: rectangle
+    x1: 40.0
+    y1: -800.0
+    x2: 496.459107806691
+    y2: 680.0
+    z_index: 1
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: Branch Office
+    text_font: sans-serif
+    text_italic: false
+    text_size: 35
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 80.0
+    y1: -760.0
+    z_index: 5
+  - border_color: '#808080FF'
+    border_radius: 0
+    border_style: ''
+    color: '#FFFFFFFF'
+    rotation: 0
+    thickness: 1
+    type: rectangle
+    x1: -840.0
+    y1: -800.0
+    x2: 560.0
+    y2: 680.0
+    z_index: 1
+  - border_color: '#808080FF'
+    border_radius: 10
+    border_style: ''
+    color: '#F0E9D2'
+    rotation: 0
+    thickness: 1
+    type: rectangle
+    x1: -760.0
+    y1: -360.0
+    x2: 400.0
+    y2: 200.0
+    z_index: 2
+  - border_color: '#808080FF'
+    border_radius: 10
+    border_style: ''
+    color: '#23EC9B'
+    rotation: 0
+    thickness: 1
+    type: rectangle
+    x1: 160.0
+    y1: -360.0
+    x2: 240.0
+    y2: 200.0
+    z_index: 2
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: false
+    text_content: |-
+      IP: 172.16.0.10
+      VLAN: 10
+      ADMIN
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 240.0
+    y1: -240.0
+    z_index: 4
+  - border_color: '#808080FF'
+    border_style: ''
+    color: '#FFFFFFFF'
+    line_end: null
+    line_start: null
+    thickness: 1
+    type: line
+    x1: -440.0
+    y1: -560.0
+    x2: -320.0
+    y2: -560.0
+    z_index: 6
+  - border_color: '#808080FF'
+    border_style: 4,2
+    color: '#FFFFFFFF'
+    line_end: null
+    line_start: null
+    thickness: 1
+    type: line
+    x1: -320.0
+    y1: -560.0
+    x2: 280.0
+    y2: -560.0
+    z_index: 7
+  - border_color: '#808080FF'
+    border_style: 4,2
+    color: '#FFFFFFFF'
+    line_end: null
+    line_start: null
+    thickness: 1
+    type: line
+    x1: -120.0
+    y1: -720.0
+    x2: -120.0
+    y2: -560.0
+    z_index: 8
+  - border_color: '#808080FF'
+    border_style: ''
+    color: '#FFFFFFFF'
+    rotation: 0
+    thickness: 1
+    type: ellipse
+    x1: 82.3972286374134
+    y1: -559.3256351039261
+    x2: 20.0
+    y2: 20.0
+    z_index: 9
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: false
+    text_content: BROUTER1
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 41.722863741339495
+    y1: -533.782909930716
+    z_index: 10
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: false
+    text_content: E0/1
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -274.3209500609014
+    y1: -569.0864799025579
+    z_index: 10
+smart_annotations: []
+nodes:
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname ROUTER1
+          logging discriminator EXCESS severity drops 6 msg-body drops EXCESSCOLL
+          logging buffered 50000
+          logging console discriminator EXCESS
+
+          arp timeout 300
+
+          interface Ethernet0/0
+           ip address 192.168.90.1 255.255.255.0
+           ip access-group BLOCK-ALL in
+          interface Ethernet0/1
+           ip address 172.16.0.1 255.255.0.0
+           ip access-group BLOCK-ALL in
+          !
+          interface range Ethernet0/2-3
+            shutdown
+          ip access-list extended BLOCK-ALL
+            deny ip any any
+
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n0
+    image_definition: null
+    label: ROUTER1
+    node_definition: iol-xe
+    parameters: {}
+    ram: null
+    tags: []
+    x: -320
+    y: -560
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+  - boot_disk_size: null
+    configuration: []
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n1
+    image_definition: null
+    label: SWITCH1
+    node_definition: unmanaged_switch
+    parameters: {}
+    ram: null
+    tags: []
+    x: -560
+    y: -560
+    interfaces:
+      - id: i0
+        label: port0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i1
+        label: port1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i2
+        label: port2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i3
+        label: port3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i4
+        label: port4
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i5
+        label: port5
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i6
+        label: port6
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i7
+        label: port7
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration: []
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n2
+    image_definition: null
+    label: INTERNET
+    node_definition: external_connector
+    parameters: {}
+    ram: null
+    tags: []
+    x: -120
+    y: -561
+    interfaces:
+      - id: i0
+        label: port
+        mac_address: null
+        type: physical
+        slot: 0
+  - boot_disk_size: null
+    configuration: []
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n3
+    image_definition: null
+    label: BSWITCH1
+    node_definition: unmanaged_switch
+    parameters: {}
+    ram: null
+    tags: []
+    x: 280
+    y: -560
+    interfaces:
+      - id: i0
+        label: port0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i1
+        label: port1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i2
+        label: port2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i3
+        label: port3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i4
+        label: port4
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i5
+        label: port5
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i6
+        label: port6
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i7
+        label: port7
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration: []
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: true
+    id: n4
+    image_definition: null
+    label: .
+    node_definition: unmanaged_switch
+    parameters: {}
+    ram: null
+    tags: []
+    x: -120
+    y: -560
+    interfaces:
+      - id: i0
+        label: port0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i1
+        label: port1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i2
+        label: port2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i3
+        label: port3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i4
+        label: port4
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i5
+        label: port5
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i6
+        label: port6
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i7
+        label: port7
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration:
+      - name: boot.sh
+        content: |-
+          # Insert more commands here
+          ip address add dev eth0 192.168.90.98/24
+          ip link set dev eth0 up
+          ip route add default via 192.168.90.1
+          cat > /usr/share/nginx/html/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Welcome!</title>
+              <style>
+                  body {
+                      margin: 0;
+                      height: 100vh;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      font-family: 'Arial', sans-serif;
+                      color: white;
+                      text-align: center;
+                  }
+
+                  .container {
+                      padding: 40px;
+                      background-color: rgba(0, 0, 0, 0.3);
+                      border-radius: 15px;
+                      backdrop-filter: blur(10px);
+                      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                      max-width: 600px;
+                  }
+
+                  h1 {
+                      font-size: 4rem;
+                      margin-bottom: 10px;
+                      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+                  }
+
+                  p {
+                      font-size: 1.5rem;
+                      margin-bottom: 30px;
+                      opacity: 0.9;
+                  }
+
+                  .btn {
+                      display: inline-block;
+                      padding: 12px 30px;
+                      background-color: #fff;
+                      color: #667eea;
+                      text-decoration: none;
+                      border-radius: 50px;
+                      font-weight: bold;
+                      font-size: 1.1rem;
+                      transition: all 0.3s ease;
+                  }
+
+                  .btn:hover {
+                      transform: translateY(-3px);
+                      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>Welcome!</h1>
+                  <p>We're glad you're here. Explore, learn, and enjoy your stay.</p>
+                  <a href="#" class="btn">Get Started</a>
+              </div>
+          </body>
+          </html>
+          EOF
+          echo "READY" >/dev/console
+          exit 0
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n5
+    image_definition: null
+    label: WEB
+    node_definition: nginx
+    parameters: {}
+    ram: null
+    tags: []
+    x: -680
+    y: -320
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        type: physical
+        slot: 0
+  - boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |-
+          # this is a shell script which will be sourced at boot
+          hostname inserthostname-here
+          # configurable user account
+          USERNAME=cisco
+          PASSWORD=cisco
+          ip address add dev eth0 172.16.1.2/16
+          ip link set dev eth0 up
+          ip route add default via 172.16.0.1
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n6
+    image_definition: null
+    label: INTERNET-USER
+    node_definition: desktop
+    parameters: {}
+    ram: null
+    tags: []
+    x: -120
+    y: -720
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i1
+        label: eth1
+        mac_address: null
+        type: physical
+        slot: 1
+  - boot_disk_size: null
+    configuration:
+      - name: iosxe_config.txt
+        content: |-
+          # this is a shell script which will be sourced at boot
+          hostname inserthostname-here
+          # configurable user account
+          USERNAME=cisco
+          PASSWORD=cisco
+          sudo ifconfig eth0 192.168.90.99 netmask 255.255.255.0
+          sudo ip link set dev eth0 up
+          sudo route add default gw 192.168.90.1
+          # no password for tc user by default
+          TC_PASSWORD=cisco
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n7
+    image_definition: null
+    label: JUMPBOX
+    node_definition: server
+    parameters: {}
+    ram: null
+    tags: []
+    x: -480
+    y: -320
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        type: physical
+        slot: 0
+  - boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |-
+          # this is a shell script which will be sourced at boot
+          hostname inserthostname-here
+          # configurable user account
+          USERNAME=cisco
+          PASSWORD=cisco
+          ip address add dev eth0 172.16.0.10/16
+          ip link set dev eth0 up
+          ip route add default via 172.16.0.1
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n8
+    image_definition: null
+    label: BRANCH-ADMIN
+    node_definition: desktop
+    parameters: {}
+    ram: null
+    tags: []
+    x: 280
+    y: -320
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i1
+        label: eth1
+        mac_address: null
+        type: physical
+        slot: 1
+links:
+  - id: l0
+    n1: n0
+    n2: n1
+    i1: i1
+    i2: i3
+    conditioning: {}
+    label: ROUTER1-Ethernet0/0<->SWITCH1-port3
+  - id: l1
+    n1: n4
+    n2: n0
+    i1: i0
+    i2: i2
+    conditioning: {}
+    label: unmanaged-switch-0-port0<->ROUTER1-Ethernet0/1
+  - id: l2
+    n1: n4
+    n2: n3
+    i1: i1
+    i2: i0
+    conditioning: {}
+    label: unmanaged-switch-0-port1<->BSWITCH1-port0
+  - id: l3
+    n1: n5
+    n2: n1
+    i1: i0
+    i2: i0
+    conditioning: {}
+    label: nginx-0-eth0<->SWITCH1-port0
+  - id: l4
+    n1: n6
+    n2: n4
+    i1: i0
+    i2: i3
+    conditioning: {}
+    label: desktop-0-eth0<->.-port3
+  - id: l5
+    n1: n7
+    n2: n1
+    i1: i0
+    i2: i1
+    conditioning: {}
+    label: server-0-eth0<->SWITCH1-port1
+  - id: l6
+    n1: n8
+    n2: n3
+    i1: i0
+    i2: i1
+    conditioning: {}
+    label: desktop-0_0-eth0<->BSWITCH1-port1
+lab:
+  description: ''
+  notes: ''
+  title: Lab 4
+  version: 0.3.0
