@@ -94,9 +94,7 @@ nodes:
   - boot_disk_size: null
     configuration:
       - name: node.cfg
-        content: |-
-        # this is a shell script which will be sourced at boot
-        hostname desktop-0
+        content: hostname desktop-0
     cpu_limit: null
     cpus: null
     data_volume: null
@@ -119,9 +117,7 @@ nodes:
   - boot_disk_size: null
     configuration:
       - name: node.cfg
-        content: |-
-        # this is a shell script which will be sourced at boot
-        hostname desktop-1
+        content: hostname desktop-1
     cpu_limit: null
     cpus: null
     data_volume: null
