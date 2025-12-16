@@ -92,7 +92,11 @@ annotations:
 smart_annotations: []
 nodes:
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: node.cfg
+      content: |-
+        # this is a shell script which will be sourced at boot
+        hostname desktop-0
     cpu_limit: null
     cpus: null
     data_volume: null
@@ -113,7 +117,11 @@ nodes:
         type: physical
         slot: 0
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: node.cfg
+      content: |-
+        # this is a shell script which will be sourced at boot
+        hostname desktop-1
     cpu_limit: null
     cpus: null
     data_volume: null
@@ -134,7 +142,9 @@ nodes:
         type: physical
         slot: 0
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: ios_config.txt
+        content: hostname iol-l2-0
     cpu_limit: null
     cpus: null
     data_volume: null
@@ -174,7 +184,9 @@ nodes:
         type: physical
         slot: 3
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: ios_config.txt
+        content: hostname iol-0
     cpu_limit: null
     cpus: null
     data_volume: null
@@ -214,7 +226,9 @@ nodes:
         type: physical
         slot: 3
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: ios_config.txt
+        content: hostname iol-1
     cpu_limit: null
     cpus: null
     data_volume: null
