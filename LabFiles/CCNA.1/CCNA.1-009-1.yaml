@@ -1,0 +1,1041 @@
+annotations:
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: |-
+      Color: Sand
+      Hex: #F0E9D2
+    text_font: monospace
+    text_italic: false
+    text_size: 8
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 80.0
+    y1: -40.0
+    z_index: 1
+  - border_color: '#808080FF'
+    border_radius: 10
+    border_style: ''
+    color: '#F0E9D2'
+    rotation: 0
+    thickness: 1
+    type: rectangle
+    x1: -522.1719609668539
+    y1: -581.4939624478828
+    x2: 765.8231948567579
+    y2: 536.7492543419453
+    z_index: 1
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: Server Room
+    text_font: sans-serif
+    text_italic: false
+    text_size: 35
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -525.3306552123513
+    y1: -649.1162504184194
+    z_index: 5
+  - border_color: '#808080FF'
+    border_radius: 0
+    border_style: ''
+    color: '#FFFFFFFF'
+    rotation: 0
+    thickness: 1
+    type: rectangle
+    x1: -600.0
+    y1: -680.8446250717316
+    x2: 920.0
+    y2: 680.0
+    z_index: 0
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: false
+    text_content: OSPF AREA 0
+    text_font: sans-serif
+    text_italic: false
+    text_size: 20
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -512.8470987752178
+    y1: -569.691764813791
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 315
+    text_bold: true
+    text_content: 192.168.3.0/30
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 5.842370654779025
+    y1: -227.52034064301745
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: 192.168.1.0/24
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -320.0
+    y1: -320.0
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 45
+    text_bold: true
+    text_content: 192.168.2.0/30
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 12.539870717829046
+    y1: -419.0596105083104
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: '.1'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 107.31792932368921
+    y1: -281.0291533069215
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: '.2'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -15.487390994453701
+    y1: -175.1526032315977
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: '.3'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -72.52277942732164
+    y1: -178.78926806375003
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: '.4'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -344.9698127984101
+    y1: -475.44995028996186
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: '.2'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -16.072635710455295
+    y1: -474.64544120999017
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: '.1'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 107.28904847396791
+    y1: -354.6140035906642
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: '.5'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -340.5776600050778
+    y1: -181.25673249551141
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: '.2'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -71.62059020410663
+    y1: -475.54018545176035
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: 'Lo0: 5.5.5.5'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 10
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -398.0763263184138
+    y1: -119.46076742842938
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: 'Lo0: 4.4.4.4'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 10
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -398.12559906853664
+    y1: -439.195582643266
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: 'Lo0: 2.2.2.2'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 10
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -84.61403763577385
+    y1: -439.1794442734626
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: 'Lo0: 3.3.3.3'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 10
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -78.13173464454505
+    y1: -120.07973569257622
+    z_index: 4
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: true
+    text_content: 'Lo0: 1.1.1.1'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 10
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 141.0923235978841
+    y1: -325.50492567059246
+    z_index: 4
+smart_annotations: []
+nodes:
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname ROUTER2
+          !
+          logging discriminator PNP msg-body drops PnP|PNP|sudi|NTP
+          logging buffered 50000
+          logging console discriminator PNP
+          !
+          interface Loopback0
+           ip address 2.2.2.2 255.255.255.255
+          !
+          interface Ethernet0/0
+           ip address 192.168.1.2 255.255.255.0
+          !
+          interface Ethernet0/1
+           ip address 192.168.2.2 255.255.255.252
+          !
+          interface Ethernet0/2
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/3
+           no ip address
+           shutdown
+          !
+          interface Serial1/0
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/1
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/2
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/3
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          router ospf 1
+           network 2.2.2.2 0.0.0.0 area 1
+           network 192.168.1.2 0.0.0.255 area 1
+           network 192.168.2.0 0.0.0.3 area 1
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n0
+    image_definition: null
+    label: ROUTER2
+    node_definition: iol-xe-serial-4eth
+    parameters: {}
+    ram: null
+    tags: []
+    x: -40
+    y: -480
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i5
+        label: Serial1/0
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i6
+        label: Serial1/1
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i7
+        label: Serial1/2
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i8
+        label: Serial1/3
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname ROUTER3
+          !
+          logging discriminator PNP msg-body drops PnP|PNP|sudi|NTP
+          logging buffered 50000
+          logging console discriminator PNP
+          !
+          interface Loopback0
+           ip address 3.3.3.3 255.255.255.255
+          !
+          interface Ethernet0/0
+           ip address 192.168.1.3 255.255.255.0
+           ip ospf hello-interval 5
+          !
+          interface Ethernet0/1
+           ip address 192.168.3.2 255.255.255.252
+           ip ospf hello-interval 5
+          !
+          interface Ethernet0/2
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/3
+           no ip address
+           shutdown
+          !
+          interface Serial1/0
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/1
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/2
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/3
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          router ospf 1
+           network 3.3.3.3 0.0.0.0 area 0
+           network 192.168.1.0 0.0.0.255 area 0
+           network 192.168.3.0 0.0.0.3 area 0
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n1
+    image_definition: null
+    label: ROUTER3
+    node_definition: iol-xe-serial-4eth
+    parameters: {}
+    ram: null
+    tags: []
+    x: -40
+    y: -160
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i5
+        label: Serial1/0
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i6
+        label: Serial1/1
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i7
+        label: Serial1/2
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i8
+        label: Serial1/3
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname ROUTER4
+          !
+          logging discriminator PNP msg-body drops PnP|PNP|sudi|NTP
+          logging buffered 50000
+          logging console discriminator PNP
+          !
+          interface Loopback0
+           ip address 4.4.4.4 255.255.255.255
+          !
+          interface Ethernet0/0
+           ip address 192.168.1.4 255.255.255.0
+          !
+          interface Ethernet0/1
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/2
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/3
+           no ip address
+           shutdown
+          !
+          interface Serial1/0
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/1
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/2
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/3
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          router ospf 100
+           network 4.4.4.4 0.0.0.0 area 0
+           network 192.168.10.0 0.0.0.255 area 0
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n2
+    image_definition: null
+    label: ROUTER4
+    node_definition: iol-xe-serial-4eth
+    parameters: {}
+    ram: null
+    tags: []
+    x: -360
+    y: -480
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i5
+        label: Serial1/0
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i6
+        label: Serial1/1
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i7
+        label: Serial1/2
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i8
+        label: Serial1/3
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname ROUTER1
+          !
+          logging discriminator PNP msg-body drops PnP|PNP|sudi|NTP
+          logging buffered 50000
+          logging console discriminator PNP
+          !
+          interface Loopback0
+           ip address 1.1.1.1 255.255.255.255
+          !
+          interface Ethernet0/0
+           ip address 192.168.2.1 255.255.255.252
+          !
+          interface Ethernet0/1
+           ip address 192.168.3.1 255.255.255.252
+          !
+          interface Ethernet0/2
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/3
+           no ip address
+           shutdown
+          !
+          interface Serial1/0
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/1
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/2
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/3
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          router ospf 1
+           passive-interface Ethernet0/0
+           passive-interface Ethernet0/1
+           network 1.1.1.1 0.0.0.0 area 0
+           network 192.168.2.0 0.0.0.3 area 0
+           network 192.168.3.0 0.0.0.3 area 0
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n3
+    image_definition: null
+    label: ROUTER1
+    node_definition: iol-xe-serial-4eth
+    parameters: {}
+    ram: null
+    tags: []
+    x: 120
+    y: -320
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i5
+        label: Serial1/0
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i6
+        label: Serial1/1
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i7
+        label: Serial1/2
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i8
+        label: Serial1/3
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration: []
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n4
+    image_definition: null
+    label: SWITCH2
+    node_definition: unmanaged_switch
+    parameters: {}
+    ram: null
+    tags: []
+    x: -200
+    y: -160
+    interfaces:
+      - id: i0
+        label: port0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i1
+        label: port1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i2
+        label: port2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i3
+        label: port3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i4
+        label: port4
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i5
+        label: port5
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i6
+        label: port6
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i7
+        label: port7
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration: []
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n5
+    image_definition: null
+    label: SWITCH1
+    node_definition: unmanaged_switch
+    parameters: {}
+    ram: null
+    tags: []
+    x: -200
+    y: -480
+    interfaces:
+      - id: i0
+        label: port0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i1
+        label: port1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i2
+        label: port2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i3
+        label: port3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i4
+        label: port4
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i5
+        label: port5
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i6
+        label: port6
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i7
+        label: port7
+        mac_address: null
+        type: physical
+        slot: 7
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname ROUTER5
+          !
+          logging discriminator PNP msg-body drops PnP|PNP|sudi|NTP
+          logging buffered 50000
+          logging console discriminator PNP
+          !
+          interface Loopback0
+           ip address 5.5.5.5 255.255.255.255
+          !
+          interface Ethernet0/0
+           ip address 192.168.1.5 255.255.255.0
+          !
+          interface Ethernet0/1
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/2
+           no ip address
+           shutdown
+          !
+          interface Ethernet0/3
+           no ip address
+           shutdown
+          !
+          interface Serial1/0
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/1
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/2
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          interface Serial1/3
+           no ip address
+           shutdown
+           serial restart-delay 0
+          !
+          router ospf 1
+           router-id 3.3.3.3
+           network 5.5.5.5 0.0.0.0 area 0
+           network 192.168.1.0 0.0.0.255 area 0
+          !
+          end
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n6
+    image_definition: null
+    label: ROUTER5
+    node_definition: iol-xe-serial-4eth
+    parameters: {}
+    ram: null
+    tags: []
+    x: -360
+    y: -160
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: Ethernet0/0
+        mac_address: null
+        type: physical
+        slot: 0
+      - id: i2
+        label: Ethernet0/1
+        mac_address: null
+        type: physical
+        slot: 1
+      - id: i3
+        label: Ethernet0/2
+        mac_address: null
+        type: physical
+        slot: 2
+      - id: i4
+        label: Ethernet0/3
+        mac_address: null
+        type: physical
+        slot: 3
+      - id: i5
+        label: Serial1/0
+        mac_address: null
+        type: physical
+        slot: 4
+      - id: i6
+        label: Serial1/1
+        mac_address: null
+        type: physical
+        slot: 5
+      - id: i7
+        label: Serial1/2
+        mac_address: null
+        type: physical
+        slot: 6
+      - id: i8
+        label: Serial1/3
+        mac_address: null
+        type: physical
+        slot: 7
+links:
+  - id: l0
+    n1: n5
+    n2: n4
+    i1: i1
+    i2: i2
+    conditioning: {}
+    label: unmanaged-switch-0_0-port1<->unmanaged-switch-0-port2
+  - id: l1
+    n1: n4
+    n2: n6
+    i1: i1
+    i2: i1
+    conditioning: {}
+    label: unmanaged-switch-0-port1<->ROUTER5-Ethernet0/0
+  - id: l2
+    n1: n5
+    n2: n2
+    i1: i2
+    i2: i1
+    conditioning: {}
+    label: unmanaged-switch-0_0-port2<->ROUTER4-Ethernet0/0
+  - id: l3
+    n1: n0
+    n2: n5
+    i1: i1
+    i2: i0
+    conditioning: {}
+    label: ROUTER2-Ethernet0/0<->SWITCH1-port0
+  - id: l4
+    n1: n1
+    n2: n4
+    i1: i1
+    i2: i0
+    conditioning: {}
+    label: ROUTER3-Ethernet0/0<->SWITCH2-port0
+  - id: l5
+    n1: n0
+    n2: n3
+    i1: i2
+    i2: i1
+    conditioning: {}
+    label: ROUTER2-Ethernet0/1<->ROUTER1-Ethernet0/0
+  - id: l6
+    n1: n1
+    n2: n3
+    i1: i2
+    i2: i2
+    conditioning: {}
+    label: ROUTER3-Ethernet0/1<->ROUTER1-Ethernet0/1
+lab:
+  description: ''
+  notes: ''
+  title: LAB-TOPOLOGY1
+  version: 0.3.0
