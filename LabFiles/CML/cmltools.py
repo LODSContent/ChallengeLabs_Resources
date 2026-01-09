@@ -42,6 +42,7 @@ import yaml
 import ast
 import requests
 import urllib3
+import threading
 from genie.testbed import load
 from unicon.core.errors import SubCommandFailure
 from zipfile import ZipFile
@@ -619,7 +620,12 @@ class CMLClient:
         if clear_screen:
             self.send_clear_sequence(dev, os_type)
         try:
-            dev.disconnect()
+            if self.debug:
+                logging.info("About to run disconnect()")
+            #dev.disconnect()
+            # Launch disconnect() in background
+            disconnect_thread = threading.Thread(target=dev.disconnect, name=f"Disconnect-{dev.name}", daemon=True)
+            disconnect_thread.start()
         except:
             pass
         return results, device_passed, merged_output
