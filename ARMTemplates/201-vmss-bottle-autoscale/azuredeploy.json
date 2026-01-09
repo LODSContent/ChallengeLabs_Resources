@@ -11,7 +11,7 @@
       },
       "vmSku": {
         "type": "string",
-        "defaultValue": "Standard_D2s_v3",
+        "defaultValue": "Standard_D2s_v6",
         "metadata": {
           "description": "Size of VMs in the VM Scale Set."
         }
@@ -90,7 +90,7 @@
         "publisher": "Canonical",
         "offer": "ubuntu-24_04-lts",
         "sku": "server",
-        "version": "server"
+        "version": "latest"
       },
       "imageReference": "[variables('osType')]",
       "linuxConfiguration": {
