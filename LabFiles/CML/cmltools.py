@@ -569,6 +569,8 @@ class CMLClient:
         if os_type == 'ios':
             try:
                 dev.execute('terminal length 0', timeout=5)
+                # Enable synchronous logging to prevent command disruption.
+                dev.configure('line vty 0 4\nlogging synchronous', timeout=5)
             except:
                 pass  # Best effort
         merged_output = []
