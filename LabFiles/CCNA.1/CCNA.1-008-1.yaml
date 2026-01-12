@@ -214,6 +214,7 @@ nodes:
         type: physical
         slot: 3
   - boot_disk_size: null
+    configuration:
       - name: ios_config.txt
         content: hostname Router2
     cpu_limit: null
