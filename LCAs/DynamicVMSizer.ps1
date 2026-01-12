@@ -1,32 +1,39 @@
-param(
-    [string]$TargetSpec = '@lab.Variable(VMTargetSpec)', # Format: c<cpu>r<ram>g<gen>p<price-0.00> e.g. c2r4g2p0.20, c4r16g1p0.70
-    [string]$MaxCPU = '16', # Maximum allowed vCPUs - HARD CAP
-    [string]$MaxRAM = '64', # Maximum allowed RAM in GB - HARD CAP
-    [string]$Location = '@lab.CloudResourceGroup(RG1).Location', # Location
-    [string]$allowedSizesURL = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/AzureVMSizes.csv", # URL for allowed list
-    [switch]$Debug
-)
+# Script Title
+$ScriptTitle = "Dynamic VM Sizer"
 
-# Debug function (unchanged)
+# Target VM Size - Format: c<cpu>r<ram>g<gen>p<price-0.00> e.g. c2r4g2p0.20, c4r16g1p0.70
+$TargetSpec = '@lab.Variable(VMTargetSpec)'
+
+# Maximum allowed vCPUs - HARD CAP
+$MaxCPU = '16'
+
+# Maximum allowed RAM in GB - HARD CAP
+$MaxRAM = '64'
+
+# Location (from the resource group)
+$Location = '@lab.CloudResourceGroup(RG1).Location'
+
+# URL for allowed list of VM sizes (SKUs)
+$allowedSizesURL = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/AzureVMSizes.csv"
+
+# Default size to use if automatic selection fails
+$defaultSize = 'Standard_B4as_v2'
+
+# Enable script debugging by setting the debug lab variable to True
+$ScriptDebug = '@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True'
+
+# Enable detailed debugging when ScriptDebug is on
+$VerboseDebug = $false
+
+# Debug function
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string]$Message,
-        [string]$DebugUrl = ""
+        [string]$Message
     )
   
-    if (!$Debug) { return }
-  
-    if ($global:DebugUrl) {
-        $DebugUrl = $global:DebugUrl
-    }
- 
-    if ($DebugUrl) {
-        try {
-            Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -UseBasicParsing -ErrorAction Stop | Out-Null
-        } catch {
-            Write-Warning "Failed to send debug message: $_"
-        }
+    if ($ScriptDebug) { 
+        $Global:MessageBuffer += "`n`n$Message"
     }
 }
 
@@ -110,8 +117,8 @@ $allSkus = Get-AzComputeResourceSku -Location $Location | Where-Object {
 }
 
 if (-not $allSkus) {
-    Send-DebugMessage "[ERROR] No VM sizes available in location $Location"
-    Set-LabVariable -Name VMSize -Value ""
+    Send-DebugMessage "[ERROR] No VM sizes available in location $Location. Setting size to default: $defaultSize"
+    Set-LabVariable -Name VMSize -Value $defaultSize
     return $true
 }
 
@@ -130,14 +137,14 @@ $allSkus = $allSkus | Where-Object {
     
     $cpuArch = if ($caps.ContainsKey('CpuArchitectureType')) { $caps['CpuArchitectureType'].Value } else { 'x64' }
     if ($cpuArch -ne 'x64') {
-        Send-DebugMessage "[EXCLUDE-ARCH] Dropped ARM64 size: $($_.Name)"
+        if ($VerboseDebug) {Send-DebugMessage "[EXCLUDE-ARCH] Dropped ARM64 size: $($_.Name)"}
         $false
     } else { $true }
 }
 
 if ($allSkus.Count -eq 0) {
-    Send-DebugMessage "[ERROR] No x64-compatible VM sizes remain after filtering"
-    Set-LabVariable -Name VMSize -Value ""
+    Send-DebugMessage "[ERROR] No x64-compatible VM sizes remain after filtering. Setting size to default: $defaultSize"
+    Set-LabVariable -Name VMSize -Value $defaultSize
     return $true
 }
 
@@ -198,6 +205,7 @@ function Get-VMHourlyPrice {
 # Collect candidates - STRICT price enforcement
 $candidates = @()
 
+Send-DebugMessage "[INFO] Examining SKUs for candidates."
 foreach ($sku in $allSkus) {
     $caps = @{}
     foreach ($cap in $sku.Capabilities) { $caps[$cap.Name] = $cap }
@@ -208,7 +216,7 @@ foreach ($sku in $allSkus) {
     foreach ($prefix in $excludedPrefixes) {
         if ($sku.Name -like "*_$prefix*") {  # Changed to *prefix* for better match
             $excluded = $true
-            Send-DebugMessage "[EXCLUDE-SPECIAL] Skipping: $($sku.Name)"
+            if ($VerboseDebug) {Send-DebugMessage "[EXCLUDE-SPECIAL] Skipping: $($sku.Name)"}
             break
         }
     }
@@ -218,7 +226,7 @@ foreach ($sku in $allSkus) {
     $hyperV = if ($caps.ContainsKey('HyperVGenerations')) { $caps['HyperVGenerations'].Value } else { 'V1' }
     $supportsGen = if ($requiredGen -eq '1') { $hyperV -match 'V1' } else { $hyperV -match 'V2' }
     if (-not $supportsGen) { 
-        Send-DebugMessage "[SKIP-GEN] $($sku.Name) does not support Gen $requiredGen"
+        if ($VerboseDebug) {Send-DebugMessage "[SKIP-GEN] $($sku.Name) does not support Gen $requiredGen"}
         continue 
     }
     
@@ -227,31 +235,31 @@ foreach ($sku in $allSkus) {
     $memoryGB = if ($caps.ContainsKey('MemoryGB') -and $caps['MemoryGB'].Value) { [double]$caps['MemoryGB'].Value } else { 0.0 }
     
     if ($vcpus -lt $minVCPU) { 
-        Send-DebugMessage "[SKIP-LOWCPU] $($sku.Name) $vcpus vCPU < min $minVCPU"
+        if ($VerboseDebug) {Send-DebugMessage "[SKIP-LOWCPU] $($sku.Name) $vcpus vCPU < min $minVCPU"}
         continue 
     }
     if ($vcpus -gt $maxVCPUNum) { 
-        Send-DebugMessage "[SKIP-HIGHCPU] $($sku.Name) $vcpus vCPU > max $maxVCPUNum"
+        if ($VerboseDebug) {Send-DebugMessage "[SKIP-HIGHCPU] $($sku.Name) $vcpus vCPU > max $maxVCPUNum"}
         continue 
     }
     if ($memoryGB -lt $minMemoryGB) { 
-        Send-DebugMessage "[SKIP-LOWRAM] $($sku.Name) $memoryGB GB < min $minMemoryGB"
+        if ($VerboseDebug) {Send-DebugMessage "[SKIP-LOWRAM] $($sku.Name) $memoryGB GB < min $minMemoryGB"}
         continue 
     }
     if ($memoryGB -gt $maxRAMNum) { 
-        Send-DebugMessage "[SKIP-HIGHRAM] $($sku.Name) $memoryGB GB > max $maxRAMNum"
+        if ($VerboseDebug) {Send-DebugMessage "[SKIP-HIGHRAM] $($sku.Name) $memoryGB GB > max $maxRAMNum"}
         continue 
     }
     
     $price = Get-VMHourlyPrice -skuName $sku.Name -region $Location
     
     if ($null -eq $price) { 
-        Send-DebugMessage "[SKIP-NOPRICE] $($sku.Name) - no price found"
+        if ($VerboseDebug) {Send-DebugMessage "[SKIP-NOPRICE] $($sku.Name) - no price found"}
         continue 
     }
     
     if ($price -gt [double]$MaxPrice) { 
-        Send-DebugMessage "[SKIP-PRICE] $($sku.Name) at $price > $MaxPrice"
+        if ($VerboseDebug) {Send-DebugMessage "[SKIP-PRICE] $($sku.Name) at $price > $MaxPrice"}
         continue 
     }
     
@@ -264,8 +272,10 @@ foreach ($sku in $allSkus) {
     }
     
     $candidates += $obj
-    Send-DebugMessage "[CANDIDATE] Added $($sku.Name) - $vcpus vCPU / $memoryGB GB @ $price/hr"
+    if ($VerboseDebug) {Send-DebugMessage "[CANDIDATE] Added $($sku.Name) - $vcpus vCPU / $memoryGB GB @ $price/hr"}
 }
+
+Send-DebugMessage "[INFO] Found $($candidates.count) candidates."
 
 # Select final size - only from candidates (price-respecting)
 $selected = $null
@@ -281,8 +291,8 @@ if ($candidates.Count -gt 0) {
     
     Send-DebugMessage "[SUCCESS] Selected cheapest valid: $($selected.Name) - $($selected.vCPUs) vCPU / $($selected.MemoryGB) GB @ $($priceDisplay)/hr"
 } else {
-    Send-DebugMessage "[ERROR] No VM size found meeting ALL constraints (incl. price <= $MaxPrice/hr) in $Location for TargetSpec: $TargetSpec out of $($allSkus.Count) eligible sizes."
-    Set-LabVariable -Name VMSize -Value ""
+    Send-DebugMessage "[ERROR] No VM size found meeting ALL constraints (incl. price <= $MaxPrice/hr) in $Location for TargetSpec: $TargetSpec out of $($allSkus.Count) eligible sizes. Setting size to default: $defaultSize"
+    Set-LabVariable -Name VMSize -Value $defaultSize
     return $true
 }
 
@@ -298,5 +308,9 @@ Set-LabVariable -Name VMSize -Value $selected.Name
 Set-LabVariable -Name VMPrice -Value $selected.PricePerHourUSD
 
 Send-DebugMessage "[FINAL] VM Size selected: $($selected.Name)"
+
+if ($ScriptDebug) {
+    Send-LabNotification -Message "[Debug] $($ScriptTitle):`n-------`n$($Global:MessageBuffer)"
+}
 
 Return $True
