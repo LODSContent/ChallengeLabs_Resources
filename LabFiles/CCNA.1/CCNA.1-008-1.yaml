@@ -122,7 +122,11 @@ annotations:
 smart_annotations: []
 nodes:
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: node.cfg
+        content: |-
+          # this is a shell script which will be sourced at boot
+          hostname desktop-0
     cpu_limit: null
     cpus: null
     data_volume: null
@@ -143,7 +147,11 @@ nodes:
         type: physical
         slot: 0
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: node.cfg
+        content: |-
+          # this is a shell script which will be sourced at boot
+          hostname desktop-1
     cpu_limit: null
     cpus: null
     data_volume: null
@@ -164,14 +172,16 @@ nodes:
         type: physical
         slot: 0
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: ios_config.txt
+        content: hostname Router1
     cpu_limit: null
     cpus: null
     data_volume: null
     hide_links: false
     id: n2
     image_definition: null
-    label: iol-0
+    label: Router1
     node_definition: iol-xe
     parameters: {}
     ram: null
@@ -204,14 +214,15 @@ nodes:
         type: physical
         slot: 3
   - boot_disk_size: null
-    configuration: []
+      - name: ios_config.txt
+        content: hostname Router2
     cpu_limit: null
     cpus: null
     data_volume: null
     hide_links: false
     id: n3
     image_definition: null
-    label: iol-1
+    label: Router2
     node_definition: iol-xe
     parameters: {}
     ram: null
