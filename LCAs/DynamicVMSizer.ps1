@@ -1,5 +1,5 @@
 param(
-    [string]$TargetSpec = '@lab.Variable(VMTargetSpec)', # Format: c<cpu>r<ram>g<gen> e.g. c2r4g2, c4r16g1
+    [string]$TargetSpec = '@lab.Variable(VMTargetSpec)', # Format: c<cpu>r<ram>g<gen>p<price-0.00> e.g. c2r4g2p0.20, c4r16g1p0.70
     [string]$MaxCPU = '16', # Maximum allowed vCPUs - HARD CAP
     [string]$MaxRAM = '64', # Maximum allowed RAM in GB - HARD CAP
     [string]$Location = '@lab.CloudResourceGroup(RG1).Location', # Location
