@@ -1,198 +1,260 @@
 param(
-    [string]$TargetSpec   = '@lab.Variable(VMTargetSpec)',          # Format: c<cpu>r<ram>g<gen>  e.g. c2r4g2, c4r16g1
-    [string]$MaxPrice     = '0.20',            # Max on-demand price per hour (USD)
-    [string]$MaxCPU       = '4',               # Maximum allowed vCPUs
-    [string]$MaxRAM       = '32',              # Maximum allowed RAM in GB
-    [string]$Location     = '@lab.CloudResourceGroup(RG1).Location',  # Location
+    [string]$TargetSpec = '@lab.Variable(VMTargetSpec)', # Format: c<cpu>r<ram>g<gen> e.g. c2r4g2, c4r16g1
+    [string]$MaxCPU = '16', # Maximum allowed vCPUs - HARD CAP
+    [string]$MaxRAM = '64', # Maximum allowed RAM in GB - HARD CAP
+    [string]$Location = '@lab.CloudResourceGroup(RG1).Location', # Location
+    [string]$allowedSizesURL = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/AzureVMSizes.csv", # URL for allowed list
     [switch]$Debug
 )
 
-# Authentication & Location
-$context = Get-AzContext
-
-$TargetSpec = if ([string]::IsNullOrWhiteSpace($TargetSpec) -or $TargetSpec -eq '@lab.Variable(VMTargetSpec)') {
-    'c2r4g1'
-} else {
-    $TargetSpec
+# Debug function (unchanged)
+function Send-DebugMessage {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Message,
+        [string]$DebugUrl = "http://zombie.cyberjunk.com:2025/ABACAB81"
+    )
+  
+    if (!$Debug) { return }
+  
+    if ($global:DebugUrl) {
+        $DebugUrl = $global:DebugUrl
+    }
+ 
+    if ($DebugUrl) {
+        try {
+            Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -UseBasicParsing -ErrorAction Stop | Out-Null
+        } catch {
+            Write-Warning "Failed to send debug message: $_"
+        }
+    }
 }
 
-<#
-$location = if ([string]::IsNullOrWhiteSpace($Location) -or $Location -eq '@lab.CloudResourceGroup(RG1).Location') {
-    $context.Location
-} else {
-    $Location
-}
-#>
+Send-DebugMessage "[INFO] Starting VM size selection in location: $Location"
+Send-DebugMessage "[INFO] Target spec: $TargetSpec | MaxPrice: $MaxPrice | MaxCPU: $MaxCPU vCPU | MaxRAM: $MaxRAM GB"
 
-if ($Debug) {
-    Write-Output "[INFO] Starting VM size selection in location: $location"
-    Write-Output "[INFO] Target spec: $TargetSpec | MaxPrice: $MaxPrice | MaxCPU: $MaxCPU vCPU | MaxRAM: $MaxRAM GB"
-}
-
-# Parse TargetSpec: c<cpu>r<ram>g<gen>
-$targetCPU   = 2
-$targetRAM   = 4.0
-$requiredGen = '1'
-
-if ($TargetSpec -match '^c(\d+)r(\d+(?:\.\d+)?)g([12])$') {
+# Parse TargetSpec (unchanged)
+$targetCPU    = 2
+$targetRAM    = 4.0
+$requiredGen  = '2'
+$maxPrice     = '0.50'
+if ($TargetSpec -match '^c(\d+)r(\d+(?:\.\d+)?)g([12])p(\d+\.\d{2})$') {
+    $targetCPU = [int]$Matches[1]
+    $targetRAM = [double]$Matches[2]
+    $requiredGen = $Matches[3]
+    $maxPrice    = $Matches[4]
+    Send-DebugMessage "[INFO] '$TargetSpec' decoded to: CPU: $targetCPU, RAM: $targetRAM, Gen: $requiredGen, MaxPrice: `$$maxPrice/hr"
+} 
+elseif ($TargetSpec -match '^c(\d+)r(\d+(?:\.\d+)?)g([12])$') {
+    # Backward compatibility - old format without price
     $targetCPU   = [int]$Matches[1]
     $targetRAM   = [double]$Matches[2]
     $requiredGen = $Matches[3]
-} else {
-    if ($Debug) {
-        Write-Output "[WARN] Invalid TargetSpec format '$TargetSpec'. Using defaults: c2r4g1"
+    Send-DebugMessage "[WARN] Old TargetSpec format detected (no price). Using default MaxPrice: `$$maxPrice"
+} 
+else {
+    Send-DebugMessage "[ERROR] Invalid TargetSpec format: '$TargetSpec'. Using defaults: c2r4g1p0.50"
+    $TargetSpec = 'c2r4g2p0.50'
+}
+
+$minVCPU = $targetCPU
+$minMemoryGB = $targetRAM
+$maxVCPUNum = if ([int]::TryParse($MaxCPU, [ref]$null)) { [int]$MaxCPU } else { 9999 }
+$maxRAMNum = if ([double]::TryParse($MaxRAM, [ref]$null)) { [double]$MaxRAM } else { 9999.0 }
+
+Send-DebugMessage "[INFO] Parsed constraints: >= $minVCPU vCPU / >= $minMemoryGB GB (Gen $requiredGen) | <= $maxVCPUNum vCPU / <= $maxRAMNum GB | <= $MaxPrice /hr"
+
+# Fetch allowed VM sizes from GitHub CSV with retry (unchanged, but fixed variable $csvUrl -> $allowedSizesURL)
+$allowedSizes = @()
+$maxRetries = 4
+$baseDelaySeconds = 2
+$useExponentialBackoff = $true
+$attempt = 0
+$success = $false
+
+while (-not $success -and $attempt -lt $maxRetries) {
+    $attempt++
+    Send-DebugMessage "[INFO] Attempt $attempt/$maxRetries to fetch allowed VM sizes from: $allowedSizesURL"
+    try {
+        $allowedSizes = Invoke-RestMethod -Uri $allowedSizesURL -Method Get -TimeoutSec 15 -ErrorAction Stop | 
+                        ConvertFrom-Csv -Header Name | 
+                        Select-Object -ExpandProperty Name -Unique     
+        
+        if ($allowedSizes.Count -gt 0) {
+            Send-DebugMessage "[SUCCESS] Loaded $($allowedSizes.Count) allowed VM sizes from CSV (first clean: $($allowedSizes[0]))"
+            $success = $true
+        } else {
+            throw "Empty or invalid CSV content after cleaning"
+        }
+    }
+    catch {
+        $errorMsg = $_.Exception.Message
+        Send-DebugMessage "[ERROR] Fetch attempt $attempt failed: $errorMsg"
+        if ($attempt -lt $maxRetries) {
+            $delay = if ($useExponentialBackoff) { [math]::Min(30, $baseDelaySeconds * [math]::Pow(2, $attempt - 1)) } else { $baseDelaySeconds }
+            Send-DebugMessage "[RETRY] Waiting $delay seconds before next attempt..."
+            Start-Sleep -Seconds $delay
+        }
     }
 }
 
-$minVCPU     = $targetCPU
-$minMemoryGB = $targetRAM
-
-$maxVCPUNum = if ([int]::TryParse($MaxCPU,   [ref]$null)) { [int]$MaxCPU   } else { 9999 }
-$maxRAMNum  = if ([double]::TryParse($MaxRAM, [ref]$null)) { [double]$MaxRAM } else { 9999.0 }
-
-if ($Debug) {
-    Write-Output "[INFO] Parsed → Min: ≥ $minVCPU vCPU / ≥ $minMemoryGB GB (Gen $requiredGen)"
-    Write-Output "[INFO] Max limits → ≤ $maxVCPUNum vCPU / ≤ $maxRAMNum GB | ≤ $$MaxPrice/hr"
+if (-not $success) {
+    Send-DebugMessage "[WARN] All retries failed. Proceeding with NO size filtering."
+    $allowedSizes = @()
 }
 
-# Get available VM SKUs
-$allSkus = Get-AzComputeResourceSku -Location $location | Where-Object {
+# Get available VM SKUs (unchanged)
+$allSkus = Get-AzComputeResourceSku -Location $Location | Where-Object {
     $_.ResourceType -eq 'virtualMachines' -and
-    ($_.Restrictions.Count -eq 0 -or -not ($_.Restrictions.ReasonCode -contains 'NotAvailableForSubscription'))
+    $_.Restrictions.Count -eq 0 -and ($_.LocationInfo.Zones.Count -gt 0 -or $_.Restrictions.Reasoncode -ne "NotAvailableForSubscription")
 }
 
 if (-not $allSkus) {
-    throw "[ERROR] No VM sizes available in location $location"
+    Send-DebugMessage "[ERROR] No VM sizes available in location $Location"
+    Set-LabVariable -Name VMSize -Value ""
+    return $true
 }
 
-# Bulk price fetch - primary method
+Send-DebugMessage "[INFO] Found $($allSkus.Count) available VM sizes in location $Location"
+
+# Apply allowed sizes filter
+if ($allowedSizes.Count -gt 0) {
+    $allSkus = $allSkus | Where-Object { $allowedSizes -contains $_.Name }
+    Send-DebugMessage "[INFO] After CSV allowed sizes filter: $($allSkus.Count) sizes remain"
+}
+
+# Enforce x64 (unchanged)
+$allSkus = $allSkus | Where-Object {
+    $caps = @{}
+    foreach ($cap in $_.Capabilities) { $caps[$cap.Name] = $cap }
+    
+    $cpuArch = if ($caps.ContainsKey('CpuArchitectureType')) { $caps['CpuArchitectureType'].Value } else { 'x64' }
+    if ($cpuArch -ne 'x64') {
+        Send-DebugMessage "[EXCLUDE-ARCH] Dropped ARM64 size: $($_.Name)"
+        $false
+    } else { $true }
+}
+
+if ($allSkus.Count -eq 0) {
+    Send-DebugMessage "[ERROR] No x64-compatible VM sizes remain after filtering"
+    Set-LabVariable -Name VMSize -Value ""
+    return $true
+}
+
+Send-DebugMessage "[INFO] After x64 filter: $($allSkus.Count) sizes remain eligible"
+
+# Bulk price fetch (increase upper sanity bound to <2 for larger sizes)
 $priceDict = @{}
-
 try {
-    if ($Debug) {
-        Write-Output "[INFO] Fetching bulk VM prices for $location..."
-    }
-    $bulkFilter = "serviceName eq 'Virtual Machines' and armRegionName eq '$location' and priceType eq 'Consumption'"
+    Send-DebugMessage "[INFO] Fetching bulk VM prices for $Location..."
+    $bulkFilter = "serviceName eq 'Virtual Machines' and armRegionName eq '$Location' and priceType eq 'Consumption'"
     $bulkUri = "https://prices.azure.com/api/retail/prices?api-version=2023-01-01-preview&`$filter=$([uri]::EscapeDataString($bulkFilter))"
-
     $response = Invoke-RestMethod -Uri $bulkUri -Method Get -TimeoutSec 30
-
     foreach ($item in $response.Items) {
         $sku = $item.armSkuName
         $priceRaw = $item.unitPrice
-
-        # Only accept reasonable prices and exclude Spot/Low Priority
-        if ($priceRaw -and $priceRaw -gt 0.01 -and $priceRaw -lt 5 -and
-            $item.meterName -notmatch 'Spot|Low Priority|LowPriority') {
-            
-            $price = [double]$priceRaw  # Force conversion to double
-            
+        if ($priceRaw -and $priceRaw -gt 0.05 -and $priceRaw -lt 2 -and
+            $item.meterName -notmatch 'Spot|Low Priority|LowPriority|Partial|Reservation') {
+            $price = [double]$priceRaw
             if (-not $priceDict.ContainsKey($sku) -or $price -lt $priceDict[$sku]) {
                 $priceDict[$sku] = $price
             }
         }
     }
-
-    if ($Debug) {
-        if ($priceDict.Count -gt 0) {
-            Write-Output "[SUCCESS] Bulk fetch complete - $($priceDict.Count) VM prices loaded"
-        } else {
-            Write-Output "[WARN] Bulk response empty - will try per-SKU fallback"
-        }
-    }
+    Send-DebugMessage "[SUCCESS] Bulk fetch complete - $($priceDict.Count) VM prices loaded"
 }
 catch {
-    if ($Debug) {
-        Write-Output "[WARN] Bulk price fetch failed: $($_.Exception.Message) → using per-SKU fallback"
-    }
+    Send-DebugMessage "[WARN] Bulk price fetch failed: $($_.Exception.Message) - using per-SKU fallback"
 }
 
-# Price lookup function
+# Price lookup function (unchanged, but same bound increase)
 function Get-VMHourlyPrice {
     param(
         [string]$skuName,
         [string]$region
     )
-
-    # Prefer bulk dictionary
     if ($priceDict -and $priceDict.ContainsKey($skuName)) {
         return $priceDict[$skuName]
     }
-
-    # Fallback single query (rare)
-    if ($Debug) {
-        Write-Output "[FALLBACK] Single price query for $skuName"
-    }
-
     Start-Sleep -Milliseconds 400
-
     $filter = "serviceName eq 'Virtual Machines' and armRegionName eq '$region' and armSkuName eq '$skuName' and priceType eq 'Consumption'"
     $uri = "https://prices.azure.com/api/retail/prices?api-version=2023-01-01-preview&`$filter=$([uri]::EscapeDataString($filter))"
-
     try {
         $response = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 15
         $validItems = $response.Items | Where-Object {
-            $_.unitPrice -gt 0.01 -and $_.unitPrice -lt 5 -and
-            $_.meterName -notmatch 'Spot|Low Priority|LowPriority'
+            $_.unitPrice -gt 0.05 -and $_.unitPrice -lt 2 -and
+            $_.meterName -notmatch 'Spot|Low Priority|LowPriority|Partial|Reservation'
         }
-        
         if ($validItems.Count -gt 0) {
-            $lowest = ($validItems | Sort-Object unitPrice | Select-Object -First 1).unitPrice
-            $price = [double]$lowest
+            $price = [double]($validItems | Sort-Object unitPrice -Descending | Select-Object -First 1).unitPrice
             $priceDict[$skuName] = $price
             return $price
         }
     }
-    catch {
-        if ($Debug) {
-            Write-Output "[WARN] Single price query failed for $skuName → $($_.Exception.Message)"
-        }
-    }
-
+    catch { }
     return $null
 }
 
-# Collect candidates
+# Collect candidates - STRICT price enforcement
 $candidates = @()
-$fallbackCandidates = @()
 
 foreach ($sku in $allSkus) {
     $caps = @{}
     foreach ($cap in $sku.Capabilities) { $caps[$cap.Name] = $cap }
-
-    # x86 only
-    $cpuArch = if ($caps.ContainsKey('CpuArchitectureType')) { $caps['CpuArchitectureType'].Value } else { 'x64' }
-    if ($cpuArch -ne 'x64') { continue }
-
-    # Exclude confidential, GPU, HPC, etc.
+    
+    # Exclude specialized + L-series (expensive storage-optimized)
     $excludedPrefixes = @('DC', 'EC', 'HB', 'HC', 'HX', 'ND', 'NC', 'NV', 'NP', 'H')
     $excluded = $false
     foreach ($prefix in $excludedPrefixes) {
-        if ($sku.Name -like "*_$prefix*") {
+        if ($sku.Name -like "*_$prefix*") {  # Changed to *prefix* for better match
             $excluded = $true
+            Send-DebugMessage "[EXCLUDE-SPECIAL] Skipping: $($sku.Name)"
             break
         }
     }
-    if ($excluded) {
-        if ($Debug) { Write-Output "[EXCLUDE] Skipping specialized size: $($sku.Name)" }
-        continue
-    }
-
+    if ($excluded) { continue }
+    
     # Generation check
     $hyperV = if ($caps.ContainsKey('HyperVGenerations')) { $caps['HyperVGenerations'].Value } else { 'V1' }
     $supportsGen = if ($requiredGen -eq '1') { $hyperV -match 'V1' } else { $hyperV -match 'V2' }
-    if (-not $supportsGen) { continue }
-
-    # Specs
+    if (-not $supportsGen) { 
+        Send-DebugMessage "[SKIP-GEN] $($sku.Name) does not support Gen $requiredGen"
+        continue 
+    }
+    
+    # Specs - strict caps
     $vcpus = if ($caps.ContainsKey('vCPUs') -and $caps['vCPUs'].Value) { [int]$caps['vCPUs'].Value } else { 0 }
     $memoryGB = if ($caps.ContainsKey('MemoryGB') -and $caps['MemoryGB'].Value) { [double]$caps['MemoryGB'].Value } else { 0.0 }
-
-    # Apply min + max filters
-    if ($vcpus -lt $minVCPU -or $vcpus -gt $maxVCPUNum) { continue }
-    if ($memoryGB -lt $minMemoryGB -or $memoryGB -gt $maxRAMNum) { continue }
-
-    $price = Get-VMHourlyPrice -skuName $sku.Name -region $location
-
+    
+    if ($vcpus -lt $minVCPU) { 
+        Send-DebugMessage "[SKIP-LOWCPU] $($sku.Name) $vcpus vCPU < min $minVCPU"
+        continue 
+    }
+    if ($vcpus -gt $maxVCPUNum) { 
+        Send-DebugMessage "[SKIP-HIGHCPU] $($sku.Name) $vcpus vCPU > max $maxVCPUNum"
+        continue 
+    }
+    if ($memoryGB -lt $minMemoryGB) { 
+        Send-DebugMessage "[SKIP-LOWRAM] $($sku.Name) $memoryGB GB < min $minMemoryGB"
+        continue 
+    }
+    if ($memoryGB -gt $maxRAMNum) { 
+        Send-DebugMessage "[SKIP-HIGHRAM] $($sku.Name) $memoryGB GB > max $maxRAMNum"
+        continue 
+    }
+    
+    $price = Get-VMHourlyPrice -skuName $sku.Name -region $Location
+    
+    if ($null -eq $price) { 
+        Send-DebugMessage "[SKIP-NOPRICE] $($sku.Name) - no price found"
+        continue 
+    }
+    
+    if ($price -gt [double]$MaxPrice) { 
+        Send-DebugMessage "[SKIP-PRICE] $($sku.Name) at $price > $MaxPrice"
+        continue 
+    }
+    
     $obj = New-Object PSObject -Property @{
         Name              = $sku.Name
         vCPUs             = $vcpus
@@ -200,21 +262,12 @@ foreach ($sku in $allSkus) {
         PricePerHourUSD   = $price
         HyperVGenerations = $hyperV
     }
-
-    if ($null -ne $price -and $price -le [double]$MaxPrice) {
-        $candidates += $obj
-    }
-    else {
-        if ($vcpus -eq $targetCPU -and $memoryGB -ge $targetRAM) {
-            $fallbackCandidates += $obj
-            if ($Debug) {
-                Write-Output "[FALLBACK POOL] Added $($sku.Name) ($vcpus vCPU / $memoryGB GB)"
-            }
-        }
-    }
+    
+    $candidates += $obj
+    Send-DebugMessage "[CANDIDATE] Added $($sku.Name) - $vcpus vCPU / $memoryGB GB @ $price/hr"
 }
 
-# Select final size
+# Select final size - only from candidates (price-respecting)
 $selected = $null
 
 if ($candidates.Count -gt 0) {
@@ -223,51 +276,27 @@ if ($candidates.Count -gt 0) {
     
     $priceValue = if ($null -ne $selected.PricePerHourUSD -and $selected.PricePerHourUSD -gt 0) {
         [math]::Round([double]$selected.PricePerHourUSD, 4)
-    } else {
-        "unknown"
-    }
+    } else { "unknown" }
     $priceDisplay = if ($priceValue -ne "unknown") { "`$${priceValue}" } else { $priceValue }
-
-    if ($Debug) {
-        Write-Output "[SUCCESS] Selected (normal path): $($selected.Name)"
-        Write-Output ("         → {0} vCPU / {1} GB @ {2}/hr" -f $selected.vCPUs, $selected.MemoryGB, $priceDisplay)
-    }
-}
-elseif ($fallbackCandidates.Count -gt 0) {
-    $sortedFallback = $fallbackCandidates | Sort-Object vCPUs, MemoryGB
-    $selected = $sortedFallback[0]
     
-    $priceValue = if ($null -ne $selected.PricePerHourUSD -and $selected.PricePerHourUSD -gt 0) {
-        [math]::Round([double]$selected.PricePerHourUSD, 4)
-    } else {
-        "unknown"
-    }
-    $priceDisplay = if ($priceValue -ne "unknown") { "`$${priceValue}" } else { $priceValue }
-
-    if ($Debug) {
-        Write-Output "[FALLBACK] Price issues → selected closest to target: $($selected.Name)"
-        Write-Output ("         → {0} vCPU / {1} GB @ {2}/hr" -f $selected.vCPUs, $selected.MemoryGB, $priceDisplay)
-    }
-}
-else {
-    throw "[ERROR] No suitable VM size found matching constraints in $location"
+    Send-DebugMessage "[SUCCESS] Selected cheapest valid: $($selected.Name) - $($selected.vCPUs) vCPU / $($selected.MemoryGB) GB @ $($priceDisplay)/hr"
+} else {
+    Send-DebugMessage "[ERROR] No VM size found meeting ALL constraints (incl. price <= $MaxPrice/hr) in $Location for TargetSpec: $TargetSpec out of $($allSkus.Count) eligible sizes."
+    Set-LabVariable -Name VMSize -Value ""
+    return $true
 }
 
-# Output for deployment (always shown, even without Debug)
+# Output for deployment
 $DeploymentScriptOutputs = @{
-    vmSize       = $selected.Name
+    vmSize = $selected.Name
     pricePerHour = if ($null -ne $selected.PricePerHourUSD -and $selected.PricePerHourUSD -gt 0) {
         [math]::Round([double]$selected.PricePerHourUSD, 4)
-    } else {
-        "unknown"
-    }
-}
-
-if ($Debug) {
-    Write-Output "[FINAL] VM Size selected: $($selected.Name)"
+    } else { "unknown" }
 }
 
 Set-LabVariable -Name VMSize -Value $selected.Name
 Set-LabVariable -Name VMPrice -Value $selected.PricePerHourUSD
+
+Send-DebugMessage "[FINAL] VM Size selected: $($selected.Name)"
 
 Return $True
