@@ -255,7 +255,11 @@ nodes:
         type: physical
         slot: 3
   - boot_disk_size: null
-    configuration: []
+    configuration:
+      - name: node.cfg
+        content: |-
+          # this is a shell script which will be sourced at boot
+          hostname desktop-2
     cpu_limit: null
     cpus: null
     data_volume: null
