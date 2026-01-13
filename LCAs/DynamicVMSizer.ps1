@@ -1,7 +1,8 @@
 <#
    Title: DynamicVMSizer.ps1
-   Description: Finds a VM size that is available based upon constraints passed in the parameters.
-   Target: Cloud Subscription - PowerShell - 7.4.0 | Az 11.1.0 (RC)
+   Description: Finds a VM size (SKU) that is available based upon constraints passed in the parameters.
+                This script should be launched using the corresponding DynamicVMSizer-Launcher.ps1 script
+                as a Lifecycle Action.
    Version: 2026.01.13
 #>
 
