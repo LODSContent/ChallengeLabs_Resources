@@ -2,7 +2,10 @@
 $ScriptTitle = "Dynamic VM Sizer"
 
 # Target VM Size - Format: c<cpu>r<ram>g<gen>p<price-0.00> e.g. c2r4g2p0.20, c4r16g1p0.70
-$TargetSpec = '@lab.Variable(VMTargetSpec)'
+$TargetSpec = '@lab.Variable(VMTargetSpec1)'
+
+# Name of the @lab variable to return
+$VMSizeLabVariable = 'VMSize1'
 
 # Maximum allowed vCPUs - HARD CAP
 $MaxCPU = '16'
@@ -31,16 +34,39 @@ function Send-DebugMessage {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$Message
     )
-  
-    if ($ScriptDebug) { 
-        $Global:MessageBuffer += "`n`n$Message"
+
+    $Global:MessageBuffer += "`n`n$Message"
+}
+
+# Error function
+function Throw-Error {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Message
+    )
+    Send-DebugMessage $Message
+    Send-DebugMessage "[INFO] Setting lab variable $VMSizeLabVariable to default: $defaultSize"
+    Set-LabVariable -Name $VMSizeLabVariable -Value $defaultSize
+    if ($ScriptDebug) {
+        Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
     }
+    throw "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
+}
+
+if ($TargetSpec -like '@lab*' -or $TargetSpec -eq '') {
+    Throw-Error "[ERROR] Empty or missing TargetSpec @lab variable: $TargetSpec. Setting size to default: $defaultSize"
+    return $true      
+}
+
+if ($location -like '@lab*' -or $location -eq '') {
+    Throw-Error "[ERROR] Empty or missing Resource Group Name: $location."
+    return $true      
 }
 
 Send-DebugMessage "[INFO] Starting VM size selection in location: $Location"
 Send-DebugMessage "[INFO] Target spec: $TargetSpec | MaxPrice: $MaxPrice | MaxCPU: $MaxCPU vCPU | MaxRAM: $MaxRAM GB"
 
-# Parse TargetSpec (unchanged)
+# Parse TargetSpec
 $targetCPU    = 2
 $targetRAM    = 4.0
 $requiredGen  = '2'
@@ -78,7 +104,6 @@ $baseDelaySeconds = 2
 $useExponentialBackoff = $true
 $attempt = 0
 $success = $false
-
 while (-not $success -and $attempt -lt $maxRetries) {
     $attempt++
     Send-DebugMessage "[INFO] Attempt $attempt/$maxRetries to fetch allowed VM sizes from: $allowedSizesURL"
@@ -91,7 +116,8 @@ while (-not $success -and $attempt -lt $maxRetries) {
             Send-DebugMessage "[SUCCESS] Loaded $($allowedSizes.Count) allowed VM sizes from CSV (first clean: $($allowedSizes[0]))"
             $success = $true
         } else {
-            throw "Empty or invalid CSV content after cleaning"
+            Throw-Error "[ERROR] Empty or invalid CSV content after cleaning. Setting size to default: $defaultSize"
+            return $true            
         }
     }
     catch {
@@ -117,8 +143,7 @@ $allSkus = Get-AzComputeResourceSku -Location $Location | Where-Object {
 }
 
 if (-not $allSkus) {
-    Send-DebugMessage "[ERROR] No VM sizes available in location $Location. Setting size to default: $defaultSize"
-    Set-LabVariable -Name VMSize -Value $defaultSize
+    Throw-Error "[ERROR] No VM sizes available in location $Location. Setting size to default: $defaultSize"
     return $true
 }
 
@@ -143,8 +168,7 @@ $allSkus = $allSkus | Where-Object {
 }
 
 if ($allSkus.Count -eq 0) {
-    Send-DebugMessage "[ERROR] No x64-compatible VM sizes remain after filtering. Setting size to default: $defaultSize"
-    Set-LabVariable -Name VMSize -Value $defaultSize
+    Throw-Error "[ERROR] No x64-compatible VM sizes remain after filtering. Setting size to default: $defaultSize"
     return $true
 }
 
@@ -204,7 +228,6 @@ function Get-VMHourlyPrice {
 
 # Collect candidates - STRICT price enforcement
 $candidates = @()
-
 Send-DebugMessage "[INFO] Examining SKUs for candidates."
 foreach ($sku in $allSkus) {
     $caps = @{}
@@ -279,7 +302,6 @@ Send-DebugMessage "[INFO] Found $($candidates.count) candidates."
 
 # Select final size - only from candidates (price-respecting)
 $selected = $null
-
 if ($candidates.Count -gt 0) {
     $sorted = $candidates | Sort-Object PricePerHourUSD, vCPUs, MemoryGB
     $selected = $sorted[0]
@@ -291,26 +313,21 @@ if ($candidates.Count -gt 0) {
     
     Send-DebugMessage "[SUCCESS] Selected cheapest valid: $($selected.Name) - $($selected.vCPUs) vCPU / $($selected.MemoryGB) GB @ $($priceDisplay)/hr"
 } else {
-    Send-DebugMessage "[ERROR] No VM size found meeting ALL constraints (incl. price <= $MaxPrice/hr) in $Location for TargetSpec: $TargetSpec out of $($allSkus.Count) eligible sizes. Setting size to default: $defaultSize"
-    Set-LabVariable -Name VMSize -Value $defaultSize
+    Throw-Error "[ERROR] No VM size found meeting ALL constraints (incl. price <= $MaxPrice/hr) in $Location for TargetSpec: $TargetSpec out of $($allSkus.Count) eligible sizes. Setting size to default: $defaultSize"
     return $true
 }
 
-# Output for deployment
-$DeploymentScriptOutputs = @{
-    vmSize = $selected.Name
-    pricePerHour = if ($null -ne $selected.PricePerHourUSD -and $selected.PricePerHourUSD -gt 0) {
-        [math]::Round([double]$selected.PricePerHourUSD, 4)
-    } else { "unknown" }
-}
+# Use the VMSize variable in the Markdown or in a Resource Template's VMSize parameter
+Set-LabVariable -Name $VMSizeLabVariable -Value $selected.Name
 
-Set-LabVariable -Name VMSize -Value $selected.Name
+# Use the VMPrice variable temporarily in Markdown to visualize the hourly cost of the VM size
 Set-LabVariable -Name VMPrice -Value $selected.PricePerHourUSD
 
 Send-DebugMessage "[FINAL] VM Size selected: $($selected.Name)"
 
+# Sends the Debug log as a lab notification
 if ($ScriptDebug) {
-    Send-LabNotification -Message "[Debug] $($ScriptTitle):`n-------`n$($Global:MessageBuffer)"
+    Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
 
 Return $True
