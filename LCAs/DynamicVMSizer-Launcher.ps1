@@ -1,9 +1,9 @@
 <#
    Title: Dynamic VM Sizer Launcher
-   Description: Use this script in an LCA to launch the DynamicVMSizer.ps1 script located in GitHub.
-                The script will discover available VM Sizes (SKUs) and find one that is at least the
-                same size or larger than the Target size.
-   Target: Cloud Subscription - PowerShell - 7.4.0 | Az 11.1.0 (RC)
+   Description: Use this script in a Lifecycle Action to launch the DynamicVMSizer.ps1 script located in GitHub.
+                The script will discover available VM Sizes (SKUs) and find one that is at least the same size 
+                or larger than the Target size.
+   Target: Pre-Build - Blocking - Cloud Subscription - PowerShell - 7.4.0 | Az 11.1.0 (RC)
    Version: 2026.01.13
 #>
 
