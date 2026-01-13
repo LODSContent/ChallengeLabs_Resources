@@ -3,6 +3,11 @@
    Description: Use this script in a Lifecycle Action to launch the DynamicVMSizer.ps1 script located in GitHub.
                 The script will discover available VM Sizes (SKUs) and find one that is at least the same size 
                 or larger than the Target size.
+                Create a VMTargetSpec1 lab variable in the lab profile and populate with the desired size using
+                the format below.
+                The script will create a VMSize1 lab variable with the resulting size (SKU) that is found.
+                The resulting VMSize1 variable can be used in lab instructions or Resource Template Parameters.
+                The resource group lab variable MUST be specified below for the "Location". 
    Target: Pre-Build - Blocking - Cloud Subscription - PowerShell - 7.4.0 | Az 11.1.0 (RC)
    Version: 2026.01.13
 #>
