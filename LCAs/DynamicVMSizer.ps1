@@ -1,31 +1,33 @@
+<#
+   Title: DynamicVMSizer.ps1
+   Description: Finds a VM size that is available based upon constraints passed in the parameters.
+   Target: Cloud Subscription - PowerShell - 7.4.0 | Az 11.1.0 (RC)
+   Version: 2026.01.13
+#>
+
+param (
+    # Target VM Size - Format: c<cpu>r<ram>g<gen>p<price-0.00> e.g. c2r4g2p0.20, c4r16g1p0.70
+    $TargetSpec = 'c2r4g2p0.50',
+    # Name of the @lab variable to return
+    $VMSizeLabVariable = 'VMSize1',
+    # Default size to use if automatic selection fails
+    $DefaultSize = 'Standard_B4as_v2',
+    # Location (from the resource group)
+    $Location,
+    # URL for allowed list of VM sizes (SKUs)
+    $allowedSizesURL = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/AzureVMSizes.csv",
+    # Maximum allowed vCPUs
+    $MaxCPU = '16',
+    # Maximum allowed RAM in GB
+    $MaxRAM = '64',
+    # Enable script debugging by setting the debug lab variable to True
+    $ScriptDebug
+)
+
 # Script Title
-$ScriptTitle = "Dynamic VM Sizer"
+$ScriptTitle = "Dynamic VM Sizer: $VMSizeLabVariable"
 
-# Target VM Size - Format: c<cpu>r<ram>g<gen>p<price-0.00> e.g. c2r4g2p0.20, c4r16g1p0.70
-$TargetSpec = '@lab.Variable(VMTargetSpec1)'
-
-# Name of the @lab variable to return
-$VMSizeLabVariable = 'VMSize1'
-
-# Maximum allowed vCPUs - HARD CAP
-$MaxCPU = '16'
-
-# Maximum allowed RAM in GB - HARD CAP
-$MaxRAM = '64'
-
-# Location (from the resource group)
-$Location = '@lab.CloudResourceGroup(RG1).Location'
-
-# URL for allowed list of VM sizes (SKUs)
-$allowedSizesURL = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/AzureVMSizes.csv"
-
-# Default size to use if automatic selection fails
-$defaultSize = 'Standard_B4as_v2'
-
-# Enable script debugging by setting the debug lab variable to True
-$ScriptDebug = '@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True'
-
-# Enable detailed debugging when ScriptDebug is on
+# Enable detailed debugging
 $VerboseDebug = $false
 
 # Debug function
@@ -45,8 +47,8 @@ function Throw-Error {
         [string]$Message
     )
     Send-DebugMessage $Message
-    Send-DebugMessage "[INFO] Setting lab variable $VMSizeLabVariable to default: $defaultSize"
-    Set-LabVariable -Name $VMSizeLabVariable -Value $defaultSize
+    Send-DebugMessage "[INFO] Setting lab variable $VMSizeLabVariable to default: $DefaultSize"
+    Set-LabVariable -Name $VMSizeLabVariable -Value $DefaultSize
     if ($ScriptDebug) {
         Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
     }
@@ -54,12 +56,12 @@ function Throw-Error {
 }
 
 if ($TargetSpec -like '@lab*' -or $TargetSpec -eq '') {
-    Throw-Error "[ERROR] Empty or missing TargetSpec @lab variable: $TargetSpec. Setting size to default: $defaultSize"
+    Throw-Error "[ERROR] Empty or missing TargetSpec @lab variable: $TargetSpec. Setting size to default: $DefaultSize"
     return $true      
 }
 
-if ($location -like '@lab*' -or $location -eq '') {
-    Throw-Error "[ERROR] Empty or missing Resource Group Name: $location."
+if ($Location -like '@lab*' -or $Location -eq '') {
+    Throw-Error "[ERROR] Empty or missing Resource Group Name: $Location."
     return $true      
 }
 
@@ -77,13 +79,6 @@ if ($TargetSpec -match '^c(\d+)r(\d+(?:\.\d+)?)g([12])p(\d+\.\d{2})$') {
     $requiredGen = $Matches[3]
     $maxPrice    = $Matches[4]
     Send-DebugMessage "[INFO] '$TargetSpec' decoded to: CPU: $targetCPU, RAM: $targetRAM, Gen: $requiredGen, MaxPrice: `$$maxPrice/hr"
-} 
-elseif ($TargetSpec -match '^c(\d+)r(\d+(?:\.\d+)?)g([12])$') {
-    # Backward compatibility - old format without price
-    $targetCPU   = [int]$Matches[1]
-    $targetRAM   = [double]$Matches[2]
-    $requiredGen = $Matches[3]
-    Send-DebugMessage "[WARN] Old TargetSpec format detected (no price). Using default MaxPrice: `$$maxPrice"
 } 
 else {
     Send-DebugMessage "[ERROR] Invalid TargetSpec format: '$TargetSpec'. Using defaults: c2r4g1p0.50"
@@ -116,7 +111,7 @@ while (-not $success -and $attempt -lt $maxRetries) {
             Send-DebugMessage "[SUCCESS] Loaded $($allowedSizes.Count) allowed VM sizes from CSV (first clean: $($allowedSizes[0]))"
             $success = $true
         } else {
-            Throw-Error "[ERROR] Empty or invalid CSV content after cleaning. Setting size to default: $defaultSize"
+            Throw-Error "[ERROR] Empty or invalid CSV content after cleaning. Setting size to default: $DefaultSize"
             return $true            
         }
     }
@@ -143,7 +138,7 @@ $allSkus = Get-AzComputeResourceSku -Location $Location | Where-Object {
 }
 
 if (-not $allSkus) {
-    Throw-Error "[ERROR] No VM sizes available in location $Location. Setting size to default: $defaultSize"
+    Throw-Error "[ERROR] No VM sizes available in location $Location. Setting size to default: $DefaultSize"
     return $true
 }
 
@@ -168,7 +163,7 @@ $allSkus = $allSkus | Where-Object {
 }
 
 if ($allSkus.Count -eq 0) {
-    Throw-Error "[ERROR] No x64-compatible VM sizes remain after filtering. Setting size to default: $defaultSize"
+    Throw-Error "[ERROR] No x64-compatible VM sizes remain after filtering. Setting size to default: $DefaultSize"
     return $true
 }
 
@@ -313,7 +308,7 @@ if ($candidates.Count -gt 0) {
     
     Send-DebugMessage "[SUCCESS] Selected cheapest valid: $($selected.Name) - $($selected.vCPUs) vCPU / $($selected.MemoryGB) GB @ $($priceDisplay)/hr"
 } else {
-    Throw-Error "[ERROR] No VM size found meeting ALL constraints (incl. price <= $MaxPrice/hr) in $Location for TargetSpec: $TargetSpec out of $($allSkus.Count) eligible sizes. Setting size to default: $defaultSize"
+    Throw-Error "[ERROR] No VM size found meeting ALL constraints (incl. price <= $MaxPrice/hr) in $Location for TargetSpec: $TargetSpec out of $($allSkus.Count) eligible sizes. Setting size to default: $DefaultSize"
     return $true
 }
 
