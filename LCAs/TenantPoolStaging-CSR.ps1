@@ -20,26 +20,30 @@ param (
     [switch]$ScriptDebug
 )
 
+# Script Title
+$ScriptTitle = "Pool Staging for: $TenantName"
+
+# Debug function
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string]$Message,
-        [string]$DebugUrl = "http://zombie.cyberjunk.com:2025/ABACAB81"
+        [string]$Message
     )
 
-    if ($global:DebugUrl) {
-      $DebugUrl = $global:DebugUrl
+    $Global:MessageBuffer += "`n`n$Message"
+}
+
+# Error function
+function Throw-Error {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Message
+    )
+    Send-DebugMessage $Message
+    if ($ScriptDebug) {
+        Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
     }
-    
-    if ($DebugUrl) {
-       try {
-           Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
-       } catch {
-           # Silently fail to avoid disrupting the script; optionally log locally if desired
-           Write-Warning "Failed to send debug message: $_"
-       }
-   }
-   #Write-Host $Message
+    throw "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
 
 # Install Az.Accounts version 2.13.2
@@ -63,7 +67,7 @@ if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*
 
 if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
     if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
-    throw "Tenant name or password are blank."
+    Throw-Error "Tenant name or password are blank."
 }
 
 if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
@@ -142,7 +146,7 @@ try {
 	$AppName = $Context.AppName
 	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
 } catch {
-	throw "Failed to connect to: $TenantName as: $AppName"
+	Throw-Error "Failed to connect to: $TenantName as: $AppName"
 }
 
 # Tenant validation to ensure script is running in the proper Tenant
@@ -151,7 +155,7 @@ if ($VerifiedDomain -Like "*Hexelo*") {
 	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
 } else {
 	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
-	throw "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
+	Throw-Error "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
 }
 
 # Update Service Principal Permissions
@@ -760,7 +764,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 		     			if ($scriptDebug) { Send-DebugMessage "Successfully initiated Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
 				} catch {
 					if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
-		   			throw "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
+		   			Throw-Error "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
 		  		}
 	  		}
 		
@@ -770,7 +774,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 	     			if ($scriptDebug) { Send-DebugMessage "Successfully used Set-AzContext with SubscriptionId: $SubscriptionId" }
 			} catch {
 				if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
-	   			throw "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
+	   			Throw-Error "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
 	  		}
 	    
 			# Remove and re-add Owner Role to the lab user
@@ -827,6 +831,10 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 } else {
     Set-LabVariable -Name CredentialPool -Value 'No'
     if ($ScriptDebug) { Send-DebugMessage "Credential Pool not available. Falling back on manual credentials." }
+}
+
+if ($ScriptDebug) {
+	Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
 
 return $true
