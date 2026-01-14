@@ -14,26 +14,30 @@ param (
     [switch]$ScriptDebug    
 )
 
+# Script Title
+$ScriptTitle = "Post Cleanup for: $TenantName"
+
+# Debug function
 function Send-DebugMessage {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string]$Message,
-        [string]$DebugUrl = "http://zombie.cyberjunk.com:2025/ABACAB81"
+        [string]$Message
     )
 
-    if ($global:DebugUrl) {
-      $DebugUrl = $global:DebugUrl
+    $Global:MessageBuffer += "`n`n$Message"
+}
+
+# Error function
+function Throw-Error {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Message
+    )
+    Send-DebugMessage $Message
+    if ($ScriptDebug) {
+        Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
     }
-    
-    if ($DebugUrl) {
-       try {
-           Invoke-WebRequest -Uri $DebugUrl -Method Post -Body $Message -ErrorAction Stop | Out-Null
-       } catch {
-           # Silently fail to avoid disrupting the script; optionally log locally if desired
-           Write-Warning "Failed to send debug message: $_"
-       }
-   }
-   #Write-Host $Message
+    throw "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
 
 # Install Az.Accounts version 2.13.2
@@ -50,7 +54,7 @@ if ($CustomTarget) {
 
 if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
     if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
-    throw "Tenant name or password are blank."
+    Throw-Error "Tenant name or password are blank."
 }
 
 if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
@@ -78,7 +82,7 @@ $TenantName = $TenantName.trim(" ")
 
 if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Variable*") {
     if ($ScriptDebug) { Send-DebugMessage "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process." }
-    Throw "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process."
+    Throw-Error "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process."
 } 
 
 try {
@@ -92,7 +96,7 @@ try {
 	if ($ScriptDebug) { Send-DebugMessage "Successfully connected MgGraph to: $TenantName using AppId: $ScriptingAppId" }
 } catch {
    if ($ScriptDebug) { Send-DebugMessage "Failed to connect MgGraph to: $TenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
-   throw "Failed to connect MgGraph to: $TenantName using AppId: $ScriptingAppId"
+   Throw-Error "Failed to connect MgGraph to: $TenantName using AppId: $ScriptingAppId"
 }
 
 # Create fingerprint group
@@ -111,7 +115,7 @@ if ($VerifiedDomain -Like "*Hexelo*") {
 	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
 } else {
 	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
-	throw "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
+	Throw-Error "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
 }
 
 # Create a random password for new admins and password resets
@@ -673,4 +677,8 @@ try {
 
 } catch {
     if ($ScriptDebug) {Send-DebugMessage "Cleanup failed."}
+}
+
+if ($ScriptDebug) {
+	Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
