@@ -14,6 +14,7 @@ param (
     $ScriptingAppId,
     $ScriptingAppSecret,
     $LabInstanceId,
+	$ScriptUrl,
     [switch]$SkipCleanup,
     [switch]$CreateLabUsers,
 	[switch]$CustomTarget,
@@ -22,6 +23,77 @@ param (
 
 # Script Title
 $ScriptTitle = "Pool Staging for: $TenantName"
+
+# Lab Notification function
+function Send-LabNotificationChunks {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ScriptTitle,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter(Mandatory = $false)]
+        [int]$MaxLength = 2048
+    )
+
+    # Clean up the buffer
+    $buffer = $Message.TrimEnd()
+
+    # Base header without part number
+    $baseHeader = "[Debug] $ScriptTitle :`n---------`n"
+    $baseHeaderLength = $baseHeader.Length
+
+    # Available space per chunk after header
+    $availablePerChunk = $MaxLength - $baseHeaderLength
+
+    if ($buffer.Length -le $availablePerChunk) {
+        # Short message - send as one piece with normal header
+        $fullMessage = "$baseHeader$buffer"
+        Send-LabNotification -Message $fullMessage
+        return
+    }
+
+    # Long message - need to split
+    $chunks = @()
+    $position = 0
+
+    while ($position -lt $buffer.Length) {
+        $remaining = $buffer.Length - $position
+        $take = [Math]::Min($availablePerChunk, $remaining)
+
+        # Try to end on a line break when possible (look back max ~300 chars)
+        if ($take -lt $remaining) {
+            $lookback = [Math]::Min(300, $take)
+            $lastNewLine = $buffer.LastIndexOf("`n", $position + $take - 1, $lookback)
+            if ($lastNewLine -ge $position) {
+                $take = $lastNewLine - $position + 1   # include newline
+            }
+        }
+
+        $chunkText = $buffer.Substring($position, $take).TrimEnd()
+        $chunks += $chunkText
+
+        $position += $take
+    }
+
+    # Send each chunk with numbered debug header
+    for ($i = 0; $i -lt $chunks.Count; $i++) {
+        $partNumber = $i + 1
+        $chunkHeader = "[Debug Part$partNumber] $ScriptTitle :`n---------`n"
+
+        $chunkMessage = "$chunkHeader$($chunks[$i])"
+
+        # Ultra-safety: truncate if something weird happened (very rare)
+        if ($chunkMessage.Length -gt $MaxLength) {
+            $chunkMessage = $chunkMessage.Substring(0, $MaxLength - 3) + "..."
+        }
+
+        Send-LabNotification -Message $chunkMessage
+		Start-Sleep -Seconds 2
+    }
+}
 
 # Debug function
 function Send-DebugMessage {
@@ -41,7 +113,8 @@ function Throw-Error {
     )
     Send-DebugMessage $Message
     if ($ScriptDebug) {
-        Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
+        #Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
+		Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
     }
     throw "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
@@ -50,8 +123,11 @@ function Throw-Error {
 if ($CustomTarget) {
 	try {
 	    $targetVersion = "2.13.2"
-	    Uninstall-Module -Name Az.Accounts -AllVersions -Force -ErrorAction SilentlyContinue
-	    Install-Module -Name Az.Accounts -RequiredVersion $targetVersion -Scope CurrentUser -Force -AllowClobber -ErrorAction Stop
+		if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $targetVersion -EA SilentlyContinue)) {
+		    Install-Module Az.Accounts -RequiredVersion $targetVersion -Scope CurrentUser -Force -AllowClobber
+		}
+		Remove-Module Az.Accounts -Force -EA SilentlyContinue
+		Import-Module Az.Accounts -RequiredVersion $targetVersion -Force
 	    if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
 	} catch {
 	    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
@@ -104,14 +180,11 @@ if (!$SkipCleanup) {
 	  	ScriptingAppSecret = $ScriptingAppSecret
 	  	LabInstanceId = $LabInstanceId
 		CustomTarget = $CustomTarget
-	    ScriptDebug = $ScriptDebug    
+	    ScriptDebug = $ScriptDebug   
 	}
 
-	if ($ScriptDebug) { Send-DebugMessage "Sending ScriptingAppId: $ScriptingAppId - and ScriptingAppSecret: $ScriptingAppSecret" }
+	if ($ScriptDebug) { Send-DebugMessage "Launching Cleanup Script for $TenantName" }
  
-	# URL of the script on GitHub
-	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup-v2.ps1"
-	
 	# Fetch the script content using Invoke-WebRequest
 	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
 	
@@ -322,7 +395,7 @@ foreach ($api in $Permissions.Keys) {
 	# Get the service principal for the API
 	$apiSp = Get-MgServicePrincipal -Filter "appId eq '$apiAppId'"
 	if (-not $apiSp) {
-		if ($ScriptDebug) { Send-DebugMessage "Service Principal for API $api (appId: $apiAppId) not found in tenant $TenantName" }
+		if ($ScriptDebug) { Send-DebugMessage "Service Principal for API $api not found in tenant $TenantName" }
 		continue
 	} else {
 		if ($ScriptDebug) { Send-DebugMessage "Service Principal for API '$api' found." }
@@ -485,7 +558,7 @@ if ($UserName -ne $null -or $UserName -ne '') {
         if ($_.Exception.Response.StatusCode -eq 409) {
             if ($ScriptDebug) { Send-DebugMessage "Global Administrator role already exists for $TapUser" }
         } else {
-            if ($ScriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $TapUser or it already exists: $($_.Exception.Message)" }
+            if ($ScriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $TapUser or it already exists." }
         }
     }
 
@@ -834,7 +907,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 }
 
 if ($ScriptDebug) {
-	Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
+	#Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
+	Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
 }
 
 return $true
