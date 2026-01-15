@@ -320,7 +320,7 @@ foreach ($api in $Permissions.Keys) {
 	# Get the service principal for the API
 	$apiSp = Get-MgServicePrincipal -Filter "appId eq '$apiAppId'"
 	if (-not $apiSp) {
-		if ($ScriptDebug) { Send-DebugMessage "Service Principal for API $api (appId: $apiAppId) not found in tenant $TenantName" }
+		if ($ScriptDebug) { Send-DebugMessage "Service Principal for API $api not found in tenant $TenantName" }
 		continue
 	} else {
 		if ($ScriptDebug) { Send-DebugMessage "Service Principal for API '$api' found." }
@@ -483,7 +483,7 @@ if ($UserName -ne $null -or $UserName -ne '') {
         if ($_.Exception.Response.StatusCode -eq 409) {
             if ($ScriptDebug) { Send-DebugMessage "Global Administrator role already exists for $TapUser" }
         } else {
-            if ($ScriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $TapUser or it already exists: $($_.Exception.Message)" }
+            if ($ScriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $TapUser or it already exists." }
         }
     }
 
