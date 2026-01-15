@@ -22,14 +22,84 @@ param (
     # Maximum allowed RAM in GB
     $MaxRAM = '64',
     # Enable script debugging by setting the debug lab variable to True
-    $ScriptDebug
+    $ScriptDebug,
+    # Enable detailed debugging
+    $VerboseDebug    
 )
 
 # Script Title
 $ScriptTitle = "Dynamic VM Sizer: $VMSizeLabVariable"
 
-# Enable detailed debugging
-$VerboseDebug = $false
+# Lab Notification function
+function Send-LabNotificationChunks {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ScriptTitle,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+
+        [Parameter(Mandatory = $false)]
+        [int]$MaxLength = 2048
+    )
+
+    # Clean up the buffer
+    $buffer = $Message.TrimEnd()
+
+    # Base header without part number
+    $baseHeader = "[Debug] $ScriptTitle :`n---------`n"
+    $baseHeaderLength = $baseHeader.Length
+
+    # Available space per chunk after header
+    $availablePerChunk = $MaxLength - $baseHeaderLength
+
+    if ($buffer.Length -le $availablePerChunk) {
+        # Short message - send as one piece with normal header
+        $fullMessage = "$baseHeader$buffer"
+        Send-LabNotification -Message $fullMessage
+        return
+    }
+
+    # Long message - need to split
+    $chunks = @()
+    $position = 0
+
+    while ($position -lt $buffer.Length) {
+        $remaining = $buffer.Length - $position
+        $take = [Math]::Min($availablePerChunk, $remaining)
+
+        # Try to end on a line break when possible (look back max ~300 chars)
+        if ($take -lt $remaining) {
+            $lookback = [Math]::Min(300, $take)
+            $lastNewLine = $buffer.LastIndexOf("`n", $position + $take - 1, $lookback)
+            if ($lastNewLine -ge $position) {
+                $take = $lastNewLine - $position + 1   # include newline
+            }
+        }
+
+        $chunkText = $buffer.Substring($position, $take).TrimEnd()
+        $chunks += $chunkText
+
+        $position += $take
+    }
+
+    # Send each chunk with numbered debug header
+    for ($i = 0; $i -lt $chunks.Count; $i++) {
+        $partNumber = $i + 1
+        $chunkHeader = "[Debug Part$partNumber] $ScriptTitle :`n---------`n"
+
+        $chunkMessage = "$chunkHeader$($chunks[$i])"
+
+        # Ultra-safety: truncate if something weird happened (very rare)
+        if ($chunkMessage.Length -gt $MaxLength) {
+            $chunkMessage = $chunkMessage.Substring(0, $MaxLength - 3) + "..."
+        }
+
+        Send-LabNotification -Message $chunkMessage
+		Start-Sleep -Seconds 2
+    }
+}
 
 # Debug function
 function Send-DebugMessage {
@@ -48,22 +118,10 @@ function Throw-Error {
         [string]$Message
     )
     Send-DebugMessage $Message
-    Send-DebugMessage "[INFO] Setting lab variable $VMSizeLabVariable to default: $DefaultSize"
-    Set-LabVariable -Name $VMSizeLabVariable -Value $DefaultSize
     if ($ScriptDebug) {
-        Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
+		Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
     }
     throw "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
-}
-
-if ($TargetSpec -like '@lab*' -or $TargetSpec -eq '') {
-    Throw-Error "[ERROR] Empty or missing TargetSpec @lab variable: $TargetSpec. Setting size to default: $DefaultSize"
-    return $true      
-}
-
-if ($Location -like '@lab*' -or $Location -eq '') {
-    Throw-Error "[ERROR] Empty or missing Resource Group Name: $Location."
-    return $true      
 }
 
 Send-DebugMessage "[INFO] Starting VM size selection in location: $Location"
@@ -323,7 +381,7 @@ Send-DebugMessage "[FINAL] VM Size selected: $($selected.Name)"
 
 # Sends the Debug log as a lab notification
 if ($ScriptDebug) {
-    Send-LabNotification -Message "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
+    Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
 }
 
 Return $True
