@@ -14,6 +14,7 @@ param (
     $ScriptingAppId,
     $ScriptingAppSecret,
     $LabInstanceId,
+	$ScriptUrl,
     [switch]$SkipCleanup,
     [switch]$CreateLabUsers,
 	[switch]$CustomTarget,
@@ -109,9 +110,6 @@ if (!$SkipCleanup) {
 
 	if ($ScriptDebug) { Send-DebugMessage "Sending ScriptingAppId: $ScriptingAppId - and ScriptingAppSecret: $ScriptingAppSecret" }
  
-	# URL of the script on GitHub
-	$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/TenantPoolPostCleanup-v2.ps1"
-	
 	# Fetch the script content using Invoke-WebRequest
 	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
 	
