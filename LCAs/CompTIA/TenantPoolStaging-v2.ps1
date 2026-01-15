@@ -119,43 +119,18 @@ function Throw-Error {
     throw "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
 
-# Install required Az and MgGraph modules
+# Install Az.Accounts version 2.13.2
 if ($CustomTarget) {
 	try {
-		$AzFullVer   = "11.1.0"
-		$AccountsVer = "2.13.2"
-		$GraphVer    = "2.25.0"
-		
-		# 1. Latest Az rollup (meta + all sub-modules to current latest)
-		if (Get-InstalledModule Az -EA SilentlyContinue) { 
-		    Update-Module Az -Force -AllowClobber -Scope CurrentUser 
-		} else { 
-		    Install-Module Az -Scope CurrentUser -Force -AllowClobber 
-		}
-		
-		# 2. Exact full Az version 11.1.0
-		if (-not (Get-InstalledModule Az -RequiredVersion $AzFullVer -EA SilentlyContinue)) {
-		    Install-Module Az -RequiredVersion $AzFullVer -Scope CurrentUser -Force -AllowClobber
-		}
-		Remove-Module Az -Force -EA SilentlyContinue
-		Import-Module Az -RequiredVersion $AzFullVer -Force
-		
-		# 3. Exact Az.Accounts 2.13.2 (overrides any newer loaded by rollup)
-		if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AccountsVer -EA SilentlyContinue)) {
-		    Install-Module Az.Accounts -RequiredVersion $AccountsVer -Scope CurrentUser -Force -AllowClobber
+	    $targetVersion = "2.13.2"
+		if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $targetVersion -EA SilentlyContinue)) {
+		    Install-Module Az.Accounts -RequiredVersion $targetVersion -Scope CurrentUser -Force -AllowClobber
 		}
 		Remove-Module Az.Accounts -Force -EA SilentlyContinue
-		Import-Module Az.Accounts -RequiredVersion $AccountsVer -Force
-		
-		# 4. Exact Microsoft.Graph 2.25.0
-		if (-not (Get-InstalledModule Microsoft.Graph -RequiredVersion $GraphVer -EA SilentlyContinue)) {
-		    Install-Module Microsoft.Graph -RequiredVersion $GraphVer -Scope CurrentUser -Force -AllowClobber
-		}
-		Remove-Module Microsoft.Graph -Force -EA SilentlyContinue
-		Import-Module Microsoft.Graph -RequiredVersion $GraphVer -Force
-	    if ($ScriptDebug) { Send-DebugMessage "Successfully installed required Az and MgGraph modules" }
+		Import-Module Az.Accounts -RequiredVersion $targetVersion -Force
+	    if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
 	} catch {
-	    if ($ScriptDebug) { Send-DebugMessage "Failed to install required Az and MgGraph modules: $($_.Exception.Message)" }
+	    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
 	}
 }
 
