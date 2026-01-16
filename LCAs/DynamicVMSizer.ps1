@@ -97,7 +97,7 @@ function Send-LabNotificationChunks {
         }
 
         Send-LabNotification -Message $chunkMessage
-		Start-Sleep -Seconds 2
+		Start-Sleep -Seconds 10
     }
 }
 
