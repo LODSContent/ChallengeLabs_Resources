@@ -168,7 +168,7 @@ while (-not $success -and $attempt -lt $maxRetries) {
         
         if ($allowedSizes.Count -gt 0) {
             Send-DebugMessage "[SUCCESS] Loaded $($allowedSizes.Count) allowed VM sizes from CSV (first clean: $($allowedSizes[0]))"
-			if ($VerboseDebug) {Send-DebugMessage "[SUCCESS] Allowed Sizes: $($allowedSizes -join ', ' )"
+			if ($VerboseDebug) {Send-DebugMessage "[SUCCESS] Allowed Sizes: $($allowedSizes -join ', ' )"}
             $success = $true
         } else {
             Throw-Error "[ERROR] Empty or invalid CSV content after cleaning. Setting size to default: $DefaultSize"
@@ -199,7 +199,7 @@ $allSkus = Get-AzComputeResourceSku -Location $Location | Where-Object {
 
 if ($allSkus) {
 	Send-DebugMessage "[SUCCESS] Retrieved $($allSkus.Count) VM Sizes (SKUs)."
-	if ($VerboseDebug) {Send-DebugMessage "[SUCCESS] VM Sizes found: $($allSkus.Name -join ', ' )"
+	if ($VerboseDebug) {Send-DebugMessage "[SUCCESS] VM Sizes found: $($allSkus.Name -join ', ' )"}
 } else {
     Throw-Error "[ERROR] No VM sizes available in location $Location. Setting size to default: $DefaultSize"
     return $true
@@ -211,7 +211,7 @@ Send-DebugMessage "[INFO] Found $($allSkus.Count) available VM sizes in location
 if ($allowedSizes.Count -gt 0) {
     $allSkus = $allSkus | Where-Object { $allowedSizes -contains $_.Name }
     Send-DebugMessage "[INFO] After CSV allowed sizes filter: $($allSkus.Count) sizes remain"
-	if ($VerboseDebug) {Send-DebugMessage "[INFO] VM Sizes remaining: $($allSkus.Name -join ', ' )"
+	if ($VerboseDebug) {Send-DebugMessage "[INFO] VM Sizes remaining: $($allSkus.Name -join ', ' )"}
 }
 
 # Enforce x64
@@ -358,7 +358,7 @@ foreach ($sku in $allSkus) {
 }
 
 Send-DebugMessage "[INFO] Found $($candidates.count) candidates."
-if ($VerboseDebug) {Send-DebugMessage "[INFO] VM Size candidates: $($candidates.Name -join ', ' )"
+if ($VerboseDebug) {Send-DebugMessage "[INFO] VM Size candidates: $($candidates.Name -join ', ' )"}
 
 # Select final size - only from candidates (price-respecting)
 $selected = $null
