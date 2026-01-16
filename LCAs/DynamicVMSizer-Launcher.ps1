@@ -12,6 +12,10 @@
    Version: 2026.01.13
 #>
 
+$BaseURL = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs'
+$vmSizerScript = "DynamicVMSizer.ps1"
+$allowedSizes = "AzureVMSizes.csv"
+
 # Define the parameters in a hash table
 $params = @{
     # Target VM Size - Format: c<cpu>r<ram>g<gen>p<price-0.00> e.g. c2r4g2p0.20, c4r16g1p0.70
@@ -23,11 +27,11 @@ $params = @{
     # Location (from the resource group)
     Location = '@lab.CloudResourceGroup(RG1).Location'
     
-    ### Uncomment the following parameters to override script defaults.
-    
     # URL for allowed list of VM sizes (SKUs)
-    #allowedSizesURL = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/AzureVMSizes.csv"
+    allowedSizesURL = ($BaseURL.TrimEnd('/') + '/' + $allowedSizes)
     
+    ### Uncomment the following parameters to override script defaults.  
+  
     # Default size to use if automatic selection fails
     #DefaultSize = 'Standard_B4as_v2'
     
@@ -39,10 +43,13 @@ $params = @{
     
     # Enable script debugging by setting the debug lab variable to True
     ScriptDebug = ('@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True')
+
+    # Enable detailed debugging
+    VerboseDebug = $False
 }
 
 # URL of the script on GitHub
-$scriptUrl = "https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs/DynamicVMSizer.ps1"
+$scriptUrl = $BaseURL.TrimEnd('/') + '/' + $vmSizerScript
 
 # Initialize variables for retry logic
 $maxRetries = 10
