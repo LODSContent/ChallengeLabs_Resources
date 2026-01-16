@@ -87,7 +87,8 @@ function Send-LabNotificationChunks {
     # Send each chunk with numbered debug header
     for ($i = 0; $i -lt $chunks.Count; $i++) {
         $partNumber = $i + 1
-        $chunkHeader = "[Debug Part$partNumber] $ScriptTitle :`n---------`n"
+		$headerDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        $chunkHeader = "[($headerDate) Debug Part$partNumber] $ScriptTitle :`n---------`n"
 
         $chunkMessage = "$chunkHeader$($chunks[$i])"
 
