@@ -36,69 +36,73 @@ function Send-LabNotificationChunks {
     param(
         [Parameter(Mandatory = $true)]
         [string]$ScriptTitle,
-
         [Parameter(Mandatory = $true)]
         [string]$Message,
-
         [Parameter(Mandatory = $false)]
-        [int]$MaxLength = 2048
+        [int]$MaxLength = 2048,
+        [Parameter(Mandatory = $false)]
+        [int]$DelayBetweenChunksSec = 3          # ← increased default delay
     )
 
-    # Clean up the buffer
     $buffer = $Message.TrimEnd()
+    if ([string]::IsNullOrWhiteSpace($buffer)) { return }
 
-    # Base header without part number
-    $baseHeader = "[Debug] $ScriptTitle :`n---------`n"
-    $baseHeaderLength = $baseHeader.Length
+    $dateStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $baseHeaderNoPart = "[$dateStamp Debug] $ScriptTitle :`n---------`n"
+    $baseHeaderLength = $baseHeaderNoPart.Length
 
-    # Available space per chunk after header
-    $availablePerChunk = $MaxLength - $baseHeaderLength
+    # Conservative available space (reserve 10 chars for safety margin)
+    $available = $MaxLength - $baseHeaderLength - 10
 
-    if ($buffer.Length -le $availablePerChunk) {
-        # Short message - send as one piece with normal header
-        $fullMessage = "$baseHeader$buffer"
-        Send-LabNotification -Message $fullMessage
+    if ($buffer.Length -le $available) {
+        Send-LabNotification -Message "$baseHeaderNoPart$buffer"
         return
     }
 
-    # Long message - need to split
-    $chunks = @()
-    $position = 0
+    # Split into chunks
+    $chunks = [System.Collections.Generic.List[string]]::new()
+    $pos = 0
 
-    while ($position -lt $buffer.Length) {
-        $remaining = $buffer.Length - $position
-        $take = [Math]::Min($availablePerChunk, $remaining)
+    while ($pos -lt $buffer.Length) {
+        $remaining = $buffer.Length - $pos
+        $take = [Math]::Min($available, $remaining)
 
-        # Try to end on a line break when possible (look back max ~300 chars)
+        # Prefer to break at newline (look back max 400 chars)
         if ($take -lt $remaining) {
-            $lookback = [Math]::Min(300, $take)
-            $lastNewLine = $buffer.LastIndexOf("`n", $position + $take - 1, $lookback)
-            if ($lastNewLine -ge $position) {
-                $take = $lastNewLine - $position + 1   # include newline
+            $lookback = [Math]::Min(400, $take)
+            $lastNL = $buffer.LastIndexOf("`n", $pos + $take - 1, $lookback)
+            if ($lastNL -ge $pos) {
+                $take = $lastNL - $pos + 1
             }
         }
 
-        $chunkText = $buffer.Substring($position, $take).TrimEnd()
-        $chunks += $chunkText
-
-        $position += $take
-    }
-
-    # Send each chunk with numbered debug header
-    for ($i = 0; $i -lt $chunks.Count; $i++) {
-        $partNumber = $i + 1
-		$headerDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        $chunkHeader = "[($headerDate) Debug Part$partNumber] $ScriptTitle :`n---------`n"
-
-        $chunkMessage = "$chunkHeader$($chunks[$i])"
-
-        # Ultra-safety: truncate if something weird happened (very rare)
-        if ($chunkMessage.Length -gt $MaxLength) {
-            $chunkMessage = $chunkMessage.Substring(0, $MaxLength - 3) + "..."
+        $chunk = $buffer.Substring($pos, $take).TrimEnd()
+        if ($chunk.Length -gt 0) {
+            $chunks.Add($chunk)
         }
 
-        Send-LabNotification -Message $chunkMessage
-		Start-Sleep -Seconds 10
+        $pos += $take
+    }
+
+    # Send chunks with delay to prevent merging
+    for ($i = 0; $i -lt $chunks.Count; $i++) {
+        $part = $i + 1
+        $totalParts = $chunks.Count
+
+        $header = "[$dateStamp Debug Part$part/$totalParts] $ScriptTitle :`n---------`n"
+        $fullMsg = $header + $chunks[$i]
+
+        # Hard truncate + ellipsis if still over (very defensive)
+        if ($fullMsg.Length -gt $MaxLength) {
+            $fullMsg = $fullMsg.Substring(0, $MaxLength - 4) + " ..."
+        }
+
+        Send-LabNotification -Message $fullMsg
+
+        # Delay – most important fix for merging issue
+        if ($i -lt ($chunks.Count - 1)) {
+            Start-Sleep -Seconds $DelayBetweenChunksSec
+        }
     }
 }
 
