@@ -92,9 +92,9 @@ annotations:
     rotation: 0
     text_bold: false
     text_content: |-
-      VLAN 10 - MARKETING
-      VLAN 20 - SALES
-      STP Lab
+      IP: DHCP
+      VLAN: 10
+      MARKETING
     text_font: sans-serif
     text_italic: false
     text_size: 12
@@ -104,41 +104,30 @@ annotations:
     x1: -680.0
     y1: -320.0
     z_index: 4
-  - border_color: '#808080FF'
-    border_radius: 0
-    border_style: ''
-    color: '#FFFFFFFF'
-    rotation: 0
-    thickness: 1
-    type: rectangle
-    x1: -796.0
-    y1: -720.0
-    x2: 533.0
-    y2: 600.0
-    z_index: 0
   - border_color: '#00000000'
     border_style: ''
     color: '#000000'
     rotation: 0
     text_bold: false
     text_content: |-
-      Core Switch
-      Rapid PVST+ Root
+      IP: DHCP
+      VLAN: 20
+      SALES
     text_font: sans-serif
     text_italic: false
     text_size: 12
     text_unit: pt
     thickness: 1
     type: text
-    x1: -100.0
+    x1: -440.0
     y1: -320.0
     z_index: 4
-  - border_color: '#808080FF'
+  - border_color: '#00000000'
     border_style: ''
     color: '#808080FF'
     rotation: 0
     text_bold: false
-    text_content: Room 1 - Access Layer
+    text_content: Room 1
     text_font: sans-serif
     text_italic: false
     text_size: 35
@@ -148,12 +137,12 @@ annotations:
     x1: -760.0
     y1: -680.0
     z_index: 5
-  - border_color: '#808080FF'
+  - border_color: '#00000000'
     border_style: ''
     color: '#808080FF'
     rotation: 0
     text_bold: false
-    text_content: Core / Distribution
+    text_content: Server Room
     text_font: sans-serif
     text_italic: false
     text_size: 35
@@ -163,6 +152,23 @@ annotations:
     x1: -80.0
     y1: -680.0
     z_index: 5
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#000000'
+    rotation: 0
+    text_bold: false
+    text_content: |-
+      VLAN10: 10.1.10.100
+      VLAN20: 10.1.20.100
+    text_font: sans-serif
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 0.0
+    y1: -320.0
+    z_index: 4
 smart_annotations: []
 nodes:
   - boot_disk_size: null
@@ -180,7 +186,7 @@ nodes:
     parameters: {}
     ram: null
     tags: []
-    x: -100
+    x: -520
     y: -560
     interfaces:
       - id: i0
@@ -222,8 +228,8 @@ nodes:
     parameters: {}
     ram: null
     tags: []
-    x: -520
-    y: -400
+    x: -200
+    y: -560
     interfaces:
       - id: i0
         label: Loopback0
@@ -267,7 +273,7 @@ nodes:
     ram: null
     tags: []
     x: -640
-    y: -200
+    y: -400
     interfaces:
       - id: i0
         label: eth0
@@ -292,7 +298,7 @@ nodes:
     ram: null
     tags: []
     x: -400
-    y: -200
+    y: -400
     interfaces:
       - id: i0
         label: eth0
@@ -303,26 +309,32 @@ links:
   - id: l0
     n1: n0
     n2: n1
-    i1: i1
-    i2: i0
+    i1: i1               # Ethernet0/0 on SWITCH1
+    i2: i1               # Ethernet0/0 on SWITCH2 (trunk/uplink)
     conditioning: {}
     label: SWITCH1-E0/0 <-> SWITCH2-E0/0 (Trunk)
   - id: l1
-    n1: n1
+    n1: n0
     n2: n2
-    i1: i2
-    i2: i0
+    i1: i2               # Ethernet0/1 on SWITCH1
+    i2: i0               # eth0 on HOST1
     conditioning: {}
-    label: SWITCH2-E0/1 <-> HOST1-eth0 (Access VLAN 10)
+    label: SWITCH1-E0/1 <-> HOST1-eth0 (VLAN 10)
   - id: l2
     n1: n1
     n2: n3
-    i1: i3
-    i2: i0
+    i1: i2               # Ethernet0/1 on SWITCH2
+    i2: i0               # eth0 on HOST2
     conditioning: {}
-    label: SWITCH2-E0/2 <-> HOST2-eth0 (Access VLAN 20)
+    label: SWITCH2-E0/1 <-> HOST2-eth0 (VLAN 20)
 lab:
-  description: 'CCNA.2-001 - Rapid PVST+ and Root Guard Lab'
-  notes: 'Topology for configuring Rapid PVST+ on core switch and Root Guard on access switch.'
-  title: LAB-TOPOLOGY1
+  description: 'v1.0 - Topology for CCNA.2-001: Rapid PVST+ and Root Guard lab'
+  notes: |
+    - SWITCH1: Distribution/core switch (configure Rapid PVST+ and root priorities)
+    - SWITCH2: Access-layer switch (configure Root Guard on access ports)
+    - HOST1 connected to SWITCH1 (VLAN 10)
+    - HOST2 connected to SWITCH2 (VLAN 20)
+    - VLANs 10 and 20 assumed pre-created on both switches
+    - Hosts configured for DHCP
+  title: CCNA2-001-TOPOLOGY
   version: 0.3.0
