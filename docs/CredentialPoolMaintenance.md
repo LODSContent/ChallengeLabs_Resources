@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This training manual provides guidance on maintaining the credential pools used in Skillable Challenge Labs for Azure environments, specifically those involving Microsoft Entra ID and trial subscriptions like Entra ID P2 or Power BI (PBI). It is based on a video demonstration of the maintenance process for three key pools: Entra ID P2 Challenges v3, PBI Challenges Tenant Pool, and Challenge Labs Tenant Pool #1.
+This documentation provides guidance on maintaining the credential pools used in Skillable Challenge Labs for Azure environments, specifically those involving Microsoft Entra ID and trial subscriptions like Entra ID P2 or Power BI (PBI). It is based on a video demonstration of the maintenance process for three key pools: Entra ID P2 Challenges v3, PBI Challenges Tenant Pool, and Challenge Labs Tenant Pool #1.
 
 The pools are part of the "Cloud Credential Pool" feature in the lab platform, which stores Azure tenant details (e.g., tenants, credentials) for student use or automation. For more details on Cloud Credential Pools, refer to the official documentation: [Skillable Cloud Credential Pool Docs](https://docs.skillable.com/docs/cloud-credential-pool).
 
