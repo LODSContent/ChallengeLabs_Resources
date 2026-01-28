@@ -18,6 +18,7 @@
 - [Microsoft.EventGrid/systemTopics](#microsofteventgridsystemtopics)
 - [Microsoft.EventHub](#microsofteventhub)
 - [Microsoft.OperationalInsights](#microsoftoperationalinsights)
+- [Microsoft.RecoveryServices](#microsoftrecoveryservices)
 - [Microsoft.Search](#microsoftsearch)
 - [Microsoft.Sql/servers](#microsoftsqlservers)
 - [Microsoft.SqlVirtualMachines](#microsoftsqlvirtualmachines)
