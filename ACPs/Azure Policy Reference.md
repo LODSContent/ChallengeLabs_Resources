@@ -2363,6 +2363,71 @@
 [Back to TOC:](#table-of-contents)
 <br><br>
 
+## Microsoft.RecoveryServices
+
+> **Purpose**: Allows Recovery Services Vault creation.
+
+```json
+{
+    "if": {
+        "not": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "contains": "Microsoft.RecoveryServices"
+                        },
+                        {
+                            "field": "name",
+                            "equals": "[concat('MyVault',resourcegroup().tags.LabInstance)]"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.Storage/storageAccounts"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.EventHub"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.EventGrid"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.Network"
+                }
+            ]
+        }
+    },
+    "then": {
+        "effect": "Deny"
+    }
+}
+```
+---
+[Back to TOC:](#table-of-contents)
+<br><br
+
 ## Microsoft.Search
 
 > **Purpose**: Allows Azure Cognitive Search service `srch{LabInstance}` on `basic` SKU in same region.
