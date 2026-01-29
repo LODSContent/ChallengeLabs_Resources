@@ -2309,10 +2309,6 @@
                             "contains": "hexeloamlworks"
                         },
                         {
-                            "field": "Microsoft.OperationalInsights/workspaces/sku.name",
-                            "exists": "false"
-                        },
-                        {
                             "anyOf": [
                                 {
                                     "field": "id",
