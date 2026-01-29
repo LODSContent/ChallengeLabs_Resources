@@ -1,0 +1,381 @@
+{
+  "if": {
+    "not": {
+      "anyOf": [
+        {
+          "field": "type",
+          "contains": "Microsoft.Authorization"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.EventHub"
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.EventGrid/systemTopics"
+            },
+            {
+              "field": "name",
+              "in": [
+                "egt",
+                "[concat('egt', resourcegroup().tags.LabInstance)]"
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG1/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG2/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG3/"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG1', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG2', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG3', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.EventGrid/topics"
+            },
+            {
+              "field": "name",
+              "in": [
+                "egt",
+                "[concat('egt', resourcegroup().tags.LabInstance)]"
+              ]
+            },
+            {
+              "field": "Microsoft.EventGrid/topics/sku.name",
+              "equals": "Standard"
+            },
+            {
+              "field": "Microsoft.EventGrid/topics/sku.capacity",
+              "lessOrEquals": 20
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG1/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG2/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG3/"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG1', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG2', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG3', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.EventHub/Namespaces"
+            },
+            {
+              "field": "name",
+              "in": [
+                "ehn",
+                "[concat('ehn', resourcegroup().tags.LabInstance)]"
+              ]
+            },
+            {
+              "field": "Microsoft.EventHub/namespaces/sku.name",
+              "equals": "Standard"
+            },
+            {
+              "field": "Microsoft.EventHub/namespaces/sku.tier",
+              "equals": "Standard"
+            },
+            {
+              "field": "Microsoft.EventHub/namespaces/sku.capacity",
+              "lessOrEquals": 20
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG1/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG2/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG3/"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG1', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG2', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG3', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Features"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Insights"
+        },
+        {
+          "field": "type",
+          "equals": "Microsoft.KeyVault/vaults"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.ManagedIdentity"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Network/virtualNetworks"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Network/subnets"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Network/networkSecurityGroups"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Network/publicIPAddresses"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Network/networkInterfaces"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Network/loadBalancers"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Network/applicationGateways"
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.OperationalInsights/workspaces"
+            },
+            {
+              "field": "name",
+              "in": [
+				"law",
+				"loganalyticsworkspace"
+				]
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG1/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG2/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG3/"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG1', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG2', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG3', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "contains": "Microsoft.RecoveryServices"
+            },
+            {
+              "field": "name",
+              "in": [
+                "MyVault",
+                "[concat('MyVault', resourcegroup().tags.LabInstance)]"
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG1/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG2/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG3/"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG1', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG2', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG3', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Resources/deployments"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Resources/resourceGroups"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Resources/tags"
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Resources/links"
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Search/searchServices"
+            },
+            {
+              "field": "name",
+              "in": [
+                "searchsvc",
+                "[concat('searchsvc', resourceGroup().tags.LabInstance)]"
+              ]
+            },
+            {
+              "field": "Microsoft.Search/searchServices/sku.name",
+              "equals": "basic"
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG1/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG2/"
+                },
+                {
+                  "field": "id",
+                  "contains": "/resourceGroups/RG3/"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG1', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG2', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                },
+                {
+                  "field": "id",
+                  "contains": "[concat('/resourceGroups/RG3', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "field": "type",
+          "contains": "Microsoft.Storage/storageAccounts"
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts"
+            },
+            {
+              "field": "Microsoft.Storage/storageAccounts/sku.name",
+              "in": ["Standard_LRS", "Standard_GRS", "Standard_ZRS"]
+            }
+          ]
+        },
+        {
+          "field": "location",
+          "notEquals": "global"
+        }
+      ]
+    }
+  },
+  "then": {
+    "effect": "Deny"
+  }
+}
