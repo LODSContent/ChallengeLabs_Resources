@@ -2350,11 +2350,15 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.Network"
+                    "contains": "Microsoft.Insights"
                 },
                 {
                     "field": "type",
-                    "contains": "microsoft.monitor/accounts"
+                    "contains": "Microsoft.Monitor"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.Network"
                 }
             ]
         }
