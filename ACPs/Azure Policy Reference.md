@@ -17,7 +17,8 @@
 - [Microsoft.EventGrid/topics](#microsofteventgridtopics)
 - [Microsoft.EventGrid/systemTopics](#microsofteventgridsystemtopics)
 - [Microsoft.EventHub](#microsofteventhub)
-- [Microsoft.OperationalInsights](#microsoftoperationalinsights)
+- [Microsoft.Monitor](#microsoftmonitor) (Azure Monitor Workspace)
+- [Microsoft.OperationalInsights](#microsoftoperationalinsights) (Log Analytics Workspace)
 - [Microsoft.RecoveryServices](#microsoftrecoveryservices)
 - [Microsoft.Search](#microsoftsearch)
 - [Microsoft.Sql/servers](#microsoftsqlservers)
@@ -2258,6 +2259,78 @@
                         {
                             "field": "location",
                             "notEquals": "global"
+                        }
+                    ]
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.Storage/storageAccounts"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.EventHub"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.EventGrid"
+                },
+                {
+                    "field": "type",
+                    "contains": "Microsoft.Network"
+                }
+            ]
+        }
+    },
+    "then": {
+        "effect": "Deny"
+    }
+}
+```
+---
+[Back to TOC:](#table-of-contents)
+<br><br>
+
+## Microsoft.Monitor
+(Azure Monitor Workspace)
+
+> **Purpose**: Allows Azure Monitor workspace with name restrictions.
+
+```json
+{
+    "if": {
+        "not": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Monitor"
+                        },
+                        {
+                            "field": "name",
+                            "equals": "monitor-arc"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "in": [
+                                "[resourceGroup().location]"
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "notequals": "global"
                         }
                     ]
                 },
