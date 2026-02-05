@@ -198,8 +198,17 @@ if (-not $success) {
 
 # Get available VM SKUs
 $allSkus = Get-AzComputeResourceSku -Location $Location | Where-Object {
-    $_.ResourceType -eq 'virtualMachines' -and
-    $_.Restrictions.Count -eq 0 -and ($_.LocationInfo.Zones.Count -gt 0 -or $_.Restrictions.Reasoncode -ne "NotAvailableForSubscription")
+    $_.ResourceType -eq "virtualMachines" -and
+    (
+        # No restrictions at all → allowed
+        $_.Restrictions.Count -eq 0 -or
+
+        # Allowed if there is NOT a region-wide NotAvailableForSubscription restriction
+        $_.Restrictions.Where({
+            $_.ReasonCode -eq "NotAvailableForSubscription" -and
+            $_.Type -eq "Location"
+        }).Count -eq 0
+    )
 }
 
 if ($allSkus) {
