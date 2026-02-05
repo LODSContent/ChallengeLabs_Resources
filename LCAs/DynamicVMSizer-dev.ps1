@@ -22,14 +22,13 @@ param (
     # Maximum allowed RAM in GB
     $MaxRAM = '64',
     # Enable script debugging by setting the debug lab variable to True
-    $ScriptDebug
+    $ScriptDebug,
+    # Enable detailed debugging
+    $VerboseDebug    
 )
 
 # Script Title
 $ScriptTitle = "Dynamic VM Sizer: $VMSizeLabVariable"
-
-# Enable detailed debugging
-$VerboseDebug = $false
 
 # Lab Notification function
 function Send-LabNotificationChunks {
@@ -37,68 +36,73 @@ function Send-LabNotificationChunks {
     param(
         [Parameter(Mandatory = $true)]
         [string]$ScriptTitle,
-
         [Parameter(Mandatory = $true)]
         [string]$Message,
-
         [Parameter(Mandatory = $false)]
-        [int]$MaxLength = 2048
+        [int]$MaxLength = 2048,
+        [Parameter(Mandatory = $false)]
+        [int]$DelayBetweenChunksSec = 3          # ← increased default delay
     )
 
-    # Clean up the buffer
     $buffer = $Message.TrimEnd()
+    if ([string]::IsNullOrWhiteSpace($buffer)) { return }
 
-    # Base header without part number
-    $baseHeader = "[Debug] $ScriptTitle :`n---------`n"
-    $baseHeaderLength = $baseHeader.Length
+    $dateStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $baseHeaderNoPart = "[$dateStamp Debug] $ScriptTitle :`n---------`n"
+    $baseHeaderLength = $baseHeaderNoPart.Length
 
-    # Available space per chunk after header
-    $availablePerChunk = $MaxLength - $baseHeaderLength
+    # Conservative available space (reserve 10 chars for safety margin)
+    $available = $MaxLength - $baseHeaderLength - 10
 
-    if ($buffer.Length -le $availablePerChunk) {
-        # Short message - send as one piece with normal header
-        $fullMessage = "$baseHeader$buffer"
-        Send-LabNotification -Message $fullMessage
+    if ($buffer.Length -le $available) {
+        Send-LabNotification -Message "$baseHeaderNoPart$buffer"
         return
     }
 
-    # Long message - need to split
-    $chunks = @()
-    $position = 0
+    # Split into chunks
+    $chunks = [System.Collections.Generic.List[string]]::new()
+    $pos = 0
 
-    while ($position -lt $buffer.Length) {
-        $remaining = $buffer.Length - $position
-        $take = [Math]::Min($availablePerChunk, $remaining)
+    while ($pos -lt $buffer.Length) {
+        $remaining = $buffer.Length - $pos
+        $take = [Math]::Min($available, $remaining)
 
-        # Try to end on a line break when possible (look back max ~300 chars)
+        # Prefer to break at newline (look back max 400 chars)
         if ($take -lt $remaining) {
-            $lookback = [Math]::Min(300, $take)
-            $lastNewLine = $buffer.LastIndexOf("`n", $position + $take - 1, $lookback)
-            if ($lastNewLine -ge $position) {
-                $take = $lastNewLine - $position + 1   # include newline
+            $lookback = [Math]::Min(400, $take)
+            $lastNL = $buffer.LastIndexOf("`n", $pos + $take - 1, $lookback)
+            if ($lastNL -ge $pos) {
+                $take = $lastNL - $pos + 1
             }
         }
 
-        $chunkText = $buffer.Substring($position, $take).TrimEnd()
-        $chunks += $chunkText
-
-        $position += $take
-    }
-
-    # Send each chunk with numbered debug header
-    for ($i = 0; $i -lt $chunks.Count; $i++) {
-        $partNumber = $i + 1
-        $chunkHeader = "[Debug Part$partNumber] $ScriptTitle :`n---------`n"
-
-        $chunkMessage = "$chunkHeader$($chunks[$i])"
-
-        # Ultra-safety: truncate if something weird happened (very rare)
-        if ($chunkMessage.Length -gt $MaxLength) {
-            $chunkMessage = $chunkMessage.Substring(0, $MaxLength - 3) + "..."
+        $chunk = $buffer.Substring($pos, $take).TrimEnd()
+        if ($chunk.Length -gt 0) {
+            $chunks.Add($chunk)
         }
 
-        Send-LabNotification -Message $chunkMessage
-		Start-Sleep -Seconds 2
+        $pos += $take
+    }
+
+    # Send chunks with delay to prevent merging
+    for ($i = 0; $i -lt $chunks.Count; $i++) {
+        $part = $i + 1
+        $totalParts = $chunks.Count
+
+        $header = "[$dateStamp Debug Part$part/$totalParts] $ScriptTitle :`n---------`n"
+        $fullMsg = $header + $chunks[$i]
+
+        # Hard truncate + ellipsis if still over (very defensive)
+        if ($fullMsg.Length -gt $MaxLength) {
+            $fullMsg = $fullMsg.Substring(0, $MaxLength - 4) + " ..."
+        }
+
+        Send-LabNotification -Message $fullMsg
+
+        # Delay – most important fix for merging issue
+        if ($i -lt ($chunks.Count - 1)) {
+            Start-Sleep -Seconds $DelayBetweenChunksSec
+        }
     }
 }
 
@@ -169,6 +173,7 @@ while (-not $success -and $attempt -lt $maxRetries) {
         
         if ($allowedSizes.Count -gt 0) {
             Send-DebugMessage "[SUCCESS] Loaded $($allowedSizes.Count) allowed VM sizes from CSV (first clean: $($allowedSizes[0]))"
+			if ($VerboseDebug) {Send-DebugMessage "[SUCCESS] Allowed Sizes: $($allowedSizes -join ', ' )"}
             $success = $true
         } else {
             Throw-Error "[ERROR] Empty or invalid CSV content after cleaning. Setting size to default: $DefaultSize"
@@ -191,13 +196,16 @@ if (-not $success) {
     $allowedSizes = @()
 }
 
-# Get available VM SKUs (unchanged)
+# Get available VM SKUs
 $allSkus = Get-AzComputeResourceSku -Location $Location | Where-Object {
     $_.ResourceType -eq 'virtualMachines' -and
     $_.Restrictions.Count -eq 0 -and ($_.LocationInfo.Zones.Count -gt 0 -or $_.Restrictions.Reasoncode -ne "NotAvailableForSubscription")
 }
 
-if (-not $allSkus) {
+if ($allSkus) {
+	Send-DebugMessage "[SUCCESS] Retrieved $($allSkus.Count) VM Sizes (SKUs)."
+	if ($VerboseDebug) {Send-DebugMessage "[SUCCESS] VM Sizes found: $($allSkus.Name -join ', ' )"}
+} else {
     Throw-Error "[ERROR] No VM sizes available in location $Location. Setting size to default: $DefaultSize"
     return $true
 }
@@ -208,9 +216,10 @@ Send-DebugMessage "[INFO] Found $($allSkus.Count) available VM sizes in location
 if ($allowedSizes.Count -gt 0) {
     $allSkus = $allSkus | Where-Object { $allowedSizes -contains $_.Name }
     Send-DebugMessage "[INFO] After CSV allowed sizes filter: $($allSkus.Count) sizes remain"
+	if ($VerboseDebug) {Send-DebugMessage "[INFO] VM Sizes remaining: $($allSkus.Name -join ', ' )"}
 }
 
-# Enforce x64 (unchanged)
+# Enforce x64
 $allSkus = $allSkus | Where-Object {
     $caps = @{}
     foreach ($cap in $_.Capabilities) { $caps[$cap.Name] = $cap }
@@ -354,6 +363,7 @@ foreach ($sku in $allSkus) {
 }
 
 Send-DebugMessage "[INFO] Found $($candidates.count) candidates."
+if ($VerboseDebug) {Send-DebugMessage "[INFO] VM Size candidates: $($candidates.Name -join ', ' )"}
 
 # Select final size - only from candidates (price-respecting)
 $selected = $null
