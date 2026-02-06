@@ -2431,7 +2431,7 @@
 ```
 ---
 [Back to TOC:](#table-of-contents)
-<br><br
+<br><br>
 
 ## Microsoft.Search
 
