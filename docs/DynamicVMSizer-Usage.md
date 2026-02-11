@@ -108,7 +108,7 @@ Add or verify these variables (Lab Profile → Variables tab). The script popula
 
 Search & replace:
 
-- Hard-coded VM sizes → `@lab.Variable(VMSize1)` (use **Copy** ++)
+- Hard-coded VM sizes → `@lab.Variable(VMSize1)` (use **Copy** ++ cloud only labs or use **Type Text** +++ with Skillable VMs)
 - Hard-coded regions → `@lab.CloudResourceGroup(RG1).Location`
 - Hard-coded resource groups → `@lab.CloudResourceGroup(RG1).Name`
 - Update OS to latest supported version when possible (Server 2025 / latest Ubuntu).
@@ -117,10 +117,10 @@ Example before/after:
 
 ```markdown
 Before:
-Create a Windows Server 2019 VM named VM1 in East US 2 using size Standard_B1ms.
+Create a Windows Server 2019 VM named VM1 in East US 2 using size ++Standard_B1ms++.
 
 After:
-Create a Windows Server 2025 VM named VM1 in `@lab.CloudResourceGroup(RG1).Location` using size `@lab.Variable(VMSize1)`++.
+Create a Windows Server 2025 VM named VM1 in `@lab.CloudResourceGroup(RG1).Location` using size `++@lab.Variable(VMSize1)++`.
 ```
 
 ### Step 6: Update Resource Templates (if present)
