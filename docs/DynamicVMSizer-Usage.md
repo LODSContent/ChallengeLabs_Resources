@@ -32,7 +32,7 @@ Before modifying a lab, verify:
 
 3. **ACP (Access Control Policy)**
    - Must contain a broad list of allowed VM SKUs (~80–85 sizes).
-   - Reference: [Azure Policy Reference – Microsoft.Compute/virtualMachines section](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/ACPs/Azure%20Policy%20Reference.md)
+   - Reference: [Azure Policy Reference – Microsoft.Compute/virtualMachines section](https://github.com/LODSContent/ChallengeLabs_Resources/blob/master/ACPs/Azure%20Policy%20Reference.md)
    - Use latest version (e.g., `Azure Lockdown Storage Networking VM v4` or newer).
    - Location should use `[resourceGroup().location]`, not hard-coded regions.
 
@@ -64,38 +64,45 @@ Before modifying a lab, verify:
 ### Step 3: Add Dynamic VM Sizer Lifecycle Action
 
 1. Edit lab profile → **Lifecycle Actions** tab.
-2. **Add Lifecycle Action**
-   - **Name**: Dynamic VM Sizer
-   - **Action**: Execute Script in Cloud Platform
-   - **When**: Prebuild (runs before ACP enforcement and resource template deployment)
-   - **Blocking**: Yes
-   - **Timeout**: 10 minutes (default)
-   - **Retries**: Default
-   - **Error Action**: Log
-   - **Enabled**: Yes
-3. **Script Body**: Paste the launcher script (short script that downloads and runs the full sizer from GitHub).
+2. **Add Lifecycle Action** with the following configuration:
+
+| Setting          | Value                          | Notes |
+|------------------|--------------------------------|-------|
+| **LCA Name**     | Dynamic VM Sizer               | - |
+| **Action**       | Execute Script in Cloud Platform | - |
+| **Event**        | Pre-Build                      | Runs before ACP enforcement and resource template deployment |
+| **Blocking**     | Yes                            | Subsequent actions wait for completion |
+| **Delay**        | 0                              | No initial delay |
+| **Timeout**      | 10 minutes                     | Default |
+| **Repeat**       | No                             | - |
+| **Retries**      | 0                              | - |
+| **Error Action** | Log                            | - |
+| **Enabled**      | Yes                            | - |
+
+3. **Configuration**:
+   - **Language**: PowerShell
+   - **Version**: PS 7.4.0 | Az 11.1.0 (RC)
+
+4. **Script Body**: Copy the full script content from [DynamicVMSizer-Launcher.ps1](https://github.com/LODSContent/ChallengeLabs_Resources/blob/master/LCAs/DynamicVMSizer-Launcher.ps1) and paste it directly into the LCA script body. This launcher script downloads and executes the full VM sizer logic from GitHub.
    - Ensure parameters match your ACP allowed list (especially `allowedSizes` array).
    - Set `Debug` variable to `true` during testing.
-4. **PowerShell Version**: PS 7.4.0 (with latest available Az module).
 5. Save.
 
 ### Step 4: Configure Lab Variables
 
-Add or verify these variables (Lab Profile → Variables tab):
+Add or verify these variables (Lab Profile → Variables tab). The script populates `@lab.Variable(VMSize1)` automatically.
 
 | Variable Name     | Type    | Value Example                  | Purpose |
 |-------------------|---------|--------------------------------|---------|
-| `VMTargetSpec1`   | String  | `c2r4g2`                       | Minimum specs: 2 vCPU, 4 GB RAM, Gen2 |
-| `VMTargetSpec1` full format | | `c<minCPU>r<minRAM>g<gen>` e.g. `c2r4g2` | |
+| `VMTargetSpec1`   | String  | `c2r4g2p0.20`                  | Minimum specs: 2 vCPU, 4 GB RAM, Gen2, max $0.20/hr (created by lab developer) |
+| `@lab.Variable(VMSize1)` | String | (Populated by script)          | The dynamically selected VM size |
 | `Debug`           | Boolean | `true` (testing) / `false` (prod) | Enables debug popup with selection details |
 
-**TargetSpec breakdown**:
+**TargetSpec breakdown** (format: `c<minCPU>r<minRAM>g<gen>p<maxPrice>`):
 - `c2`  → minimum **2 vCPUs**
 - `r4`  → minimum **4 GB** RAM
-- `g2`  → requires **Generation 2** VM (preferred for Server 2022/2025, modern Ubuntu)
-- Use `g1` only if targeting very old OS that cannot run on Gen2.
-
-**Max price** is typically passed via script parameter (often default `$0.20` / hr).
+- `g2`  → requires **Generation 2** VM (preferred for Server 2022/2025, modern Ubuntu); use `g1` for very old OS
+- `p0.20` → maximum **$0.20** / hr
 
 ### Step 5: Update Lab Instructions (Markdown)
 
@@ -127,6 +134,8 @@ For each ARM template deploying VMs:
 5. In lab profile → **Edit Parameters** (under resource template):
    - Set `vmSize` value to `@lab.Variable(VMSize1)`
 
+**Lab Variable for RT Parameters**: `@lab.Variable(VMSize1)` (created and populated by the VM Sizer script).
+
 ### Step 7: Update Lab Activities / Validation Scripts
 
 - Replace hard-coded sizes, regions, RG names with tokens/properties.
@@ -153,12 +162,18 @@ For each ARM template deploying VMs:
 - **Old OS requires Gen1** → Set `g1` in target spec.
 - **Region issues** → Prefer regions with better availability (e.g., West US 2 over East US).
 
+## Sample Labs
+
+- **With modified ACP**: WSHA.1-006t: Can You Deploy and Manage Windows Server on Microsoft Azure Virtual Machines? [Advanced] (MJM-Testing) | Skillable Studio
+- **With modified ACP and RT**: WSHA.1-005t: Manage Windows Server on an Azure Virtual Machine by using Azure Policy Guest Configuration [Guided] (MJM-Testing) | Skillable Studio
+
 ## References
 
 - [Skillable Lifecycle Actions Documentation](https://docs.skillable.com/docs/life-cycle-actions-5)
 - [Skillable Variables & Replacement Tokens](https://docs.skillable.com/docs/variables-1)
 - [ACP Best Practices](https://docs.skillable.com/docs/acp-best-practices)
-- [Azure Policy Reference (VM SKUs)](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/ACPs/Azure%20Policy%20Reference.md)
+- [Azure Policy Reference (VM SKUs)](https://github.com/LODSContent/ChallengeLabs_Resources/blob/master/ACPs/Azure%20Policy%20Reference.md)
+- [Dynamic VM Sizer Launcher Script](https://github.com/LODSContent/ChallengeLabs_Resources/blob/master/LCAs/DynamicVMSizer-Launcher.ps1)
 - Internal GitHub location for launcher script & full sizer logic
 
 This process significantly reduces future VM-related breakages. Apply it proactively to labs showing size-related failures. For questions, reach out to the team maintaining the Dynamic VM Sizer script.
