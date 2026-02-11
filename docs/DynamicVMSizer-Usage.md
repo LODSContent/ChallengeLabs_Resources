@@ -117,10 +117,10 @@ Example before/after:
 
 ```markdown
 Before:
-Create a Windows Server 2019 VM named VM1 in East US 2 using size ++Standard_B1ms++.
+- Create a Windows Server 2019 VM named VM1 in **East US 2** using size ++Standard_B1ms++.
 
 After:
-Create a Windows Server 2025 VM named VM1 in `@lab.CloudResourceGroup(RG1).Location` using size `++@lab.Variable(VMSize1)++`.
+- Create a Windows Server 2025 VM named VM1 in **@lab.CloudResourceGroup(RG1).Location** using size ++@lab.Variable(VMSize1)++.
 ```
 
 ### Step 6: Update Resource Templates (if present)
