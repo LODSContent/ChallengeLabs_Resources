@@ -2,7 +2,7 @@
 
 This guide explains how to implement the **Dynamic VM Sizer** PowerShell script as a Lifecycle Action (LCA) in Skillable Studio lab profiles. The script addresses ongoing issues with static VM size specifications in Azure labs, where sizes are frequently retired, restricted, or unavailable due to demand — especially in **Cloud Slice Subscription (CSS)** environments.
 
-By running this script at lab startup (pre-build), we dynamically select the lowest-cost, policy-compliant VM size that meets minimum requirements and set it into a lab variable (^@lab.Variable(VMSize1)^). Lab instructions, resource templates, and activities then reference this variable instead of hard-coded sizes.
+By running this script at lab startup (pre-build), we dynamically select the lowest-cost, policy-compliant VM size that meets minimum requirements and set it into a lab variable (`@lab.Variable(VMSize1)`). Lab instructions, resource templates, and activities then reference this variable instead of hard-coded sizes.
 
 > **Goal**: Reduce lab maintenance effort and improve deployment reliability across regions and subscription types (CSS and eventually CSR).
 
@@ -12,7 +12,7 @@ By running this script at lab startup (pre-build), we dynamically select the low
 - High-demand sizes become unavailable in some regions/subscriptions (especially CSS).
 - Static sizes in instructions or ARM templates cause frequent lab breaks.
 - The script finds the **cheapest available size** that satisfies:
-  - Minimum vCPU and RAM (from ^VMTargetSpec1^)
+  - Minimum vCPU and RAM (from `VMTargetSpec1`)
   - Maximum hourly price
   - Generation requirement (Gen1 or Gen2)
   - Allowed SKUs from Access Control Policy (ACP)
@@ -27,28 +27,28 @@ Before modifying a lab, verify:
    - **CSR**: ACP only at resource group level.
 
 2. **Resource Group Naming**
-   - Standardize to ^RG1^ (or ^RG1^ + instance ID suffix for CSR compatibility).
+   - Standardize to `RG1` (or `RG1` + instance ID suffix for CSR compatibility).
    - Update Cloud tab → Resource Group Name & Replacement Token.
 
 3. **ACP (Access Control Policy)**
    - Must contain a broad list of allowed VM SKUs (~80–85 sizes).
    - Reference: [Azure Policy Reference – Microsoft.Compute/virtualMachines section](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/ACPs/Azure%20Policy%20Reference.md)
-   - Use latest version (e.g., ^Azure Lockdown Storage Networking VM v4^ or newer).
-   - Location should use ^[resourceGroup().location]^, not hard-coded regions.
+   - Use latest version (e.g., `Azure Lockdown Storage Networking VM v4` or newer).
+   - Location should use `[resourceGroup().location]`, not hard-coded regions.
 
 4. **VM Deployment Locations**
-   - Resource templates → Use parameter with default ^[resourceGroup().location]^.
-   - Instructions → Use ^@lab.CloudResourceGroup(RG1).Location^.
+   - Resource templates → Use parameter with default `[resourceGroup().location]`.
+   - Instructions → Use `@lab.CloudResourceGroup(RG1).Location`.
 
 ## Step-by-Step Implementation
 
 ### Step 1: Update or Create Appropriate ACP
 
-1. Search for existing ACPs matching your current one (e.g., ^Azure Lockdown ... VM v*^).
+1. Search for existing ACPs matching your current one (e.g., `Azure Lockdown ... VM v*`).
 2. Open the latest version or **Save As** → next version number.
-3. In the ^Microsoft.Compute/virtualMachines/sku.name^ condition:
-   - Replace the ^in^ array with the full list from the Azure Policy Reference (~83 sizes).
-4. Standardize resource group checks to allow ^RG1^ and ^RG1<instanceID>^.
+3. In the `Microsoft.Compute/virtualMachines/sku.name` condition:
+   - Replace the `in` array with the full list from the Azure Policy Reference (~83 sizes).
+4. Standardize resource group checks to allow `RG1` and `RG1<instanceID>`.
 5. Ensure location uses resource group location variable.
 6. Save and note the new ACP name/version.
 
@@ -74,8 +74,8 @@ Before modifying a lab, verify:
    - **Error Action**: Log
    - **Enabled**: Yes
 3. **Script Body**: Paste the launcher script (short script that downloads and runs the full sizer from GitHub).
-   - Ensure parameters match your ACP allowed list (especially ^allowedSizes^ array).
-   - Set ^Debug^ variable to ^true^ during testing.
+   - Ensure parameters match your ACP allowed list (especially `allowedSizes` array).
+   - Set `Debug` variable to `true` during testing.
 4. **PowerShell Version**: PS 7.4.0 (with latest available Az module).
 5. Save.
 
@@ -85,25 +85,25 @@ Add or verify these variables (Lab Profile → Variables tab):
 
 | Variable Name     | Type    | Value Example                  | Purpose |
 |-------------------|---------|--------------------------------|---------|
-| ^VMTargetSpec1^   | String  | ^c2r4g2^                       | Minimum specs: 2 vCPU, 4 GB RAM, Gen2 |
-| ^VMTargetSpec1^ full format | | ^c<minCPU>r<minRAM>g<gen>^ e.g. ^c2r4g2^ | |
-| ^Debug^           | Boolean | ^true^ (testing) / ^false^ (prod) | Enables debug popup with selection details |
+| `VMTargetSpec1`   | String  | `c2r4g2`                       | Minimum specs: 2 vCPU, 4 GB RAM, Gen2 |
+| `VMTargetSpec1` full format | | `c<minCPU>r<minRAM>g<gen>` e.g. `c2r4g2` | |
+| `Debug`           | Boolean | `true` (testing) / `false` (prod) | Enables debug popup with selection details |
 
 **TargetSpec breakdown**:
-- ^c2^  → minimum **2 vCPUs**
-- ^r4^  → minimum **4 GB** RAM
-- ^g2^  → requires **Generation 2** VM (preferred for Server 2022/2025, modern Ubuntu)
-- Use ^g1^ only if targeting very old OS that cannot run on Gen2.
+- `c2`  → minimum **2 vCPUs**
+- `r4`  → minimum **4 GB** RAM
+- `g2`  → requires **Generation 2** VM (preferred for Server 2022/2025, modern Ubuntu)
+- Use `g1` only if targeting very old OS that cannot run on Gen2.
 
-**Max price** is typically passed via script parameter (often default ^$0.20^ / hr).
+**Max price** is typically passed via script parameter (often default `$0.20` / hr).
 
 ### Step 5: Update Lab Instructions (Markdown)
 
 Search & replace:
 
-- Hard-coded VM sizes → ^@lab.Variable(VMSize1)^ (use **Copy** ++)
-- Hard-coded regions → ^@lab.CloudResourceGroup(RG1).Location^
-- Hard-coded resource groups → ^@lab.CloudResourceGroup(RG1).Name^
+- Hard-coded VM sizes → `@lab.Variable(VMSize1)` (use **Copy** ++)
+- Hard-coded regions → `@lab.CloudResourceGroup(RG1).Location`
+- Hard-coded resource groups → `@lab.CloudResourceGroup(RG1).Name`
 - Update OS to latest supported version when possible (Server 2025 / latest Ubuntu).
 
 Example before/after:
@@ -113,19 +113,19 @@ Before:
 Create a Windows Server 2019 VM named VM1 in East US 2 using size Standard_B1ms.
 
 After:
-Create a Windows Server 2025 VM named VM1 in ^@lab.CloudResourceGroup(RG1).Location^ using size ^@lab.Variable(VMSize1)^++.
+Create a Windows Server 2025 VM named VM1 in `@lab.CloudResourceGroup(RG1).Location` using size `@lab.Variable(VMSize1)`++.
 ```
 
 ### Step 6: Update Resource Templates (if present)
 
 For each ARM template deploying VMs:
 
-1. **Remove** ^allowedValues^ from ^vmSize^ parameter (avoid maintaining third list).
+1. **Remove** `allowedValues` from `vmSize` parameter (avoid maintaining third list).
 2. Set reasonable default if desired (fallback).
-3. Ensure ^location^ parameter defaults to ^[resourceGroup().location]^.
-4. If VM size was hard-coded or used old variable → change to parameter ^vmSize^.
+3. Ensure `location` parameter defaults to `[resourceGroup().location]`.
+4. If VM size was hard-coded or used old variable → change to parameter `vmSize`.
 5. In lab profile → **Edit Parameters** (under resource template):
-   - Set ^vmSize^ value to ^@lab.Variable(VMSize1)^
+   - Set `vmSize` value to `@lab.Variable(VMSize1)`
 
 ### Step 7: Update Lab Activities / Validation Scripts
 
@@ -135,7 +135,7 @@ For each ARM template deploying VMs:
 
 ### Step 8: Test & Debug
 
-1. Set ^Debug^ = ^true^.
+1. Set `Debug` = `true`.
 2. Launch lab.
 3. Watch for debug popup/notification → shows:
    - Target spec parsed
@@ -144,13 +144,13 @@ For each ARM template deploying VMs:
    - Final selected size & price
 4. Deploy VM manually or via template.
 5. Confirm selected size appears correctly and deployment succeeds.
-6. Set ^Debug^ = ^false^ before publishing.
+6. Set `Debug` = `false` before publishing.
 
 ## Common Troubleshooting
 
-- **No candidates found** → Increase max price (e.g., ^$0.30^), lower min specs, check ACP list includes chosen size.
+- **No candidates found** → Increase max price (e.g., `$0.30`), lower min specs, check ACP list includes chosen size.
 - **Size chosen but deployment fails** → Ensure ACP includes that SKU (case-sensitive).
-- **Old OS requires Gen1** → Set ^g1^ in target spec.
+- **Old OS requires Gen1** → Set `g1` in target spec.
 - **Region issues** → Prefer regions with better availability (e.g., West US 2 over East US).
 
 ## References
