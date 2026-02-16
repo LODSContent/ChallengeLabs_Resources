@@ -162,8 +162,6 @@ $TapUser = "LabAdmin@$TenantName"
 $LegacyPassword = $Password
 $Lifetime = 300
 
-Set-LabVariable -Name StagingComplete -Value 'No'
-
 # Run cleanup routine
 if (!$SkipCleanup) {
   	# Define the parameters in a hash table
