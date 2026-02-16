@@ -197,7 +197,7 @@ try {
         Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
         Remove-Module Az.Accounts -Force -EA SilentlyContinue
         Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
-        if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
+        if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $AzAccountsVersion" }
     }
 } catch {
     if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
