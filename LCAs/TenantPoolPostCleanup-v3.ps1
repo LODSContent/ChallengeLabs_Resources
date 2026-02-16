@@ -113,18 +113,11 @@ function Throw-Error {
     throw "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
 
-# Install Az.Accounts version 2.13.2
-try {
-    $targetVersion = "2.13.2"
-    if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
-        If ($scriptDebug) { Write-Output "Installing Az.Accounts 2.13.2." }
-        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
-        Remove-Module Az.Accounts -Force -EA SilentlyContinue
-        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
-        if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
-    }
-} catch {
-    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
+if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
+	if ($ScriptDebug) { Send-DebugMessage "Received ScriptingAppId: $ScriptingAppId - and ScriptingAppSecret: $ScriptingAppSecret" }	
+} else {
+	if ($ScriptDebug) { Send-DebugMessage "ScriptingAppId and/or ScriptingAppSecret invalid." }
+	Throw-Error "ScriptingAppId and/or ScriptingAppSecret invalid."
 }
 
 if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
@@ -137,21 +130,6 @@ if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 }
 if ($ScriptDebug) { Send-DebugMessage "Lab Instance ID is: $LabInstanceId" }
 
-if ($ScriptDebug) { Send-DebugMessage "Received ScriptingAppId: $ScriptingAppId - and ScriptingAppSecret: $ScriptingAppSecret" }
-
-if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
-	try {
- 		if ($ScriptDebug) { Send-DebugMessage "Attempting Az authentication to Tenant: $tenantName using AppId: $ScriptingAppId" }
- 		$SecureSecret = $ScriptingAppSecret | ConvertTo-SecureString -AsPlainText -Force
-		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$SecureSecret)
-		# Authenticate using Connect-AzAccount
-		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
-  		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated Az to Tenant: $tenantName using AppId: $ScriptingAppId" }
-	} catch {
-		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate Az to Tenant: $tenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
- 	}
-}
-
 $Password = $Password.trim(" ")
 $TenantName = $TenantName.trim(" ")
 
@@ -160,24 +138,38 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
     Throw-Error "Tenant name required for cleanup. Tenant is currently: $TenantName - Exiting cleanup process."
 } 
 
+# Install Az.Accounts version 2.13.2
+try {
+    $targetVersion = "2.13.2"
+    if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
+        If ($scriptDebug) { Send-DebugMessage "Installing Az.Accounts 2.13.2." }
+        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
+        Remove-Module Az.Accounts -Force -EA SilentlyContinue
+        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
+        if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
+    }
+} catch {
+    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
+}
+
 try {
 	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName using AppId: $ScriptingAppId in the TenantPoolPostCleanup script." }
-  # Authenticate using Connect-AzAccount
-  If ($scriptDebug) { Send-DebugMessage "Authenticating with Connect-AzAccount" }    
-  $SecureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
-  $Credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $SecureSecret)
-  Connect-AzAccount -ServicePrincipal -Credential $Credential -Tenant $TenantName | Out-Null
-  # Authenticate using Connect-MgGraph
-  If ($scriptDebug) { Send-DebugMessage "Authenticating with Connect-MgGraph" }
-  $Body = @{
-      Grant_Type    = "client_credentials"
-      Scope         = "https://graph.microsoft.com/.default"
-      Client_Id     = $ScriptingAppId
-      Client_Secret = $ScriptingAppSecret
-  }
-  $TokenResponse = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token" -Body $Body -ContentType "application/x-www-form-urlencoded"
-  $SecureToken = ConvertTo-SecureString $TokenResponse.access_token -AsPlainText -Force
-  Connect-MgGraph -AccessToken $SecureToken -NoWelcome  
+	# Authenticate using Connect-AzAccount
+	If ($scriptDebug) { Send-DebugMessage "Authenticating with Connect-AzAccount" }    
+	$SecureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
+	$Credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $SecureSecret)
+	Connect-AzAccount -ServicePrincipal -Credential $Credential -Tenant $TenantName | Out-Null
+	# Authenticate using Connect-MgGraph
+	If ($scriptDebug) { Send-DebugMessage "Authenticating with Connect-MgGraph" }
+	$Body = @{
+	  Grant_Type    = "client_credentials"
+	  Scope         = "https://graph.microsoft.com/.default"
+	  Client_Id     = $ScriptingAppId
+	  Client_Secret = $ScriptingAppSecret
+	}
+	$TokenResponse = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token" -Body $Body -ContentType "application/x-www-form-urlencoded"
+	$SecureToken = ConvertTo-SecureString $TokenResponse.access_token -AsPlainText -Force
+	Connect-MgGraph -AccessToken $SecureToken -NoWelcome  
 	$Context = Get-MgContext
 	$AppName = $Context.AppName
 	if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to: $TenantName using AppId: $ScriptingAppId" }
