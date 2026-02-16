@@ -138,20 +138,6 @@ if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '
     Throw-Error "Tenant name or password are blank."
 }
 
-# Install Az.Accounts version 2.13.2
-try {
-    $targetVersion = "2.13.2"
-    if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
-        If ($scriptDebug) { Send-DebugMessage "Installing Az.Accounts 2.13.2." }
-        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
-        Remove-Module Az.Accounts -Force -EA SilentlyContinue
-        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
-        if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
-    }
-} catch {
-    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
-}
-
 if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
     $SubscriptionId = $Null
     if ($ScriptDebug) { Send-DebugMessage "SubscriptionId not present." }
@@ -202,6 +188,20 @@ if (!$SkipCleanup) {
 		if ($ScriptDebug) { Send-DebugMessage "Possible errors running cleanup for $TenantName" }
 	}
  }
+
+# Install Az.Accounts version 2.13.2
+try {
+    $targetVersion = "2.13.2"
+    if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
+        If ($scriptDebug) { Send-DebugMessage "Installing Az.Accounts 2.13.2." }
+        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
+        Remove-Module Az.Accounts -Force -EA SilentlyContinue
+        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
+        if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
+    }
+} catch {
+    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
+}
 
 try {
 	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName using AppId: $ScriptingAppId in the TenantPoolPostCleanup script." }
