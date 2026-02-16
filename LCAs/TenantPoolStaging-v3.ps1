@@ -894,6 +894,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 	         Set-LabVariable -Name ScriptingAppId -Value $ScriptingAppId
 	         Set-LabVariable -Name ScriptingAppSecret -Value $ScriptingAppSecret
 	         Set-LabVariable -Name CredentialPool -Value 'Yes'
+			 Set-LabVariable -Name StagingComplete -Value 'Yes'
         	if ($ScriptDebug) { Send-DebugMessage "TAP User setup complete" }
 		 } catch {
 			if ($ScriptDebug) { Send-DebugMessage "Error configuring lab variables - Error: $_" }
