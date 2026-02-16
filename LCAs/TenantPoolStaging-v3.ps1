@@ -14,7 +14,7 @@ param (
     $ScriptingAppId,
     $ScriptingAppSecret,
     $LabInstanceId,
-	$ScriptUrl,
+	$CleaningScriptUrl,
     [switch]$SkipCleanup,
     [switch]$CreateLabUsers,
 	[switch]$CustomTarget,
@@ -178,7 +178,7 @@ if (!$SkipCleanup) {
 	if ($ScriptDebug) { Send-DebugMessage "Launching Cleanup Script for $TenantName" }
  
 	# Fetch the script content using Invoke-WebRequest
-	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing).Content)
+	$scriptBlock = [ScriptBlock]::Create((Invoke-WebRequest -Uri $CleaningScriptUrl -UseBasicParsing).Content)
 	
 	$CleanupResponse = & $scriptBlock @Params
 	
