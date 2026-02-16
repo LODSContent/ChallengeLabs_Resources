@@ -218,8 +218,8 @@ try {
 	  Client_Id     = $ScriptingAppId
 	  Client_Secret = $ScriptingAppSecret
 	}
-	$TokenResponse = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token" -Body $Body -ContentType "application/x-www-form-urlencoded"
-	$SecureToken = ConvertTo-SecureString $TokenResponse.access_token -AsPlainText -Force
+	$AccessToken = (Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token" -Body $Body -ContentType "application/x-www-form-urlencoded").access_token
+	$SecureToken = ConvertTo-SecureString $AccessToken -AsPlainText -Force
 	Connect-MgGraph -AccessToken $SecureToken -NoWelcome  
 	$Context = Get-MgContext
 	$AppName = $Context.AppName
