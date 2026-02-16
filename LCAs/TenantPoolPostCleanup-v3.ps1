@@ -140,7 +140,7 @@ if ($TenantName -eq $null -or $TenantName -eq "" -or $TenantName -like "@lab.Var
 
 # Install Az.Accounts version 2.13.2
 try {
-    $targetVersion = "2.13.2"
+    $AzAccountsVersion = "2.13.2"
     if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
         If ($scriptDebug) { Send-DebugMessage "Installing Az.Accounts 2.13.2." }
         Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
