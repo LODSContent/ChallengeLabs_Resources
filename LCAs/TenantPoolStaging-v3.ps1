@@ -119,19 +119,11 @@ function Throw-Error {
     throw "[Debug] $($ScriptTitle):`n---------`n$($Global:MessageBuffer)"
 }
 
-# Install Az.Accounts version 2.13.2
-if ($CustomTarget) {
-	try {
-	    $targetVersion = "2.13.2"
-		if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $targetVersion -EA SilentlyContinue)) {
-		    Install-Module Az.Accounts -RequiredVersion $targetVersion -Scope CurrentUser -Force -AllowClobber
-		}
-		Remove-Module Az.Accounts -Force -EA SilentlyContinue
-		Import-Module Az.Accounts -RequiredVersion $targetVersion -Force
-	    if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
-	} catch {
-	    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
-	}
+if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
+	if ($ScriptDebug) { Send-DebugMessage "Received ScriptingAppId: $ScriptingAppId - and ScriptingAppSecret: $ScriptingAppSecret" }	
+} else {
+	if ($ScriptDebug) { Send-DebugMessage "ScriptingAppId and/or ScriptingAppSecret invalid." }
+	Throw-Error "ScriptingAppId and/or ScriptingAppSecret invalid."
 }
 
 <#
@@ -144,6 +136,20 @@ if ($Password -eq $null -or $Password -eq "" -or $Password -like "@lab.Variable*
 if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '',$Null -or $TenantName -like '*@lab*')) {
     if ($ScriptDebug) { Send-DebugMessage "Tenant Name or Password are blank. Cannot configure tenant." }
     Throw-Error "Tenant name or password are blank."
+}
+
+# Install Az.Accounts version 2.13.2
+try {
+    $targetVersion = "2.13.2"
+    if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
+        If ($scriptDebug) { Send-DebugMessage "Installing Az.Accounts 2.13.2." }
+        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
+        Remove-Module Az.Accounts -Force -EA SilentlyContinue
+        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
+        if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $targetVersion" }
+    }
+} catch {
+    if ($ScriptDebug) { Send-DebugMessage "Failed to install/import Az.Accounts: $($_.Exception.Message)" }
 }
 
 if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
@@ -197,29 +203,30 @@ if (!$SkipCleanup) {
 	}
  }
 
-if ($ScriptingAppId.Length -gt 10 -and $ScriptingAppSecret.Length -gt 10) {
-	try {
- 		$SecureSecret = $ScriptingAppSecret | ConvertTo-SecureString -AsPlainText -Force
-		$cred = New-Object System.Management.Automation.PSCredential($ScriptingAppId,$SecureSecret)
-		# Authenticate using Connect-AzAccount
-		Connect-AzAccount -ServicePrincipal -TenantId $tenantName -Credential $cred -ErrorAction Stop | Out-Null
-  		if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to Tenant: $tenantName using AppId: $ScriptingAppId" }
-	} catch {
-		if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to Tenant: $tenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
- 	}
-}
-
 try {
-	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName as: $AppName in the TenantPoolStaging script." }
-	# MgGraph Authentication block (Cloud Subscription Target)
-	$AccessToken = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com" -TenantId $TenantName).Token
-	$SecureToken = ConvertTo-Securestring $AccessToken -AsPlainText -Force
-	Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+	if ($ScriptDebug) { Send-DebugMessage "Attempting Authentication to: $TenantName using AppId: $ScriptingAppId in the TenantPoolPostCleanup script." }
+	# Authenticate using Connect-AzAccount
+	If ($scriptDebug) { Send-DebugMessage "Authenticating with Connect-AzAccount" }    
+	$SecureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
+	$Credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $SecureSecret)
+	Connect-AzAccount -ServicePrincipal -Credential $Credential -Tenant $TenantName | Out-Null
+	# Authenticate using Connect-MgGraph
+	If ($scriptDebug) { Send-DebugMessage "Authenticating with Connect-MgGraph" }
+	$Body = @{
+	  Grant_Type    = "client_credentials"
+	  Scope         = "https://graph.microsoft.com/.default"
+	  Client_Id     = $ScriptingAppId
+	  Client_Secret = $ScriptingAppSecret
+	}
+	$TokenResponse = Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token" -Body $Body -ContentType "application/x-www-form-urlencoded"
+	$SecureToken = ConvertTo-SecureString $TokenResponse.access_token -AsPlainText -Force
+	Connect-MgGraph -AccessToken $SecureToken -NoWelcome  
 	$Context = Get-MgContext
 	$AppName = $Context.AppName
-	if ($ScriptDebug) { Send-DebugMessage "Successfully connected to: $TenantName as: $AppName" }
+	if ($ScriptDebug) { Send-DebugMessage "Successfully authenticated to: $TenantName using AppId: $ScriptingAppId" }
 } catch {
-	Throw-Error "Failed to connect to: $TenantName as: $AppName"
+   if ($ScriptDebug) { Send-DebugMessage "Failed to authenticate to: $TenantName using AppId: $ScriptingAppId due to error:`n $($_.Exception.Message)" }
+   Throw-Error "Failed to authenticate to: $TenantName using AppId: $ScriptingAppId"
 }
 
 # Tenant validation to ensure script is running in the proper Tenant
