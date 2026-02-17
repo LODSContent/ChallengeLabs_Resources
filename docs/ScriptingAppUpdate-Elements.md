@@ -1,0 +1,317 @@
+# Tenant Pool Staging LCA
+
+Copy and paste this over the existing Tenant Pool Staging LCA
+
+```PowerShell
+<#
+   Title: Tenant Pool Staging
+   Description: Pre-cleans the Tenant before student usage. Recreates App permissions. 
+                Creates a new user with a Temporary Access Password and establishes credential variables for the lab.
+   Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
+            Custom - PS 7.3.4, Microsoft.Graph 2.25.0, Az 11.1.0
+            Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
+   Version: 2026.02.16
+#>
+
+$BaseURL = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs'
+$StagingScript = "TenantPoolStaging-v3.ps1"
+$CleaningScript = "TenantPoolPostCleanup-v3.ps1"
+
+# Define the parameters in a hash table
+$params = @{
+    TenantName = '@lab.CloudCredential(CredentialPool).TenantName'
+    UserName = '@lab.CloudCredential(CredentialPool).UserName'
+    Password = '@lab.CloudCredential(CredentialPool).Password'
+    ScriptingAppId = '@lab.CloudCredential(CredentialPool).ScriptingAppId'
+    ScriptingAppSecret = '@lab.CloudCredential(CredentialPool).ScriptingAppSecret'
+    LabInstanceId = '@lab.LabInstance.Id'
+    CleaningScriptUrl = ($BaseURL.TrimEnd('/') + '/' + $CleaningScript)
+    ScriptDebug = ('@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True')
+}
+
+# URL of the script on GitHub
+$scriptUrl = $BaseURL.TrimEnd('/') + '/' + $StagingScript
+
+# Initialize variables for retry logic
+$maxRetries = 10
+$retryDelay = 5  # seconds
+$attempt = 1
+$scriptContent = $null
+
+# Attempt to download the script content with retries
+while ($attempt -le $maxRetries -and $null -eq $scriptContent) {
+    try {
+        $scriptContent = (Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing -ErrorAction Stop).Content
+    }
+    catch {
+        if ($attempt -eq $maxRetries) {
+            Throw "Failed to download script: '$scriptUrl' from GitHub after $maxRetries attempts: $_"
+        }
+        Start-Sleep -Seconds $retryDelay
+        $attempt++
+    }
+}
+
+# Create a script block from the downloaded content
+$scriptBlock = [ScriptBlock]::Create($scriptContent)
+
+# Execute the script block with parameters
+$result = & $scriptBlock @Params
+
+return $result
+```
+
+# Tenant Pool Cleanup LCA
+
+Copy and paste this over the existing Tenant Pool Cleanup LCA
+
+```PowerShell
+<#
+   Title: Tenant Post-Cleanup
+   Description: Cleans up student tenant at lab shutdoown.
+   Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
+            Custom - PS 7.3.4, Microsoft.Graph 2.25.0, Az 11.1.0
+            Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
+   Version: 2026.02.16
+#>
+
+$BaseURL = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs'
+$CleaningScript = "TenantPoolPostCleanup-v3.ps1"
+
+# Define the parameters in a hash table
+$params = @{
+    TenantName = '@lab.CloudCredential(CredentialPool).TenantName'
+    Password = '@lab.CloudCredential(CredentialPool).Password'
+    ScriptingAppId = '@lab.CloudCredential(CredentialPool).ScriptingAppId'
+    ScriptingAppSecret = '@lab.CloudCredential(CredentialPool).ScriptingAppSecret'
+    LabInstanceId = '@lab.LabInstance.Id'
+    ScriptDebug = ('@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True')
+}
+
+# URL of the script on GitHub
+$scriptUrl = $BaseURL.TrimEnd('/') + '/' + $CleaningScript
+
+# Initialize variables for retry logic
+$maxRetries = 10
+$retryDelay = 5  # seconds
+$attempt = 1
+$scriptContent = $null
+
+# Attempt to download the script content with retries
+while ($attempt -le $maxRetries -and $null -eq $scriptContent) {
+    try {
+        $scriptContent = (Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing -ErrorAction Stop).Content
+    }
+    catch {
+        if ($attempt -eq $maxRetries) {
+            Throw "Failed to download script: '$scriptUrl' from GitHub after $maxRetries attempts: $_"
+        }
+        Start-Sleep -Seconds $retryDelay
+        $attempt++
+    }
+}
+
+# Create a script block from the downloaded content
+$scriptBlock = [ScriptBlock]::Create($scriptContent)
+
+# Execute the script block with parameters
+$result = & $scriptBlock @Params
+
+return $result
+```
+
+# Tenant Pool Staging for "Configure Tenant" Activity (Prereq based labs)
+
+```PowerShell
+<#
+   Title: Tenant Pool Staging for "Configure Tenant" Activity
+   Description: Pre-cleans the Tenant before student usage. Recreates App permissions. 
+                Creates a new user with a Temporary Access Password and establishes credential variables for the lab.
+   Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
+            Custom - PS 7.3.4, Microsoft.Graph 2.25.0, Az 11.1.0
+            Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
+   Version: 2026.02.16
+#>
+
+$BaseURL = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs'
+$StagingScript = "TenantPoolStaging-v3.ps1"
+$CleaningScript = "TenantPoolPostCleanup-v3.ps1"
+
+# Define the parameters in a hash table
+$params = @{
+    TenantName = '@lab.Variable(TenantName)'
+    UserName = 'admin@@lab.Variable(TenantName)'
+    Password = '@lab.Variable(TenantPassword)'
+    ScriptingAppId = '@lab.Variable(ScriptingAppId)'
+    ScriptingAppSecret = '@lab.Variable(ScriptingAppSecret)'
+    LabInstanceId = '@lab.LabInstance.Id'
+    CleaningScriptUrl = ($BaseURL.TrimEnd('/') + '/' + $CleaningScript)
+    ScriptDebug = ('@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True')
+}
+
+# URL of the script on GitHub
+$scriptUrl = $BaseURL.TrimEnd('/') + '/' + $StagingScript
+
+# Initialize variables for retry logic
+$maxRetries = 10
+$retryDelay = 5  # seconds
+$attempt = 1
+$scriptContent = $null
+
+# Attempt to download the script content with retries
+while ($attempt -le $maxRetries -and $null -eq $scriptContent) {
+    try {
+        $scriptContent = (Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing -ErrorAction Stop).Content
+    }
+    catch {
+        if ($attempt -eq $maxRetries) {
+            Throw "Failed to download script: '$scriptUrl' from GitHub after $maxRetries attempts: $_"
+        }
+        Start-Sleep -Seconds $retryDelay
+        $attempt++
+    }
+}
+
+# Create a script block from the downloaded content
+$scriptBlock = [ScriptBlock]::Create($scriptContent)
+
+# Execute the script block with parameters
+$result = & $scriptBlock @Params
+
+return $result
+```
+
+# Authentication block for Az and MgGraph scripts
+
+```PowerShell
+    ### Authentication Block - AZ + MgGraph - Begin
+    # Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
+    #          Custom - PS 7.3.4, Microsoft.Graph 2.25.0, Az 11.1.0
+    #          Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
+    # Version: 2026.02.16
+    ###
+    # Tenant App Credentials
+    $ScriptingAppId     = "@lab.Variable(ScriptingAppId)"
+    $ScriptingAppSecret = "@lab.Variable(ScriptingAppSecret)"
+    $TenantName         = "@lab.Variable(TenantName)"
+    # Install Az.Accounts v2.13.2 if using PS 7.3.4
+    $AzAccountsVersion = "2.13.2"
+    if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
+        If ($scriptDebug) { Write-Output "Installing Az.Accounts 2.13.2." }
+        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
+        Remove-Module Az.Accounts -Force -EA SilentlyContinue
+        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
+    }    
+    # Authenticate using Connect-AzAccount
+    If ($scriptDebug) { Write-Output "Authenticating with Connect-AzAccount" }    
+    $SecureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
+    $Credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $SecureSecret)
+    Connect-AzAccount -ServicePrincipal -Credential $Credential -Tenant $TenantName | Out-Null
+    # Authenticate using Connect-MgGraph
+    If ($scriptDebug) { Write-Output "Authenticating with Connect-MgGraph" }
+    $Body = @{
+        Grant_Type    = "client_credentials"
+        Scope         = "https://graph.microsoft.com/.default"
+        Client_Id     = $ScriptingAppId
+        Client_Secret = $ScriptingAppSecret
+    }
+	$AccessToken = (Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token" -Body $Body -ContentType "application/x-www-form-urlencoded").access_token
+	$SecureToken = ConvertTo-SecureString $AccessToken -AsPlainText -Force
+    Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+    ### Authentication Block - End
+```
+
+# Authentication block for MgGraph only scripts
+
+```PowerShell
+    ### Authentication Block - MgGraph - Begin
+    # Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
+    #          Custom - PS 7.3.4, Microsoft.Graph 2.25.0
+    #          Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
+    # Version: 2026.02.16
+    ###
+    # Tenant App Credentials
+    $ScriptingAppId     = "@lab.Variable(ScriptingAppId)"
+    $ScriptingAppSecret = "@lab.Variable(ScriptingAppSecret)"
+    $TenantName         = "@lab.Variable(TenantName)"
+    # Authenticate using Connect-MgGraph
+    If ($scriptDebug) { Write-Output "Authenticating with Connect-MgGraph" }
+    $Body = @{
+        Grant_Type    = "client_credentials"
+        Scope         = "https://graph.microsoft.com/.default"
+        Client_Id     = $ScriptingAppId
+        Client_Secret = $ScriptingAppSecret
+    }
+	$AccessToken = (Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token" -Body $Body -ContentType "application/x-www-form-urlencoded").access_token
+	$SecureToken = ConvertTo-SecureString $AccessToken -AsPlainText -Force
+    Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+    ### Authentication Block - End
+```
+
+# Tenant Logon Sections
+
+Use the following for labs without a VM. (Copy-Text)
+(Replace the landing page with the appropriate URL for that point in the lab.)
+
+```PowerShell
+:::Staging(StagingComplete=No)
+- Sign in to ++https://portal.azure.com++ using the following credentials:
+
+    > **Please wait while your Tenant is being prepared.**
+    >
+    > *This may take a few minutes...* 
+:::
+
+:::Staging(StagingComplete=Yes)
+- Sign in to ++https://portal.azure.com++ using the following credentials:
+
+    >    Username: ++@lab.Variable(UserName)++ 
+    > 
+    >    Temporary Access Pass: ++@lab.Variable(Password)++
+:::
+```
+
+Use the following for labs WITH a VM. (Type-Text) 
+(Replace the landing page with the appropriate URL for that point in the lab.)
+
+```PowerShell
+:::Staging(StagingComplete=No)
+- Sign in to +++https://portal.azure.com+++ using the following credentials:
+
+    > **Please wait while your Tenant is being prepared.**
+    >
+    > *This may take a few minutes...* 
+:::
+
+:::Staging(StagingComplete=Yes)
+- Sign in to +++https://portal.azure.com+++ using the following credentials:
+
+    >    Username: +++@lab.Variable(UserName)+++ 
+    > 
+    >    Temporary Access Pass: +++@lab.Variable(Password)+++
+:::
+```
+
+# Updated 'Provide your saved credentials' block
+
+Use the following block at the beginning of student prereq based labs.
+
+```PowerShell
+#### Provide your saved credentials
+
+- In the following text boxes, enter the details that you saved for your M365 Tenant:
+
+    **Tenant name**     
+    @lab.TextBox(TenantName)
+
+    **Password**       
+    @lab.TextBox(TenantPassword)
+
+    **Scripting App ID**       
+    @lab.TextBox(ScriptingAppId)
+
+    **Scripting App Secret**       
+    @lab.TextBox(ScriptingAppSecret)
+
+>[!Note] Your tenant name is the portion of your Global Administrator account that is after the *@* symbol.
+```
