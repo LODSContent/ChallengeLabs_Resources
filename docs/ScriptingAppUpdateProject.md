@@ -6,6 +6,9 @@ This training manual provides a step-by-step guide to updating a lab profile in 
 
 We will use an example lab based on a student prerequisite (MD102.1-003) to demonstrate the updates. The process involves reviewing profile settings, modifying cloud configurations, updating lab activities and scripts, and adjusting markdown instructions.
 
+This accompanying documentation contains the various elements that you can use to copy/paste into the labs for updates:
+[Elements](https://github.com/LODSContent/ChallengeLabs_Resources/blob/master/docs/ScriptingAppUpdate-Elements.md)
+
 ## Step 1: Review Lab Profile Settings
 
 1. Open the lab profile (e.g., MD102.1-003).
