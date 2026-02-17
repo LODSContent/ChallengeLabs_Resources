@@ -17,15 +17,13 @@ This accompanying documentation contains the various elements that you can use t
    - Note the versions of virtual machines (e.g., older Windows Server versions). If applicable, plan to update to Server 2025 gold copies in the future.
 3. Evaluate if the lab is a good candidate for replacing virtual machines:
    - If only one VM (e.g., Windows 10 client as a jump box), replace it with the latest Windows 11 jump box based on gold copies.
-   - If multiple critical VMs are present, defer updates for now.
+   - If multiple critical VMs are present, make a note if they need updating to our latest gold copies.
+4. Check the Media Tab
+   - Review attached media (e.g., ISO images).
+   - Scan the lab instructions to ensure no dependencies on these ISOs.
+   - If not required, remove the ISOs.
 
-## Step 2: Check Media Tab
-
-1. Review attached media (e.g., ISO images).
-2. Scan the lab instructions to ensure no dependencies on these ISOs.
-3. If not required, remove the ISOs.
-
-## Step 3: Modify Cloud Tab Configurations
+## Step 4: Modify Cloud Tab Configurations
 
 1. Focus on the cloud tab, which is critical for this update.
 2. Identify if it's using a CSS subscription pool.
@@ -43,51 +41,46 @@ This accompanying documentation contains the various elements that you can use t
 
 Note: Rare cases may require preserving the subscription if students perform actions in both subscription and tenant.
 
-## Step 4: Update Lab Variables
+## Step 5: Update Lab Variables
 
 1. Add a new variable for staging completion:
    - Name: StagingComplete (capital S and C).
    - Value: No (uppercase N).
    - This hides credentials until the configuration script completes.
+2. If the "debug" variable does not exist, add it. Set the variable to "True".
 
-Leave existing variables like Debug (set to true).
-
-## Step 5: Update Lab Activities
+## Step 6: Update Lab Activities
 
 1. Locate the non-scored "Configure Tenant" activity at the bottom.
 2. Replace the script with the updated version (provided in documentation: header "Tenant Pool Staging" for Configure-Tenant Activity).
 3. In configuration:
    - Set target to Custom.
    - PowerShell: 7.3.4.
-   - Microsoft.Graph: 2.2.5 (not 2.2.6, as it requires higher PowerShell; custom container limits to 7.3.4).
+   - Microsoft.Graph: 2.25.0 (not 2.2.6, as it requires higher PowerShell; custom container limits to 7.3.4).
    - If AZ commands are used (e.g., in tenant staging), add Az: 11.1.0.
    - Cloud subscriptions inherently include Az; custom targets may require explicit addition.
 
 Note: If scripts only use MgGraph commands for validation, omit Az module.
 
-## Step 6: Update Scoring Scripts
+## Step 7: Update Scoring Scripts
 
 For each scoring script in lab activities:
 
-1. Change target to Custom, PowerShell 7.3.4, Microsoft.Graph 2.2.5.
+1. Change target to Custom, PowerShell 7.3.4, Microsoft.Graph 2.25.0.
 2. Inspect commands:
    - If only Connect-MgGraph and Get-Mg* commands, use MgGraph-only authentication block (provided in documentation).
    - If AZ commands (e.g., Connect-AzAccount), use combined MgGraph + AZ authentication block.
 3. Replace authentication block:
    - Sets credentials using ScriptingAppId, ScriptingAppSecret, and TenantName from student input.
 4. For beta commands (e.g., Get-MgBetaDeviceManagement):
-   - Ensure compatibility with Microsoft.Graph 2.2.5.
+   - Ensure compatibility with Microsoft.Graph 2.25.0.
    - Load specific modules like Microsoft.Graph.Beta.DeviceManagement, Microsoft.Graph.Groups if needed.
 5. Eyeball scripts for stray AZ commands; remove or adjust as necessary.
 6. Save changes.
 
-Example updates for requirements (order may vary):
-- Requirement 6: MgGraph only.
-- Others: Similar checks and replacements.
-
 Test module compatibility during lab testing.
 
-## Step 7: Update Markdown Instructions
+## Step 8: Update Markdown Instructions
 
 1. Update "Provide Your Saved Credentials" section:
    - Add fields for TenantName, Password, ScriptingAppId, ScriptingAppSecret (students copy from prerequisite lab).
@@ -95,14 +88,14 @@ Test module compatibility during lab testing.
 2. Update login sections to handle staging:
    - Use conditional sections based on StagingComplete.
    - Hide credentials until "Yes"; show "Please wait while your tenant is being prepared."
-   - Replace placeholders with variables.
+   - Replace Portal URLs with the appropriate value for that lab step.
    - Examples:
      - Sign in to endpoint.microsoft.com (first occurrence).
      - Sign in to entra.microsoft.com (subsequent).
 3. Ensure no immediate logins show blank credentials to avoid confusion.
-4. After "Configure Tenant" button, script runs, sets variables (including StagingComplete to Yes), and reveals credentials.
+4. When the "Configure Tenant" button is pressed, the script runs, sets variables (including StagingComplete to Yes), and reveals credentials.
 
-## Step 8: Test the Lab
+## Step 9: Test the Lab
 
 1. Launch the lab.
 2. Use test credentials (TenantName, AppId, AppSecret, Username, Password).
