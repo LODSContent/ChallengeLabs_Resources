@@ -181,6 +181,68 @@ $result = & $scriptBlock @Params
 return $result
 ```
 
+# Tenant Pool Staging for "Configure Tenant" Activity (SC200.2 labs)
+
+```PowerShell
+<#
+   Title: Tenant Pool Staging for "Configure Tenant" Activity
+   Description: Pre-cleans the Tenant before student usage. Recreates App permissions. 
+                Creates a new user with a Temporary Access Password and establishes credential variables for the lab.
+   Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
+            Custom - PS 7.3.4, Microsoft.Graph 2.25.0, Az 11.1.0
+            Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
+   Version: 2026.02.16
+#>
+
+$BaseURL = 'https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/LCAs'
+$StagingScript = "TenantPoolStaging-v3.ps1"
+$CleaningScript = "TenantPoolPostCleanup-v3.ps1"
+
+# Define the parameters in a hash table
+$params = @{
+    TenantName = '@lab.Variable(TenantName)'
+    UserName = 'admin@@lab.Variable(TenantName)'
+    Password = '@lab.Variable(TenantPassword)'
+    ScriptingAppId = '@lab.Variable(ScriptingAppId)'
+    ScriptingAppSecret = '@lab.Variable(ScriptingAppSecret)'
+	SubscriptionId = '@lab.Variable(SubscriptionId)'
+    LabInstanceId = '@lab.LabInstance.Id'
+    CleaningScriptUrl = ($BaseURL.TrimEnd('/') + '/' + $CleaningScript)
+    ScriptDebug = ('@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True')
+}
+
+# URL of the script on GitHub
+$scriptUrl = $BaseURL.TrimEnd('/') + '/' + $StagingScript
+
+# Initialize variables for retry logic
+$maxRetries = 10
+$retryDelay = 5  # seconds
+$attempt = 1
+$scriptContent = $null
+
+# Attempt to download the script content with retries
+while ($attempt -le $maxRetries -and $null -eq $scriptContent) {
+    try {
+        $scriptContent = (Invoke-WebRequest -Uri $scriptUrl -UseBasicParsing -ErrorAction Stop).Content
+    }
+    catch {
+        if ($attempt -eq $maxRetries) {
+            Throw "Failed to download script: '$scriptUrl' from GitHub after $maxRetries attempts: $_"
+        }
+        Start-Sleep -Seconds $retryDelay
+        $attempt++
+    }
+}
+
+# Create a script block from the downloaded content
+$scriptBlock = [ScriptBlock]::Create($scriptContent)
+
+# Execute the script block with parameters
+$result = & $scriptBlock @Params
+
+return $result
+```
+
 # Resource Group Cleanup for SC200.2 Labs
 
 ```PowerShell
