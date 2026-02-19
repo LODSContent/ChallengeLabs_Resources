@@ -181,6 +181,45 @@ $result = & $scriptBlock @Params
 return $result
 ```
 
+# Resource Group Cleanup for SC200.2 Labs
+
+```PowerShell
+### Authentication Block - AZ - Begin
+# Targets: Cloud - PS 7.4.0
+#          Custom - PS 7.3.4, Az 11.1.0
+#          Future New Target With - PS 7.5.2, Az 15.3.0 preinstalled
+# Version: 2026.02.16
+###
+# Tenant App Credentials
+$ScriptingAppId     = "@lab.Variable(ScriptingAppId)"
+$ScriptingAppSecret = "@lab.Variable(ScriptingAppSecret)"
+$TenantName         = "@lab.Variable(TenantName)"
+# Install Az.Accounts v2.13.2 if using PS 7.3.4
+$AzAccountsVersion = "2.13.2"
+if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
+	If ($scriptDebug) { Write-Output "Installing Az.Accounts 2.13.2." }
+	Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
+	Remove-Module Az.Accounts -Force -EA SilentlyContinue
+	Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
+}    
+# Authenticate using Connect-AzAccount
+If ($scriptDebug) { Write-Output "Authenticating with Connect-AzAccount" }    
+$SecureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
+$Credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $SecureSecret)
+Connect-AzAccount -ServicePrincipal -Credential $Credential -Tenant $TenantName | Out-Null
+### Authentication Block - End
+
+try {
+    # Remove all Resource Groups
+    Get-AzResourceGroup | ForEach-Object {$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force}
+} catch {
+    Write-Output "Failed to cleanup resource groups for tenant: $TenantName. Error: $_"
+}
+
+# Finished cleanup
+return $true
+```
+
 # Authentication block for Az and MgGraph scripts
 
 ```PowerShell
