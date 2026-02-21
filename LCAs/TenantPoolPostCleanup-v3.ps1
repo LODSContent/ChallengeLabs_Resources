@@ -12,7 +12,8 @@ param (
     $ScriptingAppSecret,
     $LabInstanceId,
 	[switch]$CustomTarget,	
-    [switch]$ScriptDebug    
+    [switch]$ScriptDebug,
+	[switch]$DetailedDebug    
 )
 
 # Script Title
