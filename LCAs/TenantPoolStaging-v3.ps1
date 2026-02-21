@@ -190,9 +190,9 @@ try {
     $AzAccountsVersion = "2.13.2"
     if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
         If ($scriptDebug) { Send-DebugMessage "Installing Az.Accounts 2.13.2." }
-        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
-        Remove-Module Az.Accounts -Force -EA SilentlyContinue
-        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
+        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber | Out-Null
+        Remove-Module Az.Accounts -Force -EA SilentlyContinue | Out-Null
+        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force | Out-Null
         if ($ScriptDebug) { Send-DebugMessage "Successfully installed Az.Accounts version $AzAccountsVersion" }
     }
 } catch {
