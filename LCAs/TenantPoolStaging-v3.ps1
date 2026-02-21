@@ -18,7 +18,8 @@ param (
     [switch]$SkipCleanup,
     [switch]$CreateLabUsers,
 	[switch]$CustomTarget,
-    [switch]$ScriptDebug
+    [switch]$ScriptDebug,
+	[switch]$DetailedDebug
 )
 
 # Script Title
@@ -90,12 +91,8 @@ function Send-LabNotificationChunks {
             $chunkMessage = $chunkMessage.Substring(0, $MaxLength - 3) + "..."
         }
 
-		if ((Get-Command Send-LabNotification -ErrorAction SilentlyContinue)) {
-	        Send-LabNotification -Message $chunkMessage
-			Start-Sleep -Seconds 2
-		} else {
-			Write-Output $chunkMessage
-		}
+		Send-LabNotification -Message $chunkMessage
+		Start-Sleep -Seconds
     }
 }
 
@@ -105,6 +102,8 @@ function Send-DebugMessage {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$Message
     )
+
+	if ($DetailedDebug) { Write-Output $Message }
 
     $Global:MessageBuffer += "`n`n$Message"
 }
@@ -176,7 +175,8 @@ if (!$SkipCleanup) {
 	  	ScriptingAppSecret = $ScriptingAppSecret
 	  	LabInstanceId = $LabInstanceId
 		CustomTarget = $CustomTarget
-	    ScriptDebug = $ScriptDebug   
+	    ScriptDebug = $ScriptDebug
+		DetailedDebug = $DetailedDebug
 	}
 
 	if ($ScriptDebug) { Send-DebugMessage "Launching Cleanup Script for $TenantName" }
@@ -819,6 +819,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    # Clean and configure Trial Subscription if present
    if ($SubscriptionId) {
 		try {
+			if ($scriptDebug) { Send-DebugMessage "Subscription ID found. Cleaning Subscription." }
 	 		if ($ScriptingAppId.Length -lt 10) {
 			    # Add a secret to the Service Principal
 				$secretBody = @{
