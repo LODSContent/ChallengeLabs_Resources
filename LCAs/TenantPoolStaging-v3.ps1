@@ -809,7 +809,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    }
 
    # Clean and configure Trial Subscription if present
-   if ($SubscriptionId -eq "True") {
+   if ($SubscriptionId) {
 		$SubscriptionId = $SubscriptionId.trim(" ")
 		if ($ScriptDebug) { Send-DebugMessage "Found SubscriptionId: $SubscriptionId" }
    		try {
@@ -873,8 +873,17 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			# Remove all Resource Groups
 			try {
 	  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
-			    Get-AzResourceGroup | ForEach-Object {$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force}
-			} catch {}
+			    Get-AzResourceGroup | ForEach-Object {
+					try {
+						$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force
+						if ($scriptDebug) { Send-DebugMessage "Removed Resource Group: $($_.ResourceGroupName)" }
+					} catch {
+						if ($scriptDebug) { Send-DebugMessage "Failed to remove Resource Group: $($_.ResourceGroupName)" }
+					}
+				}
+			} catch {
+				if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
+			}
 	 	} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
 	 	}
