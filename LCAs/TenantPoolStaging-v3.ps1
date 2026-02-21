@@ -90,8 +90,12 @@ function Send-LabNotificationChunks {
             $chunkMessage = $chunkMessage.Substring(0, $MaxLength - 3) + "..."
         }
 
-        Send-LabNotification -Message $chunkMessage
-		Start-Sleep -Seconds 2
+		if ((Get-Command Send-LabNotification -ErrorAction SilentlyContinue)) {
+	        Send-LabNotification -Message $chunkMessage
+			Start-Sleep -Seconds 2
+		} else {
+			Write-Output $chunkMessage
+		}
     }
 }
 
