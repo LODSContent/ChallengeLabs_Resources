@@ -96,6 +96,8 @@ function Send-DebugMessage {
         [string]$Message
     )
 
+	if ($DetailedDebug) { Write-Output $Message }
+
     $Global:MessageBuffer += "`n`n$Message"
 }
 
