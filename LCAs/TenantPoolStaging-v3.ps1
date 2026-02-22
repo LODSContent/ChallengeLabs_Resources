@@ -844,7 +844,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 	  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
 			    Get-AzResourceGroup | ForEach-Object {
 					try {
-						$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force
+						$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force -EA Stop
 						if ($scriptDebug) { Send-DebugMessage "Removed Resource Group: $($_.ResourceGroupName)" }
 					} catch {
 						if ($scriptDebug) { Send-DebugMessage "Failed to remove Resource Group: $($_.ResourceGroupName)" }
