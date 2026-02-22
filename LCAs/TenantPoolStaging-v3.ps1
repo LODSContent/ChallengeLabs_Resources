@@ -865,7 +865,6 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 	   			Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
 	  		}
 
-		<#
 			# Remove and re-add Owner Role to the lab user
 			try {
 			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop | Out-Null
@@ -873,7 +872,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 		 	    if ($scriptDebug) { Send-DebugMessage "Failed to remove existing Owner role for $TapUser. It may not exist." }
 			}
-			
+
+		<#			
 	  		try {
 	    		    New-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
 		  	    if ($scriptDebug) { Send-DebugMessage "Set the Owner role for $TapUser." }
