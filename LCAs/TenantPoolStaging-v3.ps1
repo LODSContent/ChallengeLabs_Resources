@@ -823,50 +823,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    if ($SubscriptionId) {
    		try {
 			if ($scriptDebug) { Send-DebugMessage "Subscription ID found. Cleaning Subscription." }
-<#	 		if ($ScriptingAppId.Length -lt 10) {
-			    # Add a secret to the Service Principal
-				$secretBody = @{
-					"passwordCredential" = @{
-						"displayName" = "Script Secret"
-						"endDateTime" = (Get-Date).AddDays(1).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-					}
-				} | ConvertTo-Json -Depth 10
-
-				$secret = Invoke-MgGraphRequest `
-				    -Method POST `
-				    -Uri "https://graph.microsoft.com/v1.0/servicePrincipals(appId='$ScriptingAppId')/addPassword" `
-				    -Body $secretBody `
-				    -ContentType "application/json"
-
-			 	$ScriptingAppSecret = $Secret.SecretText
-		   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 30 seconds." }
-				Start-Sleep -seconds 30
-			
-				# Create a secure string for the client secret
-				$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
-				
-				# Create a PSCredential object
-				$credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
-				
-				# Authenticate with Azure
-				try {
-		  			Connect-AzAccount -ServicePrincipal -Credential $credential -TenantId $TenantName | Out-Null
-		     			if ($scriptDebug) { Send-DebugMessage "Successfully initiated Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
-				} catch {
-					if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
-		   			Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
-		  		}
-	  		}
-
-			# Set the context to the correct subscription
-			try {
-	  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
-	     		if ($scriptDebug) { Send-DebugMessage "Successfully used Set-AzContext with SubscriptionId: $SubscriptionId" }
-			} catch {
-				if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
-	   			Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
-	  		}
-#>
+<#
 			# Remove and re-add Owner Role to the lab user
 			try {
 			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop | Out-Null
@@ -881,6 +838,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 			    if ($scriptDebug) { Send-DebugMessage "Failed to set the Owner role for $TapUser." }
 	  		}
+#>
 			# Remove all Resource Groups
 			try {
 	  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
