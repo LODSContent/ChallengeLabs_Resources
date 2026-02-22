@@ -255,27 +255,47 @@ return $result
 # Tenant App Credentials
 $ScriptingAppId     = "@lab.Variable(ScriptingAppId)"
 $ScriptingAppSecret = "@lab.Variable(ScriptingAppSecret)"
+$SubscriptionId = "@lab.Variable(SubscriptionId)"
 $TenantName         = "@lab.Variable(TenantName)"
 # Install Az.Accounts v2.13.2 if using PS 7.3.4
 $AzAccountsVersion = "2.13.2"
 if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
-	If ($scriptDebug) { Write-Output "Installing Az.Accounts 2.13.2." }
-	Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
-	Remove-Module Az.Accounts -Force -EA SilentlyContinue
-	Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
+    If ($scriptDebug) { Write-Output "Installing Az.Accounts 2.13.2." }
+    Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
+    Remove-Module Az.Accounts -Force -EA SilentlyContinue
+    Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
 }    
 # Authenticate using Connect-AzAccount
 If ($scriptDebug) { Write-Output "Authenticating with Connect-AzAccount" }    
 $SecureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
 $Credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $SecureSecret)
 Connect-AzAccount -ServicePrincipal -Credential $Credential -Tenant $TenantName | Out-Null
+# Get the token
+$secureToken = (Get-AzAccessToken -ResourceUrl "https://management.azure.com/").Token
+$AzToken = [System.Net.NetworkCredential]::new("", $secureToken).Password
+# Build the header for Invoke-RestMethod commands
+$headers = @{
+    "Authorization" = "Bearer $AzToken"
+    "Content-Type"  = "application/json"
+}
 ### Authentication Block - End
 
-try {
-    # Remove all Resource Groups
-    Get-AzResourceGroup | ForEach-Object {$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force}
-} catch {
-    Write-Output "Failed to cleanup resource groups for tenant: $TenantName. Error: $_"
+$rgListUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups?api-version=2021-04-01"
+
+$rgs = (Invoke-RestMethod -Uri $rgListUri -Headers $headers -Method Get).value
+
+# Remove all Resource Groups
+if ($rgs.Count -gt 0) {
+    foreach ($rg in $rgs) {
+        $rgName = $rg.name
+        $deleteRgUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups/$($rgName)?api-version=2021-04-01"        
+        try {
+            Invoke-RestMethod -Uri $deleteRgUri -Headers $headers -Method Delete | Out-Null
+            if ($scriptDebug) { Write-Output "Removed Resource Group: $rgName" }
+        } catch {
+            if ($scriptDebug) { Write-Output "Failed to remove Resource Group: $rgName" }
+        }
+    }
 }
 
 # Finished cleanup
