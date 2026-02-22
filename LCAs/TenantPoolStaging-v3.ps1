@@ -824,7 +824,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    		try {
 			if ($scriptDebug) { Send-DebugMessage "Subscription ID found. Cleaning Subscription." }
 	 		if ($ScriptingAppId.Length -lt 10) {
-			    # Add a secret to the Service Principal
+<#			    # Add a secret to the Service Principal
 				$secretBody = @{
 					"passwordCredential" = @{
 						"displayName" = "Script Secret"
@@ -844,8 +844,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			
 				# Create a secure string for the client secret
 				$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
-
-<#				
+				
 				# Create a PSCredential object
 				$credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
 				
@@ -857,9 +856,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 					if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
 		   			Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
 		  		}
-#>
 	  		}
-<#
+
 			# Set the context to the correct subscription
 			try {
 	  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
@@ -868,7 +866,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 				if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
 	   			Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
 	  		}
-
+#>
 			# Remove and re-add Owner Role to the lab user
 			try {
 			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop | Out-Null
@@ -897,7 +895,6 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 				if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
 			}
-#>
 		} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
 	 	}
