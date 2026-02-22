@@ -823,8 +823,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    if ($SubscriptionId) {
    		try {
 			if ($scriptDebug) { Send-DebugMessage "Subscription ID found. Cleaning Subscription." }
-	 		if ($ScriptingAppId.Length -lt 10) {
-<#			    # Add a secret to the Service Principal
+<#	 		if ($ScriptingAppId.Length -lt 10) {
+			    # Add a secret to the Service Principal
 				$secretBody = @{
 					"passwordCredential" = @{
 						"displayName" = "Script Secret"
