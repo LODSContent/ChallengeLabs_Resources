@@ -856,6 +856,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 		  		}
 	  		}
 
+<#
 			# Set the context to the correct subscription
 			try {
 	  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
@@ -873,7 +874,6 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 		 	    if ($scriptDebug) { Send-DebugMessage "Failed to remove existing Owner role for $TapUser. It may not exist." }
 			}
 
-<#	
 	  		try {
 	    		New-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
 		  	    if ($scriptDebug) { Send-DebugMessage "Set the Owner role for $TapUser." }
