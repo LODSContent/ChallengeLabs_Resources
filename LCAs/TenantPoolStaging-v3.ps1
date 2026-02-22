@@ -52,8 +52,12 @@ function Send-LabNotificationChunks {
     if ($buffer.Length -le $availablePerChunk) {
         # Short message - send as one piece with normal header
         $fullMessage = "$baseHeader$buffer"
-        Send-LabNotification -Message $fullMessage -ErrorAction SilentlyContinue
-        return
+		try {
+        	Send-LabNotification -Message $fullMessage
+        } catch {
+			Write-Output $fullMessage
+		}
+		return
     }
 
     # Long message - need to split
@@ -91,7 +95,11 @@ function Send-LabNotificationChunks {
             $chunkMessage = $chunkMessage.Substring(0, $MaxLength - 3) + "..."
         }
 
-		Send-LabNotification -Message $chunkMessage
+		try {
+        	Send-LabNotification -Message $chunkMessage
+        } catch {
+			Write-Output $fullMessage
+		}		
 		Start-Sleep -Seconds 2
     }
 }
