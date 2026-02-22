@@ -823,6 +823,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    if ($SubscriptionId) {
    		try {
 			if ($scriptDebug) { Send-DebugMessage "Subscription ID found. Cleaning Subscription." }
+<#
 			# Remove and re-add Owner Role to the lab user
 			try {
 			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop | Out-Null
@@ -837,7 +838,6 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 			    if ($scriptDebug) { Send-DebugMessage "Failed to set the Owner role for $TapUser." }
 	  		}
-<#
 			# Remove all Resource Groups
 			try {
 	  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
