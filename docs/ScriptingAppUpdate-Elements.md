@@ -361,6 +361,7 @@ return $true
     # Tenant App Credentials
     $ScriptingAppId     = "@lab.Variable(ScriptingAppId)"
     $ScriptingAppSecret = "@lab.Variable(ScriptingAppSecret)"
+    $SubscriptionId = "@lab.Variable(SubscriptionId)"
     $TenantName         = "@lab.Variable(TenantName)"
     # Install Az.Accounts v2.13.2 if using PS 7.3.4
     $AzAccountsVersion = "2.13.2"
