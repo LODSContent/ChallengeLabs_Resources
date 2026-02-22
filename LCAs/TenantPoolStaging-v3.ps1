@@ -179,7 +179,7 @@ if (!$SkipCleanup) {
 	  	ScriptingAppSecret = $ScriptingAppSecret
 	  	LabInstanceId = $LabInstanceId
 		CustomTarget = $CustomTarget
-	    ScriptDebug = $ScriptDebug
+	    ScriptDebug = $False
 	}
 
 	if ($ScriptDebug) { Send-DebugMessage "Launching Cleanup Script for $TenantName" }
