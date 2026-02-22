@@ -12,8 +12,7 @@ param (
     $ScriptingAppSecret,
     $LabInstanceId,
 	[switch]$CustomTarget,	
-    [switch]$ScriptDebug,
-	[switch]$DetailedDebug    
+    [switch]$ScriptDebug
 )
 
 # Script Title
@@ -104,9 +103,6 @@ function Send-DebugMessage {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$Message
     )
-
-	if ($DetailedDebug) { Write-Output $Message }
-
     $Global:MessageBuffer += "`n`n$Message"
 }
 
