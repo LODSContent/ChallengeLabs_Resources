@@ -149,6 +149,14 @@ if (($Password -in '',$Null -or $Password -like '*@lab*') -or ($TenantName -in '
     Throw-Error "Tenant name or password are blank."
 }
 
+if ($SubscriptionId -in '',$Null -or $SubscriptionId -like '*@lab*' ) {
+    $SubscriptionId = $Null
+    if ($ScriptDebug) { Send-DebugMessage "SubscriptionId not present." }
+} else {
+    $SubscriptionId = $SubscriptionId.trim(" ")
+    if ($ScriptDebug) { Send-DebugMessage "Found SubscriptionId: $SubscriptionId" }
+}
+
 if ($LabInstanceId -in '',$Null -or $LabInstanceId -like '*@lab*') {
 	$LabInstanceId = "NoID"
 }
@@ -817,9 +825,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    }
 
    # Clean and configure Trial Subscription if present
-   if ($SubscriptionId -eq $true) {
-		$SubscriptionId = $SubscriptionId.trim(" ")
-		if ($ScriptDebug) { Send-DebugMessage "Found SubscriptionId: $SubscriptionId" }
+   if ($SubscriptionId) {
    		try {
 			if ($scriptDebug) { Send-DebugMessage "Subscription ID found. Cleaning Subscription." }
 	 		if ($ScriptingAppId.Length -lt 10) {
