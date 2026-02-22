@@ -855,7 +855,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 		   			Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
 		  		}
 	  		}
-		<#
+
 			# Set the context to the correct subscription
 			try {
 	  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
@@ -864,7 +864,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 				if ($scriptDebug) { Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId" }
 	   			Send-DebugMessage "Failed to Set-AzContext with SubscriptionId: $SubscriptionId"
 	  		}
-	    
+
+		<#
 			# Remove and re-add Owner Role to the lab user
 			try {
 			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop | Out-Null
