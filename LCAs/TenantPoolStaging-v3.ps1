@@ -842,7 +842,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			
 				# Create a secure string for the client secret
 				$secureSecret = ConvertTo-SecureString $Secret.SecretText -AsPlainText -Force
-				
+
+<#				
 				# Create a PSCredential object
 				$credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
 				
@@ -856,7 +857,6 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 		  		}
 	  		}
 
-<#
 			# Set the context to the correct subscription
 			try {
 	  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
