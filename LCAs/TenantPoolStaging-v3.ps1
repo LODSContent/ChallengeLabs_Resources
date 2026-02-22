@@ -52,7 +52,7 @@ function Send-LabNotificationChunks {
     if ($buffer.Length -le $availablePerChunk) {
         # Short message - send as one piece with normal header
         $fullMessage = "$baseHeader$buffer"
-        Send-LabNotification -Message $fullMessage
+        Send-LabNotification -Message $fullMessage -ErrorAction SilentlyContinue
         return
     }
 
