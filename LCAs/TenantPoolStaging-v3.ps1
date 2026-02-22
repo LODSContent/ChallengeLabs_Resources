@@ -880,6 +880,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 			    if ($scriptDebug) { Send-DebugMessage "Failed to set the Owner role for $TapUser." }
 	  		}
+		#>
 			# Remove all Resource Groups
 			try {
 	  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
@@ -894,7 +895,6 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 				if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
 			}
-		#>
 	 	} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
 	 	}
