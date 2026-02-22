@@ -855,8 +855,9 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 					if ($scriptDebug) { Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret" }
 		   			Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
 		  		}
+#>
 	  		}
-
+<#
 			# Set the context to the correct subscription
 			try {
 	  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
