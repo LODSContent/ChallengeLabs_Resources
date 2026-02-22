@@ -852,36 +852,29 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 			    if ($scriptDebug) { Send-DebugMessage "Failed to create Owner role assignment: $($_.Exception.Message)" }
 			}
-<#
-			# Remove and re-add Owner Role to the lab user
-			try {
-			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop | Out-Null
-		     	if ($scriptDebug) { Send-DebugMessage "Removed existing Owner role for $TapUser." }
-			} catch {
-		 	    if ($scriptDebug) { Send-DebugMessage "Failed to remove existing Owner role for $TapUser. It may not exist." }
-			}
 
-	  		try {
-	    		New-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
-		  	    if ($scriptDebug) { Send-DebugMessage "Set the Owner role for $TapUser." }
-			} catch {
-			    if ($scriptDebug) { Send-DebugMessage "Failed to set the Owner role for $TapUser." }
-	  		}
-			# Remove all Resource Groups
-			try {
-	  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
-			    Get-AzResourceGroup | ForEach-Object {
-					try {
-						$status = Remove-AzResourceGroup -Name $_.ResourceGroupName -Force -EA Stop
-						if ($scriptDebug) { Send-DebugMessage "Removed Resource Group: $($_.ResourceGroupName)" }
-					} catch {
-						if ($scriptDebug) { Send-DebugMessage "Failed to remove Resource Group: $($_.ResourceGroupName)" }
-					}
-				}
-			} catch {
-				if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
-			}
-#>
+			# Remove Resource Groups
+			$rgListUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups?api-version=2021-04-01"
+			
+			$rgs = (Invoke-RestMethod -Uri $rgListUri -Headers $headers -Method Get).value
+			
+			if ($rgs.Count -eq 0) {
+			    if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
+			} else {
+			    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
+			    
+			    foreach ($rg in $rgs) {
+			        $rgName = $rg.name
+			        $deleteRgUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups/$($rgName)?api-version=2021-04-01"
+			        
+			        try {
+			            Invoke-RestMethod -Uri $deleteRgUri -Headers $headers -Method Delete | Out-Null
+			            if ($scriptDebug) { Send-DebugMessage "Removed Resource Group: $rgName" }
+			        } catch {
+			            if ($scriptDebug) { Send-DebugMessage "Failed to remove Resource Group: $rgName - $($_.Exception.Message)" }
+			        }
+			    }
+			}			
 		} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
 	 	}
