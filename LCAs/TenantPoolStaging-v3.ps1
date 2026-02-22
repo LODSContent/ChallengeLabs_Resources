@@ -810,6 +810,9 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 
    # Clean and configure Trial Subscription if present
    if ($SubscriptionId) {
+		$InformationPreference = 'SilentlyContinue'
+		$VerbosePreference     = 'SilentlyContinue'
+		$ProgressPreference    = 'SilentlyContinue'
 		$SubscriptionId = $SubscriptionId.trim(" ")
 		if ($ScriptDebug) { Send-DebugMessage "Found SubscriptionId: $SubscriptionId" }
    		try {
