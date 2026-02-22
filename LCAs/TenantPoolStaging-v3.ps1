@@ -861,7 +861,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 	    
 			# Remove and re-add Owner Role to the lab user
 			try {
-			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
+			    Remove-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" -ErrorAction Stop | Out-Null
 		     	    if ($scriptDebug) { Send-DebugMessage "Removed existing Owner role for $TapUser." }
 			} catch {
 		 	    if ($scriptDebug) { Send-DebugMessage "Failed to remove existing Owner role for $TapUser. It may not exist." }
