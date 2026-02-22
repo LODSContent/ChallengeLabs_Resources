@@ -823,6 +823,35 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
    if ($SubscriptionId) {
    		try {
 			if ($scriptDebug) { Send-DebugMessage "Subscription ID found. Cleaning Subscription." }
+			# Add the Owner Role to the Lab User
+			$secureToken = (Get-AzAccessToken -ResourceUrl "https://management.azure.com/").Token
+			$AzToken = [System.Net.NetworkCredential]::new("", $secureToken).Password			
+			$headers = @{
+			    "Authorization" = "Bearer $AzToken"
+			    "Content-Type"  = "application/json"
+			}
+			# Generate unique assignment ID
+			$assignmentName = [guid]::NewGuid().ToString()
+			
+			# Full URI with api-version
+			$createUri = "https://management.azure.com/subscriptions/$SubscriptionId/providers/Microsoft.Authorization/roleAssignments/$($assignmentName)?api-version=2022-04-01"
+			
+			# Body (roleDefinitionId = Owner)
+			$body = @{
+			    properties = @{
+			        roleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+			        principalId      = $UserId   # ← Make sure this is set from earlier user lookup
+			        principalType    = "User"
+			    }
+			} | ConvertTo-Json -Depth 10
+			
+			try {
+			    $response = Invoke-RestMethod -Uri $createUri -Headers $headers -Method Put -Body $body
+			    if ($scriptDebug) { Send-DebugMessage "Successfully set Owner role for $TapUser (Assignment ID: $assignmentName)" }
+			    # Optional: $response will contain the created assignment details if you want to log them
+			} catch {
+			    if ($scriptDebug) { Send-DebugMessage "Failed to create Owner role assignment: $($_.Exception.Message)" }
+			}
 <#
 			# Remove and re-add Owner Role to the lab user
 			try {
