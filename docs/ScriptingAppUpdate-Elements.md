@@ -349,6 +349,55 @@ return $true
     ### Authentication Block - End
 ```
 
+# Authentication block for SC200.2 labs
+
+```PowerShell
+    ### Authentication Block - AZ + MgGraph + InvokeRestMethod Framework - Begin
+    # Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
+    #          Custom - PS 7.3.4, Microsoft.Graph 2.25.0, Az 11.1.0
+    #          Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
+    # Version: 2026.02.16
+    ###
+    # Tenant App Credentials
+    $ScriptingAppId     = "@lab.Variable(ScriptingAppId)"
+    $ScriptingAppSecret = "@lab.Variable(ScriptingAppSecret)"
+    $TenantName         = "@lab.Variable(TenantName)"
+    # Install Az.Accounts v2.13.2 if using PS 7.3.4
+    $AzAccountsVersion = "2.13.2"
+    if (-not (Get-InstalledModule Az.Accounts -RequiredVersion $AzAccountsVersion -EA SilentlyContinue) -and ($PSVersionTable.PSVersion -eq [Version]"7.3.4")) {
+        If ($scriptDebug) { Write-Output "Installing Az.Accounts 2.13.2." }
+        Install-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Scope CurrentUser -Force -AllowClobber
+        Remove-Module Az.Accounts -Force -EA SilentlyContinue
+        Import-Module Az.Accounts -RequiredVersion $AzAccountsVersion -Force
+    }    
+    # Authenticate using Connect-AzAccount
+    If ($scriptDebug) { Write-Output "Authenticating with Connect-AzAccount" }    
+    $SecureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
+    $Credential = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $SecureSecret)
+    Connect-AzAccount -ServicePrincipal -Credential $Credential -Tenant $TenantName | Out-Null
+    # Authenticate using Connect-MgGraph
+    If ($scriptDebug) { Write-Output "Authenticating with Connect-MgGraph" }
+    $Body = @{
+        Grant_Type    = "client_credentials"
+        Scope         = "https://graph.microsoft.com/.default"
+        Client_Id     = $ScriptingAppId
+        Client_Secret = $ScriptingAppSecret
+    }
+	$AccessToken = (Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com/$TenantName/oauth2/v2.0/token" -Body $Body -ContentType "application/x-www-form-urlencoded").access_token
+	$SecureToken = ConvertTo-SecureString $AccessToken -AsPlainText -Force
+    Connect-MgGraph -AccessToken $SecureToken -NoWelcome
+
+    # Get the token
+    $secureToken = (Get-AzAccessToken -ResourceUrl "https://management.azure.com/").Token
+    $AzToken = [System.Net.NetworkCredential]::new("", $secureToken).Password
+    # Build the header for Invoke-RestMethod commands
+    $headers = @{
+        "Authorization" = "Bearer $AzToken"
+        "Content-Type"  = "application/json"
+    }
+    ### Authentication Block - End
+```
+
 # Tenant Logon Sections
 
 Use the following for labs without a VM. (Copy-Text)
