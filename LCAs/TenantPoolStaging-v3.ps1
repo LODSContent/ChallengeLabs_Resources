@@ -831,11 +831,13 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 						"endDateTime" = (Get-Date).AddDays(1).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 					}
 				} | ConvertTo-Json -Depth 10
-		 		$secret = Invoke-MgGraphRequest `
-					-Method POST `
-					-Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($sp.id)/addPassword" `
-					-Body $secretBody `
-					-ContentType "application/json"
+
+				$secret = Invoke-MgGraphRequest `
+				    -Method POST `
+				    -Uri "https://graph.microsoft.com/v1.0/servicePrincipals(appId='$ScriptingAppId')/addPassword" `
+				    -Body $secretBody `
+				    -ContentType "application/json"
+
 			 	$ScriptingAppSecret = $Secret.SecretText
 		   		if ($scriptDebug) { Send-DebugMessage "Created secret $ScriptingAppSecret. Sleeping for 30 seconds." }
 				Start-Sleep -seconds 30
