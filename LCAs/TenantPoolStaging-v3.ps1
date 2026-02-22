@@ -872,15 +872,14 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 		 	    if ($scriptDebug) { Send-DebugMessage "Failed to remove existing Owner role for $TapUser. It may not exist." }
 			}
-
-		<#			
+				
 	  		try {
-	    		    New-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
+	    		New-AzRoleAssignment -SignInName "$TapUser" -RoleDefinitionName "Owner" -Scope "/subscriptions/$SubscriptionId" | Out-Null
 		  	    if ($scriptDebug) { Send-DebugMessage "Set the Owner role for $TapUser." }
 			} catch {
 			    if ($scriptDebug) { Send-DebugMessage "Failed to set the Owner role for $TapUser." }
 	  		}
-		#>
+<#
 			# Remove all Resource Groups
 			try {
 	  		    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
@@ -895,7 +894,8 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 				if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
 			}
-	 	} catch {
+#>
+		} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
 	 	}
    }
