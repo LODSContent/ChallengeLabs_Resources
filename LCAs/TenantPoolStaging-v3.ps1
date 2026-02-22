@@ -860,7 +860,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 		   			Send-DebugMessage "Failed to Connect-AzAccount with AppId: $ScriptingAppId and Secret: $ScriptingAppSecret"
 		  		}
 	  		}
-		
+		<#
 			# Set the context to the correct subscription
 			try {
 	  			Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
@@ -898,6 +898,7 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			} catch {
 				if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
 			}
+		#>
 	 	} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
 	 	}
