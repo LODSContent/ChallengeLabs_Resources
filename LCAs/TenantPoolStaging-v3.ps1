@@ -18,8 +18,7 @@ param (
     [switch]$SkipCleanup,
     [switch]$CreateLabUsers,
 	[switch]$CustomTarget,
-    [switch]$ScriptDebug,
-	[switch]$DetailedDebug
+    [switch]$ScriptDebug
 )
 
 # Script Title
@@ -110,9 +109,6 @@ function Send-DebugMessage {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$Message
     )
-
-	if ($DetailedDebug) { Write-Output $Message }
-
     $Global:MessageBuffer += "`n`n$Message"
 }
 
@@ -184,7 +180,6 @@ if (!$SkipCleanup) {
 	  	LabInstanceId = $LabInstanceId
 		CustomTarget = $CustomTarget
 	    ScriptDebug = $ScriptDebug
-		DetailedDebug = $DetailedDebug
 	}
 
 	if ($ScriptDebug) { Send-DebugMessage "Launching Cleanup Script for $TenantName" }
