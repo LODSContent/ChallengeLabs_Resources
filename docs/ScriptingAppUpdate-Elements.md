@@ -371,7 +371,7 @@ return $true
 
 # Additional Authentication for SC200.2 labs
 
-## For Az commands running through Invoke-RestMethod (After Connect-AzAccount section.)
+### For Az commands running through Invoke-RestMethod (After Connect-AzAccount section.)
 ```PowerShell
     # Get the token
     $secureToken = (Get-AzAccessToken -ResourceUrl "https://management.azure.com/").Token
@@ -383,7 +383,7 @@ return $true
     }
 ```
 
-## For Exchange Online commands running through Invoke-RestMethod (After Connect-AzAccount section.)
+### For Exchange Online commands running through Invoke-RestMethod (After Connect-AzAccount section.)
 ```PowerShell
     # Get the token
 	$secureToken = (Get-AzAccessToken -ResourceUrl "https://outlook.office365.com").Token
