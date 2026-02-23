@@ -444,6 +444,8 @@ return $true
 	$Connect1 = Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credential -Tenant $TenantName  -ErrorAction Ignore
 ```
 
+### For PBI scripts, remove the -Scope Organization parameter from commands.
+
 # CLabs Scripting App Permissions for PBI Workspace
 
 ```markdown
