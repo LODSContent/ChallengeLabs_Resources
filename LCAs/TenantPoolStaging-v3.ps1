@@ -372,6 +372,12 @@ $Permissions = @{
         AppId = "fc780465-2017-40d4-a0c5-307022471b92"
         Permissions = @("Machine.Read.All", "Machine.ReadWrite.All")
     }
+	"Office 365 Exchange Online" = @{
+        AppId = "c5393580-f805-4401-95e8-94b7a6ef2fc2"
+        Permissions = @(
+            "Exchange.ManageAsApp"   # This is the key one for app-only EXO access (including adminapi REST)
+        )
+    }	
 }
 
 # Get existing Service Principal
@@ -385,6 +391,25 @@ try {
 # Assign Global Administrator role
 try {
 	$roleDefinition = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'Global Administrator'" -ErrorAction Stop
+	$roleAssignmentBody = @{
+	    principalId      = $sp.Id
+	    roleDefinitionId = $roleDefinition.Id
+	    directoryScopeId = "/"
+	}
+	$response = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" `
+	-Body ($roleAssignmentBody | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
+	if ($scriptDebug) { Send-DebugMessage "Assigned Global Administrator role to $($sp.DisplayName)" }
+} catch {
+    if ($_ -like "*conflicting object*") {
+        if ($scriptDebug) { Send-DebugMessage "Global Administrator role already assigned to $($sp.DisplayName)" }
+    } else {
+	    if ($scriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $($sp.DisplayName): $($_.Exception.Message)" }
+    }
+}
+# Assign Exchange Administrator role
+# Assign Global Administrator role
+try {
+	$roleDefinition = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'Exchange Administrator'" -ErrorAction Stop
 	$roleAssignmentBody = @{
 	    principalId      = $sp.Id
 	    roleDefinitionId = $roleDefinition.Id
