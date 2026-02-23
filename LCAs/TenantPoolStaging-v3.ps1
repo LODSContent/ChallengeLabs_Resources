@@ -407,7 +407,6 @@ try {
     }
 }
 # Assign Exchange Administrator role
-# Assign Global Administrator role
 try {
 	$roleDefinition = Get-MgRoleManagementDirectoryRoleDefinition -Filter "displayName eq 'Exchange Administrator'" -ErrorAction Stop
 	$roleAssignmentBody = @{
