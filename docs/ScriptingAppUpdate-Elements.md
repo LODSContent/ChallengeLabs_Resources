@@ -441,7 +441,7 @@ return $true
 	If ($scriptDebug) { Write-Output "Authenticating with Connect-MgGraph" }
 	$secureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
 	$credential   = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
-	Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credential -Tenant $TenantName | Out-Null
+	$Connect1 = Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credential -Tenant $TenantName
 ```
 
 # Tenant Logon Sections
