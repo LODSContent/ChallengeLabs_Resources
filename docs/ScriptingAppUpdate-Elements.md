@@ -427,7 +427,7 @@ return $true
 # Authentication block for PBI scripts
 
 ```PowerShell
-    ### Authentication Block - MgGraph - Begin
+    ### Authentication Block - PBI - Begin
     # Targets: Cloud - PS 7.4.0, MicrosoftPowerBIMgmt 1.3.67
     #          Custom - PS 7.3.4, MicrosoftPowerBIMgmt 1.3.67
     #          Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
@@ -442,6 +442,7 @@ return $true
 	$secureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
 	$credential   = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
 	$Connect1 = Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credential -Tenant $TenantName  -ErrorAction Ignore
+    ### Authentication Block - PBI - End 
 ```
 
 ### For PBI scripts, remove the -Scope Organization parameter from commands.
