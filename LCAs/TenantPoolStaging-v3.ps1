@@ -377,13 +377,6 @@ $Permissions = @{
         Permissions = @(
             "Exchange.ManageAsApp"   # This is the key one for app-only EXO access (including adminapi REST)
         )
-    }
-	"Power BI Service" = @{
-        AppId = "00000009-0000-0000-c000-000000000000"
-        Permissions = @(
-            "Tenant.Read.All",      # Essential for organization-scope workspace queries
-            "Workspace.Read.All"    # Good for general workspace access
-        )
     }	
 }
 
