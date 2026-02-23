@@ -438,7 +438,7 @@ return $true
     $ScriptingAppSecret = "@lab.Variable(ScriptingAppSecret)"
     $TenantName         = "@lab.Variable(TenantName)"
     # Authenticate using Connect-PowerBIServiceAccount
-	If ($scriptDebug) { Write-Output "Authenticating with Connect-MgGraph" }
+	If ($scriptDebug) { Write-Output "Authenticating with Connect-PowerBIServiceAccount" }
 	$secureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
 	$credential   = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
 	$Connect1 = Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credential -Tenant $TenantName
