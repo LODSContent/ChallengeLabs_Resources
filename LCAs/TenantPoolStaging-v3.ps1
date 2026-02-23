@@ -179,7 +179,7 @@ if (!$SkipCleanup) {
 	  	ScriptingAppSecret = $ScriptingAppSecret
 	  	LabInstanceId = $LabInstanceId
 		CustomTarget = $CustomTarget
-	    ScriptDebug = $False
+	    ScriptDebug = $ScriptDebug
 	}
 
 	if ($ScriptDebug) { Send-DebugMessage "Launching Cleanup Script for $TenantName" }
@@ -416,12 +416,12 @@ try {
 	}
 	$response = Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" `
 	-Body ($roleAssignmentBody | ConvertTo-Json) -ContentType "application/json" -ErrorAction Stop
-	if ($scriptDebug) { Send-DebugMessage "Assigned Global Administrator role to $($sp.DisplayName)" }
+	if ($scriptDebug) { Send-DebugMessage "Assigned Exchange Administrator role to $($sp.DisplayName)" }
 } catch {
     if ($_ -like "*conflicting object*") {
-        if ($scriptDebug) { Send-DebugMessage "Global Administrator role already assigned to $($sp.DisplayName)" }
+        if ($scriptDebug) { Send-DebugMessage "Exchange Administrator role already assigned to $($sp.DisplayName)" }
     } else {
-	    if ($scriptDebug) { Send-DebugMessage "Failed to assign Global Administrator role to $($sp.DisplayName): $($_.Exception.Message)" }
+	    if ($scriptDebug) { Send-DebugMessage "Failed to assign Exchange Administrator role to $($sp.DisplayName): $($_.Exception.Message)" }
     }
 }
 
