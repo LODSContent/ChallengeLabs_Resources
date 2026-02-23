@@ -428,8 +428,8 @@ return $true
 
 ```PowerShell
     ### Authentication Block - MgGraph - Begin
-    # Targets: Cloud - PS 7.4.0
-    #          Custom - PS 7.3.4
+    # Targets: Cloud - PS 7.4.0, MicrosoftPowerBIMgmt 1.3.67
+    #          Custom - PS 7.3.4, MicrosoftPowerBIMgmt 1.3.67
     #          Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
     # Version: 2026.02.16
     ###
@@ -442,6 +442,24 @@ return $true
 	$secureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
 	$credential   = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
 	$Connect1 = Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credential -Tenant $TenantName  -ErrorAction Ignore
+```
+
+# CLabs Scripting App Permissions for PBI Workspace
+
+```markdown
+- Provide +++CLabs Scripting App+++ with Admin rights to the new Workspace.
+
+>[+HELP] Expand this help section for guidance on granting access to the Workspace.
+>
+>- On the Power BI menu, select **Workspaces**.
+>- Select the **Data Model Project 2-@lab.LabInstance.Id** workspace.
+>- In the upper-right, select **Manage access**.
+>- Select **Add people or groups**.
+>- Enter +++CLabs Scripting App+++ and then choose CLabs Scripting App.
+>- Select the drop-down list for **Viewer** and then select **Admin**.
+>- Select **Add**.
+>
+> ***Note**: The permission provided to this app is used during the validation process.*
 ```
 
 # Tenant Logon Sections
