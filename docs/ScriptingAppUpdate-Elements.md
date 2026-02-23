@@ -424,6 +424,26 @@ return $true
 	}
 ```
 
+# Authentication block for PBI scripts
+
+```PowerShell
+    ### Authentication Block - MgGraph - Begin
+    # Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
+    #          Custom - PS 7.3.4, Microsoft.Graph 2.25.0
+    #          Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
+    # Version: 2026.02.16
+    ###
+    # Tenant App Credentials
+    $ScriptingAppId     = "@lab.Variable(ScriptingAppId)"
+    $ScriptingAppSecret = "@lab.Variable(ScriptingAppSecret)"
+    $TenantName         = "@lab.Variable(TenantName)"
+    # Authenticate using Connect-PowerBIServiceAccount
+	If ($scriptDebug) { Write-Output "Authenticating with Connect-MgGraph" }
+	$secureSecret = ConvertTo-SecureString $ScriptingAppSecret -AsPlainText -Force
+	$credential   = New-Object System.Management.Automation.PSCredential($ScriptingAppId, $secureSecret)
+	Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credential -Tenant $TenantName | Out-Null
+```
+
 # Tenant Logon Sections
 
 Use the following for labs without a VM. (Copy-Text)
