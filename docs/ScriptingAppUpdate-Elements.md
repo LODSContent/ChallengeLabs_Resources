@@ -428,8 +428,8 @@ return $true
 
 ```PowerShell
     ### Authentication Block - MgGraph - Begin
-    # Targets: Cloud - PS 7.4.0, Microsoft.Graph 2.25.0
-    #          Custom - PS 7.3.4, Microsoft.Graph 2.25.0
+    # Targets: Cloud - PS 7.4.0
+    #          Custom - PS 7.3.4
     #          Future New Target With - PS 7.5.2, Microsoft.Graph 2.35.1 + Az 15.3.0 preinstalled
     # Version: 2026.02.16
     ###
