@@ -494,7 +494,7 @@ Use the following for labs WITH a VM. (Type-Text)
 
 ```PowerShell
 :::Staging(StagingComplete=No)
-- Sign in to +++https://portal.azure.com+++ using the following credentials:
+- Sign in using the following credentials:
 
     > **Please wait while your Tenant is being prepared.**
     >
@@ -502,7 +502,7 @@ Use the following for labs WITH a VM. (Type-Text)
 :::
 
 :::Staging(StagingComplete=Yes)
-- Sign in to +++https://portal.azure.com+++ using the following credentials:
+- Sign in using the following credentials:
 
     >    Username: +++@lab.Variable(UserName)+++ 
     > 
