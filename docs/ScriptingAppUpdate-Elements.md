@@ -461,6 +461,7 @@ return $true
 >- Enter +++CLabs Scripting App+++ and then choose CLabs Scripting App.
 >- Select the drop-down list for **Viewer** and then select **Admin**.
 >- Select **Add**.
+>- Close the Add people panel.
 >
 > ***Note**: The permission provided to this app is used during the validation process.*
 ```
