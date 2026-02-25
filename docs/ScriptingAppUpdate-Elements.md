@@ -493,7 +493,7 @@ For the Entra ID Portal:
 
 ```PowerShell
 :::Staging(StagingComplete=No)
-- Sign in to ++entra.microsoft.com++ using the following credentials:
+- Sign in to ++https://entra.microsoft.com++ using the following credentials:
 
     > **Please wait while your Tenant is being prepared.**
     >
@@ -501,7 +501,7 @@ For the Entra ID Portal:
 :::
 
 :::Staging(StagingComplete=Yes)
-- Sign in to ++entra.microsoft.com++ using the following credentials:
+- Sign in to ++https://entra.microsoft.com++ using the following credentials:
 
     > Username: ++@lab.Variable(UserName)++ 
     > 
