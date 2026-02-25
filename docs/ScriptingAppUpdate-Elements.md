@@ -483,9 +483,9 @@ Use the following for labs without a VM. (Copy-Text)
 :::Staging(StagingComplete=Yes)
 - Sign in to ++https://portal.azure.com++ using the following credentials:
 
-    >    Username: ++@lab.Variable(UserName)++ 
+    > Username: ++@lab.Variable(UserName)++ 
     > 
-    >    Temporary Access Pass: ++@lab.Variable(Password)++
+    > Temporary Access Pass: ++@lab.Variable(Password)++
 :::
 ```
 
@@ -504,9 +504,9 @@ Use the following for labs WITH a VM. (Type-Text)
 :::Staging(StagingComplete=Yes)
 - Sign in using the following credentials:
 
-    >    Username: +++@lab.Variable(UserName)+++ 
+    > Username: +++@lab.Variable(UserName)+++ 
     > 
-    >    Temporary Access Pass: +++@lab.Variable(Password)+++
+    > Temporary Access Pass: +++@lab.Variable(Password)+++
 :::
 ```
 
