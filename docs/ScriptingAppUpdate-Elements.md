@@ -489,6 +489,26 @@ Use the following for labs without a VM. (Copy-Text)
 :::
 ```
 
+For the Entra ID Portal:
+
+```PowerShell
+:::Staging(StagingComplete=No)
+- Sign in to ++entra.microsoft.com++ using the following credentials:
+
+    > **Please wait while your Tenant is being prepared.**
+    >
+    > *This may take a few minutes...* 
+:::
+
+:::Staging(StagingComplete=Yes)
+- Sign in to ++entra.microsoft.com++ using the following credentials:
+
+    > Username: ++@lab.Variable(UserName)++ 
+    > 
+    > Temporary Access Pass: ++@lab.Variable(Password)++
+:::
+```
+
 Use the following for labs WITH a VM. (Type-Text) 
 (Replace the landing page with the appropriate URL for that point in the lab.)
 
