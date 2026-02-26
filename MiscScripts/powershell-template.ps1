@@ -1,3 +1,5 @@
+# The script template below should be used for any labs that involve the validation of lab tasks for a cloud platform like AWS or Azure or for local Windows Client and Server validations.
+
 <#
    Title: <Title>
    Description: Brief summary of what the script does.
