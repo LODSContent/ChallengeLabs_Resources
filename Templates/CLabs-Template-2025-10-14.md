@@ -200,6 +200,7 @@ Below is the markdown template:
 
 <!-- Begin: Requirement 1, Script 1 -->
 
+### Requirement 1, Script 1
 ```PowerShell
 # The script template below should be used for any labs that involve the validation of lab tasks for a cloud platform like AWS or Azure or for Windows Clients and Servers running on the Skillable platform.
 
@@ -266,6 +267,7 @@ return $result
 
 <!-- Begin: Requirement 1, Script 2 -->
 
+### Requirement 1, Script 2
 ```bash
 # The following script template should be used for any validations that involve a linux machine or a container running on the Skillable platform
 
@@ -356,9 +358,11 @@ fi
 <!-- End: Requirement 1, Script 2 -->
 
 <!-- Begin: Requirement 1, Script 3 -->
+### Requirement 1, Script 3
 Code block here...
 <!-- End: Requirement 1, Script 3 -->
 
 <!-- Begin: Requirement 2, Script 1 -->
+### Requirement 2, Script 1
 Etc...
 <!-- End: Requirement 2, Script 1 -->
