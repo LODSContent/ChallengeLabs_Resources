@@ -197,3 +197,168 @@ Below is the markdown template:
 <!-- A lab list will be generated from GitHub using the Series variable with a value of the Lab number prefix. (Example: AZ900-001 will have a Series variable value of AZ900) -->
 
 <!-- End Summary Section -->
+
+<!-- Begin: Requirement 1, Script 1 -->
+
+```PowerShell
+# The script template below should be used for any labs that involve the validation of lab tasks for a cloud platform like AWS or Azure or for Windows Clients and Servers running on the Skillable platform.
+
+<#
+   Title: <Title>
+   Description: Brief summary of what the script does.
+   Target: <Target - Cloud Platform, Custom or VM Name>
+   Version: <YYYY.MM.DD> - Template.v4.0
+#>
+
+# Set default return value
+$result = $false
+
+# Debug toggle
+$scriptDebug = '@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True'
+if ($scriptDebug) { $ErrorActionPreference="Continue"; Write-Output "Debug mode is enabled." }
+
+# Main function body for all validation code
+function main {
+    # Modify the code below to suit the needs of the validation being performed.
+    # The scripting environment has $ErrorActionPreference = "Stop" by default.
+    # Only use try/catch inside the main routine for something that is expected to fail and should not exit main.
+    # There is a global try/catch at the end of the script that will handle error suppression for terminating errors.
+
+    If ($scriptDebug) {Write-Output "Begin main routine."}
+
+    # Parameters: Modify these to match the requirements of the lab environment
+    $file = 'C:\LabFiles\SomeFileName.txt'
+    $queryString = '*string to find in file*'
+   
+    # Add the commands for your scenario here
+    $fileContent = [string](Get-Content $file)
+    if ($scriptDebug -and $fileContent) {Write-Output "Found file."}
+
+    # Perform your validation testing here
+    if ($fileContent -like $queryString) {
+        $result = $true
+        if ($scriptDebug) {Write-Output "Validation successful."}
+    } else {
+        $result = $false
+        if ($scriptDebug) {Write-Output "Validation failed."}
+    }
+
+    if ($scriptDebug) {Write-Output "End main routine."}
+    
+    # Return the result from the main function
+    return $Result
+}
+
+# Run the main routine - When debugging, no Try/Catch is used. Any Errors or debug messages will display.
+if ($scriptDebug) {
+    $result = main
+} else {
+    try {
+        $result = main
+    } catch {
+        $result = $false
+    }
+}
+
+return $result
+```
+<!-- End: Requirement 1, Script 1 -->
+
+<!-- Begin: Requirement 1, Script 2 -->
+
+```bash
+# The following script template should be used for any validations that involve a linux machine or a container running on the Skillable platform
+
+#!/bin/bash
+# Title: Lab Environment Validation
+# Description: Validates lab environment by checking file content
+# Target: Linux VM or Container Name
+# Version: 2025.10.22 - Template.v4.0
+
+# Validation parameters
+# The file we check for and the string to query for:
+file="$HOME/nmap.txt"
+queryString="Starting Nmap"
+
+# Set default return value (0 for success, 1 for failure in Bash)
+result=1
+
+# Debug toggle (checking environment variable LAB_DEBUG)
+if [[ "@lab.Variable(debug)" == "Yes" || "@lab.Variable(debug)" == "True" || "@lab.Variable(Debug)" == "Yes" || "@lab.Variable(Debug)" == "True" ]]; then
+    scriptDebug=1
+    echo "Debug mode is enabled."
+else
+    scriptDebug=0
+fi
+
+# Main function body for all validation code
+main() {
+if [ $scriptDebug -eq 1 ]; then
+        echo "Begin main routine."
+    fi
+
+    # Check if file exists
+    if [ ! -f "$file" ]; then
+        if [ $scriptDebug -eq 1 ]; then
+            echo "File not found: $file"
+        fi
+        return 1
+    fi
+
+    # Read file content
+    fileContent=$(cat "$file" 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        if [ $scriptDebug -eq 1 ]; then
+            echo "Failed to read file: $file"
+        fi
+        return 1
+    fi
+
+    if [ $scriptDebug -eq 1 ] && [ -n "$fileContent" ]; then
+        echo "Found file."
+    fi
+
+    # Perform validation testing
+    if echo "$fileContent" | grep -q "$queryString"; then
+        result=0
+        if [ $scriptDebug -eq 1 ]; then
+            echo "Validation successful"
+        fi
+    else
+        result=1
+        if [ $scriptDebug -eq 1 ]; then
+            echo "Validation failed"
+        fi
+    fi
+
+    if [ $scriptDebug -eq 1 ]; then
+        echo "End main routine."
+    fi
+
+    return $result
+}
+# Run the main routine
+if [ $scriptDebug -eq 1 ]; then
+    main
+    result=$?
+else
+    main 2>/dev/null
+    result=$?
+fi
+
+if [ $result -eq 0 ]; then
+    echo true
+else
+    echo false
+fi
+```
+
+<!-- End: Requirement 1, Script 2 -->
+
+<!-- Begin: Requirement 1, Script 3 -->
+Code block here...
+<!-- End: Requirement 1, Script 3 -->
+
+<!-- Begin: Requirement 2, Script 1 -->
+Etc...
+<!-- End: Requirement 2, Script 1 -->
