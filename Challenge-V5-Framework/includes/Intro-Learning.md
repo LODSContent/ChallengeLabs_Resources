@@ -6,7 +6,7 @@
 
 !INSTRUCTIONS[][overview]
 
-!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/Challenge-V3-Framework/main/Templates/Sections/LabHelp.md)
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/Challenge-V5-Framework/Includes/LabHelp.md)
 
 :::HiddenVariables(ShowVariables=Yes)
 ShowToggle: @lab.DropDownList(ShowToggle)[Yes,No]
