@@ -4,12 +4,12 @@
 
 <br> 
 
-!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/Challenge-V5-Framework/Includes/@lab.Variable(difficulty).md)
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/@lab.Variable(difficulty).md)
 
  <br> 
 
 
-!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/Challenge-V5-Framework/Includes/Feedback.md)
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Feedback.md)
 
 <br> 
 
