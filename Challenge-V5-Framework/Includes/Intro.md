@@ -1,0 +1,27 @@
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/Challenge-V5-Framework/Includes/Logo-Challenges.md)
+
+# !INSTRUCTIONS[][challenge-title]
+
+@lab.Variable(GlobalIntroduction)
+
+!INSTRUCTIONS[][overview]
+
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/Challenge-V5-Framework/Includes/LabHelp.md)
+
+:::HiddenVariables(ShowVariables=Yes)
+ShowToggle: @lab.DropDownList(ShowToggle)[Yes,No]
+
+ShowLabMode: @lab.DropDownList(ShowLabMode)[Yes,No]
+
+ShowLearn: @lab.DropDownList(ShowLearn)[Yes,No]
+
+ShowGuided: @lab.DropDownList(ShowGuided)[Yes,No]
+
+ShowAdvanced: @lab.DropDownList(ShowAdvanced)[Yes,No]
+
+ShowActivity: @lab.DropDownList(ShowActivity)[Yes,No]
+
+ShowMCQ: @lab.DropDownList(ShowMCQ)[Yes,No]
+
+AutoTranslate: @lab.Variable(AutoTranslate)
+:::
