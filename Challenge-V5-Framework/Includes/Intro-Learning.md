@@ -1,4 +1,4 @@
-!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/master/LanguageFiles/Logo-Challenges-ML.md)
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/Challenge-V5-Framework/Includes/Logo-Challenges.md)
 
 # !INSTRUCTIONS[][challenge-title]
 
