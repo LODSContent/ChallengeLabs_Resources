@@ -1,4 +1,11 @@
 // Begin Blockquote styling code (Matching alternate icons to platform icons.)
+
+/*
+ * Script Name: NewStyles.js
+ * Authors: Mark Morgan
+ * Version: 2026.03.05.1832
+*/
+
 // Helper Functions
 function getLabVariable(name) {
     if (debug) { console.log(`[getLabVariable] Called for: ${name}`); }
