@@ -1,8 +1,7 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan
- * Version: 1.13
- * Date: March 05, 2026
+ * Version: 2026.03.04.1620
  * Description: Translates elements in the HTML to the target language.
  */
 
