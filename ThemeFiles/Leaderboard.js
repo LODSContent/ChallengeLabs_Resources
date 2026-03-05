@@ -21,18 +21,19 @@ if (debug) { console.log("Leaderboard: Script is loading"); }
 
 // begin shared functions
 // Retrieve a lab variable listed in Markdown as a case-insensitive variable name
-function getLabVariable(name) {
-    if (debug) { console.log(`Leaderboard: Retrieving lab variable - ${name}`); }
-    let checkName = name.toLowerCase();
-    let value = $('[data-name]').filter(function() { return $(this).attr('data-name').toLowerCase() == checkName }).val();
-    if (debug) { console.log(`Leaderboard: Retrieved value for ${name} - ${value}`); }
-    return value;
-}
+//function getLabVariable(name) {
+//    if (debug) { console.log(`Leaderboard: Retrieving lab variable - ${name}`); }
+//    let checkName = name.toLowerCase();
+//    let value = $('[data-name]').filter(function() { return $(this).attr('data-name').toLowerCase() == checkName }).val();
+//    if (debug) { console.log(`Leaderboard: Retrieved value for ${name} - ${value}`); }
+//    return value;
+//}
 // Set a lab variable
-function setLabVariable(name, value) {
-    if (debug) { console.log(`Leaderboard: Setting lab variable ${name} to ${value}`); }
-    $('[data-name="' + name + '"]').val(value).trigger("change");
-}
+//function setLabVariable(name, value) {
+//    if (debug) { console.log(`Leaderboard: Setting lab variable ${name} to ${value}`); }
+//    $('[data-name="' + name + '"]').val(value).trigger("change");
+//}
+
 // Handle tab switching
 function initializeTabSwitching() {
     if (debug) { console.log("Leaderboard: Checking for existing tab-switching logic"); }
