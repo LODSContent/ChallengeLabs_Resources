@@ -1,4 +1,53 @@
 // Begin Blockquote styling code (Matching alternate icons to platform icons.)
+
+// Helper Functions
+function getLabVariable(name) {
+    try {
+        if (debug) { console.log(`Retrieving lab variable - ${name}`); }
+        try{
+			clientAPI = window.api.v1;
+		} catch(e) {
+			clientAPI = null;
+		}
+        if (clientAPI) {
+            if (debug) { console.log(`API: Getting lab variable - ${name}`); }             
+            let value = window.api.v1.getLabVariable(name)?.toLowerCase() || null;
+            if (debug) { console.log(`API: Retrieved lab variable - ${name} = ${value}`); }
+            return value;
+        } else {
+            if (debug) { console.log(`NoAPI: Getting lab variable - ${name}`); }            
+            let checkName = name.toLowerCase();
+            let value = $('[data-name]').filter(function() { return $(this).attr('data-name').toLowerCase() == checkName }).val().toLowerCase();
+            if (debug) { console.log(`NoAPI: Retrieved lab variable - ${name} = ${value}`); }
+            return value;
+        }
+    } catch (e) {
+        if (debug) { console.log(`Failed to retrieve lab variable - ${name}`); }
+        return null;
+    }
+}
+
+function setLabVariable(name, value) {
+    try {
+        if (debug) { console.log(`Setting lab variable ${name} to ${value}`); }
+        try{
+			clientAPI = window.api.v1;
+		} catch(e) {
+			clientAPI = null;
+		}       
+        if (clientAPI) {
+            window.api.v1.setLabVariable(name,value);
+        } else {
+            $('[data-name="' + name + '"]').val(value).trigger("change");
+        }
+    } catch (e) {
+        if (debug) { console.log(`Failed to set lab variable ${name} to ${value}`); }
+    }
+}
+
+// Initialize the debug variable from the lab variable
+debug = ["true", "yes"].includes((getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase());
+
 // Function to get a current CSS style value
 function get_style_rule_value(selector, style, match)
 {
