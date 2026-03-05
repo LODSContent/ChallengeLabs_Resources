@@ -1,14 +1,14 @@
 /*
  * Script Name: LabModeSwitch.js
  * Authors: Mark Morgan
- * Version: 1.17
- * Date: March 09, 2025
+ * Version: 2.00
+ * Date: March 04, 2026
  * Description: Creates a custom dropdown to replace the original difficulty button, 
  *              managing mode switching with a styled div-based UI.
  */
 
 // Code for mode switching
-const showLabMode = $(`select[data-name="ShowLabMode"]`).val()?.toLowerCase() || null;
+const showLabMode = getLabVariable("ShowLabMode");
 
 // Define modes globally
 const modes = {
@@ -43,10 +43,14 @@ const modes = {
 };
 
 // Helper Functions
-function setSelectValue(name, value) {
-    const $select = $(`select[data-name="${name}"]`);
-    $select.find(`option[value="${value}"]`).prop('selected', true);
-    $select.trigger('change');
+function getLabVariable(name) {
+    return window.api.v1.getLabVariable(name)?.toLowerCase() || null;
+}
+
+function setLabVariable(name, value) {
+    if (condition === 'yes') {
+        window.api.v1.setLabVariable(name,value);
+    }
 }
 
 // Create and manage custom difficulty dropdown
@@ -167,7 +171,7 @@ function createCustomDifficultyDropdown() {
                 if (typeof value === 'function') {
                     value();
                 } else {
-                    setSelectValue(name, value);
+                    setLabVariable(name, value);
                 }
             }
             if (debug) { console.log(`Applied ${selectedMode} mode settings from select-Difficulty`); }
@@ -183,7 +187,7 @@ function createCustomDifficultyDropdown() {
             if (typeof value === 'function') {
                 value();
             } else {
-                setSelectValue(name, value);
+                setLabVariable(name, value);
             }
         }
         if (debug) { console.log(`Applied initial ${initialMode} mode settings from select-Difficulty`); }
