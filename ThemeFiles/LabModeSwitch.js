@@ -48,9 +48,7 @@ function getLabVariable(name) {
 }
 
 function setLabVariable(name, value) {
-    if (condition === 'yes') {
-        window.api.v1.setLabVariable(name,value);
-    }
+    window.api.v1.setLabVariable(name,value);
 }
 
 // Create and manage custom difficulty dropdown
