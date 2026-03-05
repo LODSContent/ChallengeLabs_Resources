@@ -1,10 +1,57 @@
 /*
  * Script Name: LabNotifications.js
  * Authors: Mark Morgan
- * Version: 2.23
- * Date: 9/5/2025
+ * Version: 2026.03.05.1624
  * Description: Displays custom lab notification popups using sendLabNotification API and integrates them into a styled custom alerts menu placed under .tabs, with CSS ::before for the icon, managing modal-menu-mask for background darkening, persisting alerts within the same session using sessionStorage with full content, using embedded showModalMenu and hideModalMenu for slide animation, ensuring no duplicates and handling legacy data.
  */
+
+// Helper Functions
+function getLabVariable(name) {
+    try {
+        if (debug) { console.log(`Retrieving lab variable - ${name}`); }
+        try{
+			clientAPI = window.api.v1;
+		} catch(e) {
+			clientAPI = null;
+		}
+        if (clientAPI) {
+            if (debug) { console.log(`API: Getting lab variable - ${name}`); }             
+            let value = window.api.v1.getLabVariable(name)?.toLowerCase() || null;
+            if (debug) { console.log(`API: Retrieved lab variable - ${name} = ${value}`); }
+            return value;
+        } else {
+            if (debug) { console.log(`NoAPI: Getting lab variable - ${name}`); }            
+            let checkName = name.toLowerCase();
+            let value = $('[data-name]').filter(function() { return $(this).attr('data-name').toLowerCase() == checkName }).val().toLowerCase();
+            if (debug) { console.log(`NoAPI: Retrieved lab variable - ${name} = ${value}`); }
+            return value;
+        }
+    } catch (e) {
+        if (debug) { console.log(`Failed to retrieve lab variable - ${name}`); }
+        return null;
+    }
+}
+
+function setLabVariable(name, value) {
+    try {
+        if (debug) { console.log(`Setting lab variable ${name} to ${value}`); }
+        try{
+			clientAPI = window.api.v1;
+		} catch(e) {
+			clientAPI = null;
+		}       
+        if (clientAPI) {
+            window.api.v1.setLabVariable(name,value);
+        } else {
+            $('[data-name="' + name + '"]').val(value).trigger("change");
+        }
+    } catch (e) {
+        if (debug) { console.log(`Failed to set lab variable ${name} to ${value}`); }
+    }
+}
+
+// Initialize the debug variable from the lab variable
+debug = ["true", "yes"].includes((getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase());
 
 // Begin lab Notification code
 function labNotifications() {
@@ -84,7 +131,6 @@ function labNotifications() {
     });
 }
 
-// Helper Functions
 function fetchNotifications(url) {
     const xhttp = new XMLHttpRequest();
     xhttp.open("GET", url, false); // Synchronous
