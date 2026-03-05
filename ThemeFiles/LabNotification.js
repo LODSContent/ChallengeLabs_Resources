@@ -252,8 +252,8 @@ function hideModalMenu(targetId) {
 $(document).ready(function() {
     try {
         labNotifications();
-    } catch (err) {
-        console.error("Lab notifications failed:", err);
+    } catch (e) {
+        console.log("Lab notifications failed:");
     }
 });
 // End lab Notification code
