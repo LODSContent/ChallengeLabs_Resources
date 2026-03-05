@@ -8,9 +8,14 @@
 
 // Begin Translation code
 
+// Helper function
+function getLabVariable(name) {
+    return window.api.v1.getLabVariable(name)?.toLowerCase() || null;
+}
+
 // Get AutoTranslate setting
 //const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
-const autoTranslate = $('.variable[data-name="AutoTranslate"]').text()?.toLowerCase() || null;
+const autoTranslate = getLabVariable("AutoTranslate");
 if (debug) { console.log(`AutoTranslate setting: ${autoTranslate}`); }
 
 if (autoTranslate === 'no') {
@@ -159,7 +164,7 @@ if (autoTranslate === 'no') {
         }, 1000);
     }
 
-    // Helper Function
+    // Helper Functions
     function getTargetLanguage() {
         let lang = document.documentElement.lang || "en-US";
         const langPrefix = lang.substr(0, 2).toLowerCase();
