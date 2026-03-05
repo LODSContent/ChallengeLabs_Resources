@@ -9,6 +9,10 @@
 !INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/LabHelp.md)
 
 :::HiddenVariables(ShowVariables=Yes)
+Debug: @lab.DropDownList(Debug)[True,False]
+
+debug: @lab.DropDownList(debug)[True,False]
+
 ShowToggle: @lab.DropDownList(ShowToggle)[Yes,No]
 
 ShowLabMode: @lab.DropDownList(ShowLabMode)[Yes,No]
