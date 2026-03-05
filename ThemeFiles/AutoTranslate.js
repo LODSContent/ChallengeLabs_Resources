@@ -9,9 +9,9 @@
 // Begin Translation code
 
 // Helper function
-function getLabVariable(name) {
-    return window.api.v1.getLabVariable(name)?.toLowerCase() || null;
-}
+//function getLabVariable(name) {
+//    return window.api.v1.getLabVariable(name)?.toLowerCase() || null;
+//}
 
 // Get AutoTranslate setting
 //const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
