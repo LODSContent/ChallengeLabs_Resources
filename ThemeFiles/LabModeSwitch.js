@@ -43,13 +43,13 @@ const modes = {
 };
 
 // Helper Functions
-function getLabVariable(name) {
-    return window.api.v1.getLabVariable(name)?.toLowerCase() || null;
-}
+//function getLabVariable(name) {
+//    return window.api.v1.getLabVariable(name)?.toLowerCase() || null;
+//}
 
-function setLabVariable(name, value) {
-    window.api.v1.setLabVariable(name,value);
-}
+//function setLabVariable(name, value) {
+//    window.api.v1.setLabVariable(name,value);
+//}
 
 // Create and manage custom difficulty dropdown
 function createCustomDifficultyDropdown() {
