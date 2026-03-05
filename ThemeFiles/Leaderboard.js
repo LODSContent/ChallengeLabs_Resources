@@ -1,8 +1,7 @@
 /*
  * Script Name: Leaderboard.js
  * Authors: Mark Morgan
- * Version: 1.22
- * Date: August 15, 2025
+ * Version: 2026.03.05.1624
  * Description: Posts scores to the MarcoScore leaderboard application, with case-insensitive game ID
  * handling (displayed in uppercase) and timeout management for server requests. The game ID
  * entry form is placed in a "Leaderboard" section under a "Challenge Labs" tab, with a
@@ -17,22 +16,56 @@
  * a debounced scoring mechanism. StepItems apply penalties only once per unique step, tracked by
  * clicked status, with debounced click handling to prevent rapid clicks.
  */
-if (debug) { console.log("Leaderboard: Script is loading"); }
 
-// begin shared functions
-// Retrieve a lab variable listed in Markdown as a case-insensitive variable name
-//function getLabVariable(name) {
-//    if (debug) { console.log(`Leaderboard: Retrieving lab variable - ${name}`); }
-//    let checkName = name.toLowerCase();
-//    let value = $('[data-name]').filter(function() { return $(this).attr('data-name').toLowerCase() == checkName }).val();
-//    if (debug) { console.log(`Leaderboard: Retrieved value for ${name} - ${value}`); }
-//    return value;
-//}
-// Set a lab variable
-//function setLabVariable(name, value) {
-//    if (debug) { console.log(`Leaderboard: Setting lab variable ${name} to ${value}`); }
-//    $('[data-name="' + name + '"]').val(value).trigger("change");
-//}
+// Helper Functions
+function getLabVariable(name) {
+    try {
+        if (debug) { console.log(`Retrieving lab variable - ${name}`); }
+        try{
+			clientAPI = window.api.v1;
+		} catch(e) {
+			clientAPI = null;
+		}
+        if (clientAPI) {
+            if (debug) { console.log(`API: Getting lab variable - ${name}`); }             
+            let value = window.api.v1.getLabVariable(name)?.toLowerCase() || null;
+            if (debug) { console.log(`API: Retrieved lab variable - ${name} = ${value}`); }
+            return value;
+        } else {
+            if (debug) { console.log(`NoAPI: Getting lab variable - ${name}`); }            
+            let checkName = name.toLowerCase();
+            let value = $('[data-name]').filter(function() { return $(this).attr('data-name').toLowerCase() == checkName }).val().toLowerCase();
+            if (debug) { console.log(`NoAPI: Retrieved lab variable - ${name} = ${value}`); }
+            return value;
+        }
+    } catch (e) {
+        if (debug) { console.log(`Failed to retrieve lab variable - ${name}`); }
+        return null;
+    }
+}
+
+function setLabVariable(name, value) {
+    try {
+        if (debug) { console.log(`Setting lab variable ${name} to ${value}`); }
+        try{
+			clientAPI = window.api.v1;
+		} catch(e) {
+			clientAPI = null;
+		}       
+        if (clientAPI) {
+            window.api.v1.setLabVariable(name,value);
+        } else {
+            $('[data-name="' + name + '"]').val(value).trigger("change");
+        }
+    } catch (e) {
+        if (debug) { console.log(`Failed to set lab variable ${name} to ${value}`); }
+    }
+}
+
+// Initialize the debug variable from the lab variable
+debug = ["true", "yes"].includes((getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase());
+
+if (debug) { console.log("Leaderboard: Script is loading"); }
 
 // Handle tab switching
 function initializeTabSwitching() {
