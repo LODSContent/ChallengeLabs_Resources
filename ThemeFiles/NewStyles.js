@@ -48,6 +48,8 @@ function setLabVariable(name, value) {
 // Initialize the debug variable from the lab variable
 debug = ["true", "yes"].includes((getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase());
 
+if (debug) { console.log(`Loading the NewStyles.js code.`); }
+
 // Function to get a current CSS style value
 function get_style_rule_value(selector, style, match)
 {
