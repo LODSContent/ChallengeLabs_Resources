@@ -109,25 +109,56 @@ function get_style_rule_value(selector, style, match) {
 
 // ────────────────────────────────────────────────
 
-function convertRGB(rgbColor) {
-    if (!rgbColor) {
-        if (debug) { console.log(`[convertRGB] No color provided`); }
+function convertRGB(input) {
+    if (!input) {
+        if (debug) { console.log(`[convertRGB] No input → skip`); }
         return undefined;
     }
+
+    const str = input.trim();
+
+    // Early exit for CSS variables — we can't compute them here
+    if (str.startsWith('var(')) {
+        if (debug) { 
+            console.log(`[convertRGB] CSS variable detected, cannot convert: ${str}`); 
+        }
+        return undefined;   // ← most important line
+    }
+
+    // Only attempt conversion if it looks like rgb/rgba
+    if (!str.startsWith('rgb')) {
+        if (debug) { console.log(`[convertRGB] Not an rgb() value: ${str}`); }
+        return undefined;
+    }
+
     try {
-        if (debug) { console.log(`[convertRGB] Converting: ${rgbColor}`); }
-        var a = rgbColor.split("(")[1]?.split(")")[0];
-        if (!a) throw new Error("Invalid rgb format");
-        var parts = a.split(",").map(x => parseInt(x.trim()));
-        var hex = parts.map(x => {
-            let h = x.toString(16);
-            return h.length === 1 ? "0" + h : h;
-        }).join("");
-        let result = "#" + hex;
+        if (debug) { console.log(`[convertRGB] Attempting: ${str}`); }
+
+        // Remove possible 'rgba(' or 'rgb(' and closing ')'
+        let valuesStr = str.split('(')[1]?.split(')')[0];
+        if (!valuesStr) throw new Error("Invalid format");
+
+        let parts = valuesStr.split(',').map(x => parseInt(x.trim(), 10));
+        
+        // Safety check
+        if (parts.length < 3 || parts.some(isNaN)) {
+            throw new Error("NaN or too few components");
+        }
+
+        // Optional: ignore alpha for now (most cases we want opaque hex)
+        let [r, g, b] = parts;
+
+        let hex = [r, g, b].map(x => {
+            let h = Math.max(0, Math.min(255, x)).toString(16);
+            return h.length === 1 ? '0' + h : h;
+        }).join('');
+
+        const result = '#' + hex.toUpperCase();
         if (debug) { console.log(`  → ${result}`); }
         return result;
+
     } catch (e) {
-        if (debug) { console.log(`[convertRGB] Failed: ${e.message}`); }
+        if (debug) { console.log(`[convertRGB] Failed: ${e.message} (input: ${str})`); }
         return undefined;
     }
 }
