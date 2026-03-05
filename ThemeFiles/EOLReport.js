@@ -2,7 +2,7 @@
  * Script Name: EOLReport.js
  * Authors: John Rice, Mark Morgan
  * Version: 1.10
- * Date: March 08, 2025
+ * Date: March 05, 2026
  * Description: Translates elements in the HTML to the target language.
  */
 
