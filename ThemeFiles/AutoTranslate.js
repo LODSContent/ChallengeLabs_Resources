@@ -239,6 +239,7 @@ if (autoTranslate === 'no') {
 
     // Add the dropdown to the settings modal
     function addLanguageDropdown() {
+        if (debug) { console.log(`Adding language dropdown.`); }
         const modalContent = document.querySelector('.modal-menu-content');
         if (!modalContent) return;
 
