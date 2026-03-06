@@ -43,7 +43,7 @@ Welcome to the Challenge Lab!Learn something new, validate your current skills o
 <br>
 ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["Answer questions about <Detailed list of topics from this lab>. Act as an Instructor. Use technical language. I am a beginner."]}
 
-*For each of the requirements, add a section for an introduction to the requirement based upon the Title of that Requirement and the tasks being performed in that requirement. This introduction does not need a title. Add this just below the !INSTRUCTIONS[] tag at the top of each requirement section. Use the same @lab.Variable values that are used in the main introduction. Wrap the requirement introduction in the following ShowLearn section:
+*For each of the requirements, add a section for an introduction to the requirement based upon the Title of that Requirement and the tasks being performed in that requirement. Keep the existing title at the top of the section. The introduction does not need a separate title. Add the requirement introduction just below the !INSTRUCTIONS[] tag at the top of each requirement section. Use the same @lab.Variable values that are used in the main introduction. Wrap the requirement introduction in the following ShowLearn section:
 :::ShowLearn(ShowLearn=Yes)
 <Requirement introduction goes here.>
 :::
