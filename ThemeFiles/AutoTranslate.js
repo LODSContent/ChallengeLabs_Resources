@@ -1,8 +1,9 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan
- * Version: 2026.03.04.1620
+ * Version: 2026.03.06 (with language dropdown)
  * Description: Translates elements in the HTML to the target language.
+ *              Now includes user-selectable target language via dropdown.
  */
 
 // Begin Translation code
@@ -11,11 +12,11 @@
 function getLabVariable(name) {
     try {
         if (debug) { console.log(`Retrieving lab variable - ${name}`); }
-        try{
-			clientAPI = window.api.v1;
-		} catch(e) {
-			clientAPI = null;
-		}
+        try {
+            clientAPI = window.api.v1;
+        } catch(e) {
+            clientAPI = null;
+        }
         if (clientAPI) {
             if (debug) { console.log(`API: Getting lab variable - ${name}`); }             
             let value = window.api.v1.getLabVariable(name)?.toLowerCase() || null;
@@ -24,7 +25,9 @@ function getLabVariable(name) {
         } else {
             if (debug) { console.log(`NoAPI: Getting lab variable - ${name}`); }            
             let checkName = name.toLowerCase();
-            let value = $('[data-name]').filter(function() { return $(this).attr('data-name').toLowerCase() == checkName }).val().toLowerCase();
+            let value = $('[data-name]').filter(function() { 
+                return $(this).attr('data-name').toLowerCase() == checkName 
+            }).val()?.toLowerCase() || null;
             if (debug) { console.log(`NoAPI: Retrieved lab variable - ${name} = ${value}`); }
             return value;
         }
@@ -37,13 +40,13 @@ function getLabVariable(name) {
 function setLabVariable(name, value) {
     try {
         if (debug) { console.log(`Setting lab variable ${name} to ${value}`); }
-        try{
-			clientAPI = window.api.v1;
-		} catch(e) {
-			clientAPI = null;
-		}       
+        try {
+            clientAPI = window.api.v1;
+        } catch(e) {
+            clientAPI = null;
+        }       
         if (clientAPI) {
-            window.api.v1.setLabVariable(name,value);
+            window.api.v1.setLabVariable(name, value);
         } else {
             $('[data-name="' + name + '"]').val(value).trigger("change");
         }
@@ -53,10 +56,11 @@ function setLabVariable(name, value) {
 }
 
 // Initialize the debug variable from the lab variable
-debug = ["true", "yes"].includes((getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase());
+let debug = ["true", "yes"].includes(
+    (getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase()
+);
 
 // Get AutoTranslate setting
-//const autoTranslate = $('select[data-name="AutoTranslate"]').val()?.toLowerCase() || null;
 const autoTranslate = getLabVariable("AutoTranslate");
 if (debug) { console.log(`AutoTranslate setting: ${autoTranslate}`); }
 
@@ -70,7 +74,51 @@ if (autoTranslate === 'no') {
     const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, input[type="button"], #labNotificationsHeader';
     const elementArray = findElements.replace('[type="button"]', '').split(',').map(s => s.trim().toLowerCase());
     const ignoreElements = 'no-xl8, code, .codeTitle, .typeText, .copyable';
-    const targetLanguage = getTargetLanguage();
+
+    // Language options for the dropdown (common codes supported by Google Translate GTX endpoint)
+    const languageOptions = [
+        { code: 'af', name: 'Afrikaans' },
+        { code: 'ar', name: 'Arabic' },
+        { code: 'bg', name: 'Bulgarian' },
+        { code: 'ca', name: 'Catalan' },
+        { code: 'zh-CN', name: 'Chinese (Simplified)' },
+        { code: 'zh-TW', name: 'Chinese (Traditional)' },
+        { code: 'hr', name: 'Croatian' },
+        { code: 'cs', name: 'Czech' },
+        { code: 'da', name: 'Danish' },
+        { code: 'nl', name: 'Dutch' },
+        { code: 'en', name: 'English' },
+        { code: 'et', name: 'Estonian' },
+        { code: 'fi', name: 'Finnish' },
+        { code: 'fr', name: 'French' },
+        { code: 'de', name: 'German' },
+        { code: 'el', name: 'Greek' },
+        { code: 'he', name: 'Hebrew' },
+        { code: 'hi', name: 'Hindi' },
+        { code: 'hu', name: 'Hungarian' },
+        { code: 'id', name: 'Indonesian' },
+        { code: 'it', name: 'Italian' },
+        { code: 'ja', name: 'Japanese' },
+        { code: 'ko', name: 'Korean' },
+        { code: 'lv', name: 'Latvian' },
+        { code: 'lt', name: 'Lithuanian' },
+        { code: 'no', name: 'Norwegian' },
+        { code: 'pl', name: 'Polish' },
+        { code: 'pt', name: 'Portuguese' },
+        { code: 'ro', name: 'Romanian' },
+        { code: 'ru', name: 'Russian' },
+        { code: 'sk', name: 'Slovak' },
+        { code: 'sl', name: 'Slovenian' },
+        { code: 'es', name: 'Spanish' },
+        { code: 'sv', name: 'Swedish' },
+        { code: 'th', name: 'Thai' },
+        { code: 'tr', name: 'Turkish' },
+        { code: 'uk', name: 'Ukrainian' },
+        { code: 'vi', name: 'Vietnamese' }
+    ];
+
+    // Get user-selected language (overrides page lang if set)
+    let userSelectedLang = getLabVariable("TranslateLanguage");
 
     // Translation Functions
     async function translateText(text, targetLang) {
@@ -167,9 +215,87 @@ if (autoTranslate === 'no') {
         if (debug) { console.log("Reverted all translations"); }
     }
 
+    // UPDATED: Language selection logic
+    function getTargetLanguage() {
+        // Priority 1: User-selected language from dropdown
+        if (userSelectedLang && userSelectedLang !== 'auto') {
+            return userSelectedLang;
+        }
+
+        // Priority 2: Page language (fallback)
+        let lang = document.documentElement.lang || "en-US";
+        const langPrefix = lang.substr(0, 2).toLowerCase();
+
+        if (langPrefix === "ja" || langPrefix === "ko") {
+            return langPrefix;
+        }
+
+        return langPrefix;
+    }
+
+    let targetLanguage = getTargetLanguage();
+    if (debug) { console.log(`Effective target language: ${targetLanguage}`); }
+
+    // Add the dropdown to the settings modal
+    function addLanguageDropdown() {
+        const modalContent = document.querySelector('.modal-menu-content');
+        if (!modalContent) return;
+
+        // Prevent duplicate addition
+        if (document.getElementById('translate-language-select')) return;
+
+        const html = `
+            <hr>
+            <h3 class="settings-heading primary-color"><label for="translate-language">Translate To</label></h3>
+            <div>
+                <select id="translate-language-select" data-name="TranslateLanguage">
+                    <option value="auto" ${!userSelectedLang || userSelectedLang === 'auto' ? 'selected' : ''}>Auto (use page language)</option>
+                    <option value="en" ${userSelectedLang === 'en' ? 'selected' : ''}>English (no translation)</option>
+                    ${languageOptions.map(opt => 
+                        `<option value="${opt.code}" ${userSelectedLang === opt.code ? 'selected' : ''}>${opt.name}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <hr>
+        `;
+
+        // Insert after the last <hr> in the modal content
+        const lastHr = modalContent.querySelector('hr:last-child');
+        if (lastHr) {
+            lastHr.insertAdjacentHTML('afterend', html);
+        } else {
+            modalContent.insertAdjacentHTML('beforeend', html);
+        }
+
+        // Listen for changes
+        const select = document.getElementById('translate-language-select');
+        if (select) {
+            select.addEventListener('change', async (e) => {
+                const newLang = e.target.value;
+                setLabVariable("TranslateLanguage", newLang);
+                userSelectedLang = newLang;
+                targetLanguage = getTargetLanguage();
+
+                if (debug) { console.log(`Translation language changed to: ${newLang} → effective: ${targetLanguage}`); }
+
+                // Revert current translations
+                revertTranslations();
+
+                // Re-translate with new target
+                const parentSelector = window.location.pathname.includes("ExamResult") 
+                    ? '.end-of-lab-report' 
+                    : '.instructions';
+
+                if (targetLanguage !== 'en' && targetLanguage !== 'en-us' && targetLanguage !== 'en-gb') {
+                    await translateAllElements(parentSelector);
+                }
+            });
+        }
+    }
+
     function initializeTranslation(parent) {
-        if (targetLanguage === "en-US") {
-            if (debug) { console.log("Target language is en-US, skipping translation"); }
+        if (targetLanguage === 'en' || targetLanguage === 'en-us' || targetLanguage === 'en-gb') {
+            if (debug) { console.log("Target language is English, skipping translation"); }
             return;
         }
 
@@ -198,7 +324,7 @@ if (autoTranslate === 'no') {
             }
         });
 
-        // Delay to catch late updates
+        // Delay to catch late DOM updates
         setTimeout(() => {
             translateAllElements(parent);
             observer.observe(document.body, { childList: true, subtree: true });
@@ -206,23 +332,13 @@ if (autoTranslate === 'no') {
         }, 1000);
     }
 
-    // Helper Functions
-    function getTargetLanguage() {
-        let lang = document.documentElement.lang || "en-US";
-        const langPrefix = lang.substr(0, 2).toLowerCase();
-        if (langPrefix === "ja" || langPrefix === "ko") {
-            lang = langPrefix;
-        }
-        return lang;
-    }
+    // Main execution
+    addLanguageDropdown();  // Add dropdown early
 
-    // Start Translation
-    let parentSelector;
-    if (window.location.pathname.indexOf("ExamResult") < 0) {
-        parentSelector = '.instructions';
-    } else {
-        parentSelector = '.end-of-lab-report';
-    }
+    let parentSelector = window.location.pathname.indexOf("ExamResult") < 0 
+        ? '.instructions' 
+        : '.end-of-lab-report';
+
     initializeTranslation(parentSelector);
 }
 
