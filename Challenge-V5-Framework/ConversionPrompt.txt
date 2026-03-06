@@ -52,6 +52,8 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 
 *Replace the !INSTRUCTIONS[] entry containing Toggle.md at the top of each section, including the Introduction page, with !INSTRUCTIONS[] followed by (https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Header.md) on the same line with no spaces.
 
+*Preserve all of the existing tasks in each requirement as they are. Do not remove or add any tasks or [+hint] items.
+
 *For the individual tasks within the Requirement. Add an introduction to the task with a summary of what they are going to be doing. This introduction should occur just above the corresponding bullet. Keep existing bullets "-" in-place where they currently are in front of the individual tasks and do not place bullets in front of the :::ShowLearn sections. The title of the introduction does not need to contain the word Task:
 
 *Do not include specifics about the names of things to be created. You can be specific about the services/resources/technologies being utilized. Add the section for the task just above the bullet for that task.
