@@ -8,8 +8,6 @@
 
 // Begin Translation code
 
-debug = "true";
-
 // Helper Functions
 function getLabVariable(name) {
     try {
@@ -58,7 +56,8 @@ function setLabVariable(name, value) {
 }
 
 // Initialize the debug variable from the lab variable
-let debug = ["true", "yes"].includes(
+let debug = "false";
+debug = ["true", "yes"].includes(
     (getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase()
 );
 
