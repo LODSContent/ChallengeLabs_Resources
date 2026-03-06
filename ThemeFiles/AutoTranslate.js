@@ -8,6 +8,8 @@
 
 // Begin Translation code
 
+debug = "true";
+
 // Helper Functions
 function getLabVariable(name) {
     try {
