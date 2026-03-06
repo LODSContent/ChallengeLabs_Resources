@@ -47,6 +47,8 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 :::ShowLearn(ShowLearn=Yes)
 <Requirement introduction goes here.>
 :::
+
+*After the Introduction, add an HR and line break as follows:
 ---
 <br>
 
