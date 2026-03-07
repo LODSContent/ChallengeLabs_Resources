@@ -212,7 +212,7 @@ if (autoTranslate === 'no') {
         if (debug) { console.log("Reverted all translations"); }
     }
 
-    // Language selection logic
+    // Language selection logic (small addition for clarity)
     function getTargetLanguage() {
         if (userSelectedLang && userSelectedLang !== 'auto') {
             return userSelectedLang;
@@ -224,22 +224,13 @@ if (autoTranslate === 'no') {
         }
         return langPrefix;
     }
-
-    let targetLanguage = getTargetLanguage();
-    if (debug) { console.log(`Effective target language: ${targetLanguage}`); }
-
-    // Decide which parent strategy to use
-    function getParentSelector() {
-        const isManualSelection = userSelectedLang && userSelectedLang !== 'auto';
-        if (isManualSelection) {
-            return '#labClient';
-        }
-        // Auto mode → original behavior
-        return window.location.pathname.indexOf("ExamResult") < 0
-            ? '.instructions'
-            : '.end-of-lab-report';
+    
+    // NEW helper: Is translation actually needed?
+    function shouldTranslate() {
+        const tl = targetLanguage.toLowerCase();
+        return tl !== 'en' && tl !== 'en-us' && tl !== 'en-gb';
     }
-
+    
     // Add the dropdown to the settings modal
     function addLanguageDropdown() {
         if (debug) { console.log(`Adding language dropdown.`); }
@@ -248,12 +239,12 @@ if (autoTranslate === 'no') {
             if (debug) { console.log("Modal content '#settings-menu .modal-menu-content' not found"); }
             return;
         }
-
+    
         if (document.getElementById('translate-language-select')) {
             if (debug) { console.log("Dropdown already exists — skipping"); }
             return;
         }
-
+    
         const html = `
             <h3 class="settings-heading primary-color"><label for="translate-language">Translate To</label></h3>
             <div>
@@ -267,7 +258,7 @@ if (autoTranslate === 'no') {
             </div>
             <hr>
         `;
-
+    
         const lastHr = modalContent.querySelector('hr:last-child');
         if (lastHr) {
             lastHr.insertAdjacentHTML('afterend', html);
@@ -276,26 +267,32 @@ if (autoTranslate === 'no') {
             modalContent.insertAdjacentHTML('beforeend', html);
             if (debug) { console.log("No <hr> found — appended to end"); }
         }
-
+    
         const select = document.getElementById('translate-language-select');
         if (select) {
             select.addEventListener('change', async (e) => {
                 const newLang = e.target.value;
                 setLabVariable("TranslateLanguage", newLang);
                 userSelectedLang = newLang;
+    
+                // Update target **before** deciding what to do
                 targetLanguage = getTargetLanguage();
-
+    
                 if (debug) { 
                     console.log(`Language changed to: ${newLang} → effective: ${targetLanguage}`); 
                     console.log(`Using parent: ${getParentSelector()}`);
                 }
-
+    
+                // Always revert first — this restores original text
                 revertTranslations();
-
-                const parentSelector = getParentSelector();
-
-                if (targetLanguage !== 'en' && targetLanguage !== 'en-us' && targetLanguage !== 'en-gb') {
+    
+                // Only re-translate if we actually need translation now
+                if (shouldTranslate()) {
+                    const parentSelector = getParentSelector();
                     await translateAllElements(parentSelector);
+                    if (debug) console.log("Re-translation performed after revert");
+                } else {
+                    if (debug) console.log("Target is English — no re-translation, originals restored");
                 }
             });
             if (debug) { console.log("Change listener attached"); }
@@ -303,33 +300,39 @@ if (autoTranslate === 'no') {
             if (debug) { console.log("Failed to find select after insertion"); }
         }
     }
-
+    
     function initializeTranslation() {
-        if (targetLanguage === 'en' || targetLanguage === 'en-us' || targetLanguage === 'en-gb') {
-            if (debug) { console.log("Target is English — skipping translation"); }
+        targetLanguage = getTargetLanguage(); // ensure fresh
+    
+        if (!shouldTranslate()) {
+            if (debug) { 
+                console.log(`Target is English (${targetLanguage}) — skipping initial translation`); 
+            }
+            // Still revert just in case something was translated earlier
+            revertTranslations();
             return;
         }
-
+    
         const parentSelector = getParentSelector();
-
+    
         const observer = new MutationObserver(mutations => {
             let newElementsTranslated = 0;
-
+    
             mutations.forEach(mutation => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach(node => {
                         if (node.nodeType !== 1) return;
-
+    
                         const root = document.querySelector(parentSelector);
                         if (!root) return;
-
+    
                         if (node.closest(parentSelector) || root.contains(node)) {
                             const tagName = node.tagName?.toLowerCase();
                             if (tagName && elementArray.includes(tagName)) {
                                 translateTextNodes(node);
                                 newElementsTranslated++;
                             }
-
+    
                             const descendants = node.querySelectorAll(findElements);
                             Array.from(descendants).forEach(el => {
                                 translateTextNodes(el);
@@ -339,12 +342,12 @@ if (autoTranslate === 'no') {
                     });
                 }
             });
-
+    
             if (debug && newElementsTranslated > 0) {
                 console.log(`Translated ${newElementsTranslated} new elements via mutation in '${parentSelector}'`);
             }
         });
-
+    
         setTimeout(() => {
             const rootToObserve = document.querySelector('#labClient') || document.body;
             translateAllElements(parentSelector);
@@ -358,7 +361,7 @@ if (autoTranslate === 'no') {
             }
         }, 1000);
     }
-
+    
     // Main execution
     addLanguageDropdown();
     initializeTranslation();
