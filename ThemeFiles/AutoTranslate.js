@@ -1,7 +1,7 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan
- * Version: 2026.03.07.0100 (enhanced mutation handling + logging for all mutations)
+ * Version: 2026.03.07.0111 (debug logging + revert fix + observer improvements)
  * Description: Translates elements in the HTML to the target language.
  *              Uses page-language selectors for 'auto' mode;
  *              uses #labClient when user manually selects a language.
@@ -198,8 +198,9 @@ if (autoTranslate === 'no') {
             return;
         }
         const elements = parentElement.querySelectorAll(findElements);
+        if (debug) console.log(`Translating ${elements.length} elements in ${parentSelector}`);
         await Promise.all(Array.from(elements).map(translateTextNodes));
-        if (debug) { console.log(`Completed initial translation for ${elements.length} elements in '${parent}'`); }
+        if (debug) { console.log(`Completed translation for ${elements.length} elements in '${parentSelector}'`); }
     }
 
     function revertTranslations() {
@@ -213,47 +214,77 @@ if (autoTranslate === 'no') {
         if (debug) { console.log("Reverted all translations"); }
     }
 
-    // UPDATED: Language selection logic
+    // Language selection logic
     function getTargetLanguage() {
-        // Priority 1: User-selected language from dropdown
+        let effectiveLang;
+
         if (userSelectedLang && userSelectedLang !== 'auto') {
-            return userSelectedLang;
+            effectiveLang = userSelectedLang;
+        } else {
+            let lang = document.documentElement.lang || "en-US";
+            const langPrefix = lang.substr(0, 2).toLowerCase();
+            if (langPrefix === "ja" || langPrefix === "ko") {
+                effectiveLang = langPrefix;
+            } else {
+                effectiveLang = langPrefix;
+            }
         }
-        // Priority 2: Page language (fallback)
-        let lang = document.documentElement.lang || "en-US";
-        const langPrefix = lang.substr(0, 2).toLowerCase();
-        if (langPrefix === "ja" || langPrefix === "ko") {
-            return langPrefix;
+
+        if (debug) {
+            console.log("[getTargetLanguage] userSelectedLang =", userSelectedLang);
+            console.log("[getTargetLanguage] document.lang =", document.documentElement.lang);
+            console.log("[getTargetLanguage] effective targetLanguage =", effectiveLang);
         }
-        return langPrefix;
+
+        return effectiveLang;
+    }
+
+    function shouldTranslate() {
+        const tl = (targetLanguage || "").toLowerCase();
+        const result = tl !== 'en' && tl !== 'en-us' && tl !== 'en-gb';
+        
+        if (debug) {
+            console.log("[shouldTranslate] targetLanguage =", tl, "→ shouldTranslate =", result);
+        }
+        
+        return result;
     }
 
     let targetLanguage = getTargetLanguage();
-    if (debug) { console.log(`Effective target language: ${targetLanguage}`); }
+
+    // Decide which parent strategy to use
+    function getParentSelector() {
+        const isManualSelection = userSelectedLang && userSelectedLang !== 'auto';
+        if (isManualSelection) {
+            return '#labClient';
+        }
+        // Auto mode → original behavior
+        return window.location.pathname.indexOf("ExamResult") < 0
+            ? '.instructions'
+            : '.end-of-lab-report';
+    }
 
     // Add the dropdown to the settings modal
     function addLanguageDropdown() {
         if (debug) { console.log(`Adding language dropdown.`); }
         const modalContent = document.querySelector('#settings-menu .modal-menu-content');
         if (!modalContent) {
-            if (debug) { console.log("Modal content .modal-menu-content not found"); }
+            if (debug) { console.log("Modal content '#settings-menu .modal-menu-content' not found"); }
             return;
         }
 
-        // Prevent duplicate addition
         if (document.getElementById('translate-language-select')) {
-            if (debug) { console.log("Dropdown already exists — skipping addition"); }
+            if (debug) { console.log("Dropdown already exists — skipping"); }
             return;
         }
 
         const html = `
-            <hr>
             <h3 class="settings-heading primary-color"><label for="translate-language">Translate To</label></h3>
             <div>
                 <select id="translate-language-select" data-name="TranslateLanguage">
                     <option value="auto" ${!userSelectedLang || userSelectedLang === 'auto' ? 'selected' : ''}>Auto (use page language)</option>
                     <option value="en" ${userSelectedLang === 'en' ? 'selected' : ''}>English (no translation)</option>
-                    ${languageOptions.map(opt => 
+                    ${languageOptions.map(opt =>
                         `<option value="${opt.code}" ${userSelectedLang === opt.code ? 'selected' : ''}>${opt.name}</option>`
                     ).join('')}
                 </select>
@@ -261,92 +292,129 @@ if (autoTranslate === 'no') {
             <hr>
         `;
 
-        // Insert after the last <hr> in the modal content
         const lastHr = modalContent.querySelector('hr:last-child');
         if (lastHr) {
             lastHr.insertAdjacentHTML('afterend', html);
             if (debug) { console.log("Dropdown inserted after last <hr>"); }
         } else {
             modalContent.insertAdjacentHTML('beforeend', html);
-            if (debug) { console.log("No <hr> found — dropdown appended to end of modal"); }
+            if (debug) { console.log("No <hr> found — appended to end"); }
         }
 
-        // Listen for changes
         const select = document.getElementById('translate-language-select');
         if (select) {
             select.addEventListener('change', async (e) => {
                 const newLang = e.target.value;
                 setLabVariable("TranslateLanguage", newLang);
                 userSelectedLang = newLang;
+
                 targetLanguage = getTargetLanguage();
 
-                if (debug) { console.log(`Translation language changed to: ${newLang} → effective: ${targetLanguage}`); }
+                if (debug) {
+                    console.log(`[Dropdown change] New selection: ${newLang} → effective: ${targetLanguage}`);
+                    console.log(`[Dropdown change] Parent will be: ${getParentSelector()}`);
+                }
 
-                // Revert current translations
-                revertTranslations();
+                revertTranslations();  // always restore originals first
 
-                // Re-translate with new target
-                const parentSelector = window.location.pathname.includes("ExamResult") 
-                    ? '.end-of-lab-report' 
-                    : '.instructions';
-
-                if (targetLanguage !== 'en' && targetLanguage !== 'en-us' && targetLanguage !== 'en-gb') {
+                if (shouldTranslate()) {
+                    const parentSelector = getParentSelector();
                     await translateAllElements(parentSelector);
+                    if (debug) console.log("[Dropdown change] Translation performed");
+                } else {
+                    if (debug) console.log("[Dropdown change] Target is English — staying reverted");
                 }
             });
-            if (debug) { console.log("Change listener attached to dropdown"); }
+            if (debug) { console.log("Change listener attached"); }
         } else {
-            if (debug) { console.log("Failed to find select element after insertion"); }
+            if (debug) { console.log("Failed to find select after insertion"); }
         }
     }
 
     function initializeTranslation() {
-        if (targetLanguage === 'en' || targetLanguage === 'en-us' || targetLanguage === 'en-gb') {
-            if (debug) { console.log("Target language is English, skipping translation"); }
+        if (debug) console.log("[initializeTranslation] Starting...");
+
+        targetLanguage = getTargetLanguage();
+
+        if (!shouldTranslate()) {
+            if (debug) {
+                console.log("[initializeTranslation] Target is English — skipping translation and reverting any old state");
+            }
+            revertTranslations();
             return;
+        }
+
+        const parentSelector = getParentSelector();
+
+        if (debug) {
+            console.log("[initializeTranslation] Parent selector chosen:", parentSelector);
+        }
+
+        const parentEl = document.querySelector(parentSelector);
+        if (!parentEl) {
+            if (debug) console.warn("[initializeTranslation] Parent element NOT FOUND:", parentSelector);
+            return;
+        }
+
+        if (debug) {
+            const count = parentEl.querySelectorAll(findElements).length;
+            console.log(`[initializeTranslation] Found ${count} candidate elements in ${parentSelector}`);
         }
 
         const observer = new MutationObserver(mutations => {
             let newElementsTranslated = 0;
 
             mutations.forEach(mutation => {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === 1 && node.closest(parent)) {
-                        const tagName = node.tagName.toLowerCase();
-                        if (elementArray.includes(tagName) && (node.type === 'button' || tagName !== 'input')) {
-                            translateTextNodes(node);
-                            newElementsTranslated++;
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType !== 1) return;
+
+                        const root = document.querySelector(parentSelector);
+                        if (!root) return;
+
+                        if (node.closest(parentSelector) || root.contains(node)) {
+                            const tagName = node.tagName?.toLowerCase();
+                            if (tagName && elementArray.includes(tagName)) {
+                                translateTextNodes(node);
+                                newElementsTranslated++;
+                            }
+
+                            const descendants = node.querySelectorAll(findElements);
+                            Array.from(descendants).forEach(el => {
+                                translateTextNodes(el);
+                                newElementsTranslated++;
+                            });
                         }
-                        const languageElements = node.querySelectorAll(findElements);
-                        Array.from(languageElements).forEach(element => {
-                            translateTextNodes(element);
-                            newElementsTranslated++;
-                        });
-                    }
-                });
+                    });
+                }
             });
 
             if (debug && newElementsTranslated > 0) {
-                console.log(`Translated ${newElementsTranslated} new elements in '${parent}'`);
+                console.log(`[Mutation] Translated ${newElementsTranslated} new elements in '${parentSelector}'`);
             }
         });
 
-        // Delay to catch late DOM updates
         setTimeout(() => {
-            translateAllElements(parent);
-            observer.observe(document.body, { childList: true, subtree: true });
-            if (debug) { console.log(`Translation observer initialized for '${parent}'`); }
-        }, 1000);
+            if (debug) console.log("[initializeTranslation] Delayed start – calling translateAllElements");
+            translateAllElements(parentSelector);
+
+            const rootToObserve = document.querySelector('#labClient') || document.body;
+            observer.observe(rootToObserve, { 
+                childList: true, 
+                subtree: true,
+                characterData: true
+            });
+
+            if (debug) {
+                console.log(`[initializeTranslation] Observer attached to: ${rootToObserve.id || rootToObserve.tagName}`);
+                console.log("[initializeTranslation] Initialization complete");
+            }
+        }, 1200);
     }
 
     // Main execution
-    addLanguageDropdown();  // Add dropdown early
-
-    let parentSelector = window.location.pathname.indexOf("ExamResult") < 0 
-        ? '.instructions' 
-        : '.end-of-lab-report';
-
-    initializeTranslation(parentSelector);
+    addLanguageDropdown();
+    initializeTranslation();
 }
 
 // End Translation code
