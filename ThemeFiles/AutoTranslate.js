@@ -253,7 +253,6 @@ if (autoTranslate === 'no') {
         }
     
         const html = `
-            <hr>
             <h3 class="settings-heading primary-color"><label for="translate-language">Translate To</label></h3>
             <div>
                 <select id="translate-language-select" data-name="TranslateLanguage">
