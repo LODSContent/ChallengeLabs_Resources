@@ -59,10 +59,10 @@ function setLabVariable(name, value) {
 }
 
 // Initialize debug early
-let debug = "false";
-debug = ["true", "yes"].includes(
-    (getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase()
-);
+let debug = "true";
+//debug = ["true", "yes"].includes(
+//    (getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase()
+//);
 
 // Get AutoTranslate setting
 const autoTranslate = getLabVariable("AutoTranslate");
