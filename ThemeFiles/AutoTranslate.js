@@ -406,7 +406,7 @@ if (autoTranslate === 'no') {
             if (debug) console.log("[initializeTranslation] Delayed start – calling translateAllElements");
             translateAllElements(parentSelector);
 
-            const rootToObserve = document.querySelector('#labClient') || document.body;
+            const rootToObserve = document.querySelector(parentSelector) || document.body;
             observer.observe(rootToObserve, { 
                 childList: true, 
                 subtree: true,
