@@ -363,7 +363,8 @@ if (autoTranslate === 'no') {
 
         const observer = new MutationObserver(mutations => {
             let newElementsTranslated = 0;
-
+            
+            console.log("[initializeTranslation] MutationObserver initialized.");
             mutations.forEach(mutation => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach(node => {
