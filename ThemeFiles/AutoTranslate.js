@@ -1,7 +1,7 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan
- * Version: 2026.03.09.1416
+ * Version: 2026.03.09.1557
  * Description: Translates elements in the HTML to the target language.
  *              Uses page-language selectors for 'auto' mode;
  *              uses #labClient when user manually selects a language.
@@ -307,22 +307,25 @@ if (autoTranslate === 'no') {
                 const newLang = e.target.value;
                 setLabVariable("TranslateLanguage", newLang);
                 userSelectedLang = newLang;
-
                 targetLanguage = getTargetLanguage();
-
+            
                 if (debug) {
                     console.log(`[Dropdown change] New selection: ${newLang} → effective: ${targetLanguage}`);
                     console.log(`[Dropdown change] Parent will be: ${getParentSelector()}`);
                 }
-
-                revertTranslations();  // always restore originals first
-
+            
+                // Always revert first
+                revertTranslations();
+            
                 if (shouldTranslate()) {
                     const parentSelector = getParentSelector();
                     await translateAllElements(parentSelector);
-                    if (debug) console.log("[Dropdown change] Translation performed");
+                    if (debug) console.log("[Dropdown change] Initial translation performed");
+            
+                    // IMPORTANT: Re-initialize observer for future dynamic content
+                    initializeTranslation();
                 } else {
-                    if (debug) console.log("[Dropdown change] Target is English — staying reverted");
+                    if (debug) console.log("[Dropdown change] Target is English — staying reverted (no observer)");
                 }
             });
             if (debug) { console.log("Change listener attached"); }
@@ -364,7 +367,10 @@ if (autoTranslate === 'no') {
         const observer = new MutationObserver(mutations => {
             let newElementsTranslated = 0;
 
-            console.log("[Translation:Observer] MutationObserver initialized.");
+            if (debug && mutations.length > 0) {
+                    console.log(`[Observer fired] Detected ${mutations.length} mutations`);
+            }
+            
             mutations.forEach(mutation => {
                 if (mutation.type === 'childList') {
                     mutation.addedNodes.forEach(node => {
