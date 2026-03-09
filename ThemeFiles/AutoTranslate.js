@@ -430,5 +430,3 @@ if (autoTranslate === 'no') {
 }
 
 // End Translation code
-
-// End Translation code
