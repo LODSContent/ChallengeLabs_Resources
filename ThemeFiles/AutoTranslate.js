@@ -264,7 +264,7 @@ if (autoTranslate === 'no') {
     function getParentSelector() {
         const isManualSelection = userSelectedLang && userSelectedLang !== 'auto';
         if (isManualSelection) {
-            return '.instructions-client';
+            return '#labClient';
         }
         // Auto mode → original behavior
         return window.location.pathname.indexOf("ExamResult") < 0
