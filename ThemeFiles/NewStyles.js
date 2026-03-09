@@ -62,9 +62,9 @@ function setLabVariable(name, value) {
 
 // Initialize debug from lab variable
 debug = "false";
-//debug = ["true", "yes"].includes(
-//    (getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase()
-//);
+debug = ["true", "yes"].includes(
+    (getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase()
+);
 if (debug) { 
     console.log(`%cDebug mode ENABLED`, "color:#0f0; font-weight:bold");
     console.log(`Loading the NewStyles.js code.`); 
@@ -171,7 +171,7 @@ function convertRGB(input) {
 
 // ────────────────────────────────────────────────
 function setColors() {
-    if (debug) console.log(`[setColors] Starting`);
+    //if (debug) console.log(`[setColors] Starting`);
 
     const root = document.querySelector(':root');
     if (!root) {
@@ -281,7 +281,7 @@ function setColors() {
         root.style.setProperty('--button-primary-color', buttonColor);
     }
 
-    if (debug) console.log(`[setColors] Finished`);
+    //if (debug) console.log(`[setColors] Finished`);
 }
 
 // ────────────────────────────────────────────────
@@ -298,7 +298,7 @@ setTimeout(() => {
     if (debug) console.log(`Setting up MutationObserver on #settings-menu`);
     try {
         const observer = new MutationObserver((mutations) => {
-            if (debug) console.log(`[Observer] ${mutations.length} mutations → refreshing colors`);
+            //if (debug) console.log(`[Observer] ${mutations.length} mutations → refreshing colors`);
             setColors();
         });
 
