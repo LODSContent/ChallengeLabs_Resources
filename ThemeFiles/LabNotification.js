@@ -58,7 +58,7 @@ function labNotifications() {
     if (debug) { console.log("Starting lab notifications v2.23"); }
 
     // Ensure custom alerts button exists
-    ensureCustomAlertsButton();
+    //ensureCustomAlertsButton();
 
     // Ensure custom alerts menu exists
     const customAlertsMenu = ensureCustomAlertsMenu();
