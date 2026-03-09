@@ -363,31 +363,23 @@ if (autoTranslate === 'no') {
 
         const observer = new MutationObserver(mutations => {
             let newElementsTranslated = 0;
-            
+
             console.log("[initializeTranslation] MutationObserver initialized.");
             mutations.forEach(mutation => {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType !== 1) return;
-
-                        const root = document.querySelector(parentSelector);
-                        if (!root) return;
-
-                        if (node.closest(parentSelector) || root.contains(node)) {
-                            const tagName = node.tagName?.toLowerCase();
-                            if (tagName && elementArray.includes(tagName)) {
-                                translateTextNodes(node);
-                                newElementsTranslated++;
-                            }
-
-                            const descendants = node.querySelectorAll(findElements);
-                            Array.from(descendants).forEach(el => {
-                                translateTextNodes(el);
-                                newElementsTranslated++;
-                            });
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1 && node.closest(parentSelector)) {
+                        const tagName = node.tagName.toLowerCase();
+                        if (elementArray.includes(tagName) && (node.type === 'button' || tagName !== 'input')) {
+                            translateTextNodes(node);
+                            newElementsTranslated++;
                         }
-                    });
-                }
+                        const languageElements = node.querySelectorAll(findElements);
+                        Array.from(languageElements).forEach(element => {
+                            translateTextNodes(element);
+                            newElementsTranslated++;
+                        });
+                    }
+                });
             });
 
             if (debug && newElementsTranslated > 0) {
@@ -395,6 +387,7 @@ if (autoTranslate === 'no') {
             }
         });
 
+        // Delay to catch late updates
         setTimeout(() => {
             if (debug) console.log("[initializeTranslation] Delayed start – calling translateAllElements");
             translateAllElements(parentSelector);
