@@ -1,7 +1,7 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan
- * Version: 2026.03.09.1136
+ * Version: 2026.03.09.1355
  * Description: Translates elements in the HTML to the target language.
  *              Uses page-language selectors for 'auto' mode;
  *              uses #labClient when user manually selects a language.
