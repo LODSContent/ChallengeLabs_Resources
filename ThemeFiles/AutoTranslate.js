@@ -58,6 +58,14 @@ function setLabVariable(name, value) {
     }
 }
 
+function debounce(fn, delay = 250) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}
+
 // Initialize debug early
 let debug = "true";
 //debug = ["true", "yes"].includes(
@@ -364,42 +372,45 @@ if (autoTranslate === 'no') {
             console.log(`[initializeTranslation] Found ${count} candidate elements in ${parentSelector}`);
         }
 
-        const observer = new MutationObserver(mutations => {
-            let newElementsTranslated = 0;
-
-            if (debug && mutations.length > 0) {
-                    console.log(`[Observer fired] Detected ${mutations.length} mutations`);
-            }
-            
-            mutations.forEach(mutation => {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType !== 1) return;
-
-                        const root = document.querySelector(parentSelector);
-                        if (!root) return;
-
-                        if (node.closest(parentSelector) || root.contains(node)) {
-                            const tagName = node.tagName?.toLowerCase();
-                            if (tagName && elementArray.includes(tagName)) {
-                                translateTextNodes(node);
-                                newElementsTranslated++;
+        const observer = new MutationObserver(
+            debounce(mutations => {
+                if (debug) console.log(`[Observer fired] Detected ${mutations.length} mutations (debounced)`);
+        
+                let newElementsTranslated = 0;
+        
+                mutations.forEach(mutation => {
+                    if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType !== 1) return;
+                            const root = document.querySelector(parentSelector);
+                            if (!root) return;
+                            if (node.closest(parentSelector) || root.contains(node)) {
+                                const tagName = node.tagName?.toLowerCase();
+                                if (tagName && elementArray.includes(tagName)) {
+                                    translateTextNodes(node);
+                                    newElementsTranslated++;
+                                }
+                                const descendants = node.querySelectorAll(findElements);
+                                Array.from(descendants).forEach(el => {
+                                    translateTextNodes(el);
+                                    newElementsTranslated++;
+                                });
                             }
-
-                            const descendants = node.querySelectorAll(findElements);
-                            Array.from(descendants).forEach(el => {
-                                translateTextNodes(el);
-                                newElementsTranslated++;
-                            });
+                        });
+                    } else if (mutation.type === 'characterData') {
+                        const parent = mutation.target.parentElement;
+                        if (parent && (parent.closest(parentSelector))) {
+                            translateTextNodes(parent);
+                            newElementsTranslated++;
                         }
-                    });
+                    }
+                });
+        
+                if (debug && newElementsTranslated > 0) {
+                    console.log(`[Mutation] Translated ${newElementsTranslated} new elements (debounced)`);
                 }
-            });
-
-            if (debug && newElementsTranslated > 0) {
-                console.log(`[Mutation] Translated ${newElementsTranslated} new elements in '${parentSelector}'`);
-            }
-        });
+            }, 200)  // 200 ms debounce — adjust to 100–400
+        );
 
         // Delay to catch late updates
         setTimeout(() => {
