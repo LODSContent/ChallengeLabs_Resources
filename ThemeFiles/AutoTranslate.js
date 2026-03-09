@@ -414,7 +414,21 @@ if (autoTranslate === 'no') {
 
     // Main execution
     addLanguageDropdown();
-    initializeTranslation();
+
+    // Only initialize translation (initial scan + observer) if we actually need to translate
+    if (shouldTranslate()) {
+        initializeTranslation();
+    } else {
+        if (debug) {
+            const reason = userSelectedLang && userSelectedLang !== 'auto'
+                ? `manual selection is English (${userSelectedLang})`
+                : `page language is English (${document.documentElement.lang || 'en-US'})`;
+            console.log(`[Main] Translation skipped: ${reason}`);
+        }
+        revertTranslations();
+    }
 }
+
+// End Translation code
 
 // End Translation code
