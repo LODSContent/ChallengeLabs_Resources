@@ -75,7 +75,7 @@ if (debug) {
 // Helper: Get resolved (computed) color value from an element
 function getComputedColor(selector, property = 'color', fallbackSelector = null) {
     if (debug) {
-        console.log(`[getComputedColor] Resolving ${property} for selector: ${selector}`);
+        //console.log(`[getComputedColor] Resolving ${property} for selector: ${selector}`);
     }
 
     let element = document.querySelector(selector);
@@ -102,7 +102,7 @@ function getComputedColor(selector, property = 'color', fallbackSelector = null)
             raw = computed.color;
         }
 
-        if (debug) console.log(`  Computed raw: ${raw}`);
+        //if (debug) console.log(`  Computed raw: ${raw}`);
 
         // Normalize "rgb(r g b)" → "rgb(r, g, b)" (some browsers omit commas)
         if (raw && raw.includes('rgb') && !raw.includes(',')) {
@@ -124,24 +124,24 @@ function getComputedColor(selector, property = 'color', fallbackSelector = null)
 // Safe RGB → Hex converter (handles rgb(...), skips vars)
 function convertRGB(input) {
     if (!input) {
-        if (debug) console.log(`[convertRGB] No input`);
+        //if (debug) console.log(`[convertRGB] No input`);
         return undefined;
     }
 
     const str = input.trim();
 
     if (str.startsWith('var(')) {
-        if (debug) console.log(`[convertRGB] CSS var detected (should not reach here): ${str}`);
+        //if (debug) console.log(`[convertRGB] CSS var detected (should not reach here): ${str}`);
         return undefined;
     }
 
     if (!str.startsWith('rgb')) {
-        if (debug) console.log(`[convertRGB] Not rgb(): ${str}`);
+        //if (debug) console.log(`[convertRGB] Not rgb(): ${str}`);
         return undefined;
     }
 
     try {
-        if (debug) console.log(`[convertRGB] Converting: ${str}`);
+        //if (debug) console.log(`[convertRGB] Converting: ${str}`);
 
         let valuesStr = str.split('(')[1]?.split(')')[0];
         if (!valuesStr) throw new Error("Invalid rgb format");
@@ -160,9 +160,9 @@ function convertRGB(input) {
         }).join('');
 
         const result = '#' + hex.toUpperCase();
-        if (debug) console.log(`  → ${result}`);
+        //if (debug) console.log(`  → ${result}`);
         return result;
-    } catch (e) {
+    } catch (e) {;
         if (debug) console.log(`[convertRGB] Failed: ${e.message} (input: ${str})`);
         return undefined;
     }
@@ -186,12 +186,12 @@ function setColors() {
     const blockquoteShadowColor       = (styles.getPropertyValue('--blockquote-shadow-color')      || '#000000').trim();
 
     if (debug) {
-        console.log(`  Controls → bgEnable: ${blockquoteBackgroundEnable}, alpha: ${blockquoteBackgroundAlpha}, shadowEnable: ${blockquoteShadowEnable}`);
+        //console.log(`  Controls → bgEnable: ${blockquoteBackgroundEnable}, alpha: ${blockquoteBackgroundAlpha}, shadowEnable: ${blockquoteShadowEnable}`);
     }
 
     const icons = ["alert", "help", "hint", "note"];
     icons.forEach(icon => {
-        if (debug) console.log(`  → ${icon}`);
+        //if (debug) console.log(`  → ${icon}`);
 
         // Prefer existing blockquote element if available
         let color = getComputedColor(`blockquote.${icon}`, 'border-color');
