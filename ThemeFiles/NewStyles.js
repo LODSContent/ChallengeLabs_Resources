@@ -61,9 +61,10 @@ function setLabVariable(name, value) {
 }
 
 // Initialize debug from lab variable
-debug = ["true", "yes"].includes(
-    (getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase()
-);
+debug = "false";
+//debug = ["true", "yes"].includes(
+//    (getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase()
+//);
 if (debug) { 
     console.log(`%cDebug mode ENABLED`, "color:#0f0; font-weight:bold");
     console.log(`Loading the NewStyles.js code.`); 
