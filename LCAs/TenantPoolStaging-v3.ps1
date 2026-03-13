@@ -368,6 +368,10 @@ $Permissions = @{
         AppId = "cf36b471-5b44-428c-9866-a1226b414fe7"
         Permissions = @("CloudAppSecurity.ReadWrite.All")
     }
+    "Microsoft Cloud App Security" = @{
+        AppId = "05a65629-4c1b-48c1-a78b-804c4abdd4af"
+        Permissions = @("discovery.manage", "investigation.manage", "settings.manage")
+    }    	
     "WindowsDefenderATP" = @{
         AppId = "fc780465-2017-40d4-a0c5-307022471b92"
         Permissions = @("Machine.Read.All", "Machine.ReadWrite.All")
