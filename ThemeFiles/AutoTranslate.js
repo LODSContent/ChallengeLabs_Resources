@@ -350,7 +350,7 @@ if (autoTranslate === 'no') {
             console.log("[initializeTranslation] Parent selector chosen:", parent);
         }
 
-        const parentEl = document.querySelector(parentSelector);
+        const parentEl = document.querySelector(parent);
         if (!parentEl) {
             if (debug) console.warn("[initializeTranslation] Parent element NOT FOUND:", parent);
             return;
