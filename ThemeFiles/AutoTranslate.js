@@ -69,7 +69,7 @@ if (autoTranslate === 'no') {
     const translatedElements = new Set();
     const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, button, input[type="button"], #labNotificationsHeader';
     const elementArray = findElements.replace('[type="button"]', '').split(',').map(s => s.trim().toLowerCase());
-    const ignoreElements = 'no-xl8, code, .codeTitle, .typeText, .copyable';
+    const ignoreElements = 'no-xl8, code, strong, .codeTitle, .typeText, .copyable';
 
     // Language options
     const languageOptions = [
