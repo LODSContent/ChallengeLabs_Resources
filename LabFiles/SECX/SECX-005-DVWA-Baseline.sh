@@ -31,7 +31,6 @@ if [ ! -e /etc/apache2/conf-enabled/dvwa-exposure.conf ]; then
 fi
 
 # Reload Apache with syntax check
-apachectl -t
 systemctl reload apache2
 
 # Clear prior student artifacts
