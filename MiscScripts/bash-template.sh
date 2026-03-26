@@ -23,7 +23,7 @@ fi
 
 # Main function body for all validation code
 main() {
-if [ $scriptDebug -eq 1 ]; then
+    if [ $scriptDebug -eq 1 ]; then
         echo "Begin main routine."
     fi
 
