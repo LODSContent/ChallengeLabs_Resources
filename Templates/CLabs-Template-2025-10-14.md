@@ -21,6 +21,12 @@ The "Overview" section should be formatted EXACTLY as it is shown below, but upd
 
 If we are converting an existing lab that already has some of this structure (Overview, tasks, steps, summary), make sure to preserve the verbiage and order of the existing content, while adding the additional markdown structure and conten to align with this template format.
 
+Items to be typed by the student should be wrapped in ++ markers (our lab "Copy Text").
+
+Short lines of code to be typed in a command window or editor should be wrapped in single backticks.
+
+Long code blocks should be wrapped in triple back ticks.
+
 If requested, create validation scripts for each of the Requirements in the lab.
 
 We generally like to see 1 to 4 scripts per "Requirement" with scripts focusing on the major objectives performed within each requirement section within the lab. 
@@ -225,17 +231,27 @@ CRITICAL TEMPLATE RULES - FOLLOW EXACTLY:
 - Replace the placeholder validation logic (file/queryString example) with the actual checks needed for that requirement.
 
 CRITICAL OUTPUT RULES:
-- Output the scripts inside a comment block at the end of the Markdown lab instructions formatted like the following:
+- Do NOT wrap these scripts 
+- Output the scripts at the end of the Markdown lab instructions and format like the following:
 
-<!--
+===
+<!-- Begin Requirement 1 section -->
+# Validation scripts
+
 ## Requirement 1, Script 1
+```
 <script code>
+```
 
 ## Requirement 1, Script 2
+```
 <script code>
+```
 
 ## Requirement 2, Script 1
-<script code
+```
+<script code>
+```
 
 ## Etc.
 
