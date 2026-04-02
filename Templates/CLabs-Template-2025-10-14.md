@@ -311,7 +311,6 @@ Use the following bash template for any Linux related validation scripts:
 
 < Beginning of Bash Template >
 
-
 #!/bin/bash
 # Title: Lab Environment Validation
 # Description: Validates lab environment by checking file content
@@ -411,11 +410,10 @@ CRITICAL TEMPLATE RULES - FOLLOW EXACTLY:
 - Replace the placeholder validation logic (file/queryString example) with the actual checks needed for that requirement.
 
 CRITICAL OUTPUT RULES:
-- Do NOT wrap these scripts 
 - Output the scripts at the end of the Markdown lab instructions and format like the following:
 
 ===
-<!-- Begin Requirement 1 section -->
+<!-- Begin Validation Scripts section -->
 # Validation scripts
 
 ## Requirement 1, Script 1
