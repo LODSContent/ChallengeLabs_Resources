@@ -13,7 +13,7 @@ queryString="Starting Nmap"
 # Set default return value (0 for success, 1 for failure in Bash)
 result=1
 
-# Debug toggle (checking environment variable LAB_DEBUG)
+# Debug toggle
 if [[ "@lab.Variable(debug)" == "Yes" || "@lab.Variable(debug)" == "True" || "@lab.Variable(Debug)" == "Yes" || "@lab.Variable(Debug)" == "True" ]]; then
     scriptDebug=1
     echo "Debug mode is enabled."
