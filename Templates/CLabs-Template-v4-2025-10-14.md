@@ -1,35 +1,4 @@
 
-AI instructions:
-
-Use the Markdown template below to format the structure of the lab instructions. 
-
-Use the Overview section from the template as the Introduction. Preserve the [challenge-title] and [overview] markers, but edit the content as appropriate. Do not add any content other than comments before the first !INSTRUCTIONS include and challenge-title entry. Do not add any markdown headers # or introductory text to the first page other than what should be included with the challenge-title and overview markers.
-
-Make sure to preserve all !INSTRUCTIONS entries by formatting them with !INSTRUCTIONS immediately followed by an empty square bracket, followed by the content in parenthesis.
-
-The topics provided will each be a requirement. Within each requirement should be 3 or more tasks. The tasks should be brief statements of what needs to be done within the environment without provided the step-by-step details. You will need to provide details that the student would not know, like the names of items to be created, or quantities, sizes etc.
-
-Provide tables, images and codeblocks as needed for clarity in performing the task.
-
-Each individual task should be followed by a corresponding "Hint" as a "Show Guided" item that details the steps involved in a task and a corresponding "Knowledge" as a "Show Advanced" item with a link to vendor documentation related to the same task. If there are 3 tasks, there should be 3 Guided and Advanced items, one beneath each task. Do not label the Tasks as Tasks.
-
-Inside the tasks, the steps should be formatted as a markdown bulleted list. Add tables, images and codeblocks as needed for clarity.
-
-Do not use numbering on any tasks or steps. The numbers in this template are just for reference.
-
-The "Overview" section should be formatted EXACTLY as it is shown below, but updated with the particulars for this lab.
-
-If we are converting an existing lab that already has some of this structure (Overview, tasks, steps, summary), make sure to preserve the verbiage and order of the existing content, while adding the additional markdown structure and conten to align with this template format.
-
-Items to be typed by the student should be wrapped in ++ markers (our lab "Copy Text").
-
-Short lines of code to be typed in a command window or editor should be wrapped in single backticks.
-
-Long code blocks should be wrapped in triple back ticks.
-
-
-Below is the markdown template:
-
 <!-- Current Challenge Lab Template v4 - as of - 10/14/2025 -->
 
 <!-- Begin Overview section -->
