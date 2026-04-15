@@ -52,9 +52,9 @@
 
       "queryString": "Azure",
 
-      "startDate": "",
+      "startDate": "1/1/2024",
 
-      "endDate": ""
+      "endDate": "4/1/2026"
 
       },
 
@@ -70,9 +70,9 @@
 
       "queryString": " aws |\\.aws\\.|^aws|\\(aws\\)|\\[aws\\]|\\*aws\\*",
 
-      "startDate": "",
+      "startDate": "1/1/2024",
 
-      "endDate": ""
+      "endDate": "4/1/2026"
 
       },
 
@@ -88,9 +88,9 @@
 
       "queryString": "Entra.*tenant",
 
-      "startDate": "",
+      "startDate": "1/1/2024",
 
-      "endDate": ""
+      "endDate": "4/1/2026"
 
       }
 
