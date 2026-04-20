@@ -36,7 +36,7 @@ function main {
         if ($scriptDebug) {Write-Output "Validation successful. Found:`n$queryString `nin: `n$queryVariable"}
     } else {
         $result = $false
-        if ($scriptDebug) {Write-Output "Validation failed. Could not find:`n$queryString `nin: `n$queryVariable""}
+        if ($scriptDebug) {Write-Output "Validation failed. Could not find:`n$queryString `nin: `n$queryVariable"}
     }
 
     if ($scriptDebug) {Write-Output "End main routine."}
