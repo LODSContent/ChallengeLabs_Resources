@@ -7,6 +7,10 @@
    Version: <YYYY.MM.DD> - Template.v4.0
 #>
 
+ # Parameters: Modify these to match the requirements of the lab environment
+ $file = 'C:\LabFiles\SomeFileName.txt'
+ $queryString = '*string to find in file*'
+
 # Set default return value
 $result = $false
 
@@ -22,10 +26,6 @@ function main {
     # There is a global try/catch at the end of the script that will handle error suppression for terminating errors.
 
     If ($scriptDebug) {Write-Output "Begin main routine."}
-
-    # Parameters: Modify these to match the requirements of the lab environment
-    $file = 'C:\LabFiles\SomeFileName.txt'
-    $queryString = '*string to find in file*'
    
     # Add the commands for your scenario here
     $fileContent = [string](Get-Content $file)
