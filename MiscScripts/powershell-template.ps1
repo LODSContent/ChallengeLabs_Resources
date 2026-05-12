@@ -7,9 +7,9 @@
    Version: <YYYY.MM.DD.hhmm> - Template.v4.0
 #>
 
- # Parameters: Modify these to match the requirements of the lab environment
- $file = 'C:\LabFiles\SomeFileName.txt'
- $queryString = '*string to find in file*'
+# Parameters: Modify these to match the requirements of the lab environment
+$file = 'C:\LabFiles\SomeFileName.txt'
+$queryString = '*string to find in file*'
 
 # Set defaults
 $result = $false
