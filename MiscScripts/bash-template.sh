@@ -3,7 +3,8 @@
 # Title: Lab Environment Validation
 # Description: Validates lab environment by checking file content
 # Target: Linux lab environment
-# Version: <YYYY.MM.DD.hhmm> - Template.v4.0
+# Template: 5.0
+# Version: <YYYY.MM.DD.hhmm>
 
 # Validation parameters
 # The file we check for and the string to query for:
