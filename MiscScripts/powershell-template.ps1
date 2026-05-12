@@ -51,7 +51,7 @@ function main {
     return $result
 }
 
-# Run the main routine - When debugging, no Try/Catch is used. Any Errors or debug messages will display.
+# Run the main routine - When debugging, any Errors or debug messages will display.
 if ($scriptDebug) {
     try {
         $result = main
