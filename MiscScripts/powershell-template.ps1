@@ -36,10 +36,12 @@ function main {
     # Perform your validation testing here
     if ($fileContent -like $queryString) {
         $result = $true
-        if ($scriptDebug) {Write-Output "Validation successful."}
+        # Scripter/AI: Provide detail about the successful result
+        if ($scriptDebug) {Write-Output "'$queryString' found in: $file"}
     } else {
         $result = $false
-        if ($scriptDebug) {Write-Output "Validation failed."}
+        # Scripter/AI: Provide detail about the failed result
+        if ($scriptDebug) {Write-Output "'$queryString' not found in: $file"}
     }
 
     if ($scriptDebug) {Write-Output "End main routine."}
@@ -65,4 +67,5 @@ if ($scriptDebug) {
     }
 }
 
+if ($scriptDebug) {Write-Output "The result returned is: $result"}
 return $result
