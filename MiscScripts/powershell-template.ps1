@@ -49,7 +49,13 @@ function main {
 
 # Run the main routine - When debugging, no Try/Catch is used. Any Errors or debug messages will display.
 if ($scriptDebug) {
-    $result = main
+    try {
+        $result = main
+    } catch {
+        Write-Output "ERROR: $($_.Exception.Message)"
+        Write-Output "At line $($_.InvocationInfo.ScriptLineNumber - 104): $($_.InvocationInfo.Line.Trim())"
+        $result = $false
+    }
 } else {
     try {
         $result = main
