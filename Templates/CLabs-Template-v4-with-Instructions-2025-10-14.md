@@ -21,7 +21,6 @@ The "Overview" section should be formatted EXACTLY as it is shown below, but upd
 
 If we are converting an existing lab that already has some of this structure (Overview, tasks, steps, summary), make sure to preserve the verbiage and order of the existing content, while adding the additional markdown structure and conten to align with this template format.
 - During a conversion, if you encounter any image links like this: !IMAGE[Data source page](instructions300272/hh2xabhg.jpg)  Make sure that the descriptor in the square brackets [] is a true descriptor and not just a repeat of the file name from the parenthesis (). Infer from the content and steps prior to the image link what that descriptor should be. If there is already a good descriptor, do not modify it.
-- Replace any existing "recap" section with the one from this template, updating the Title to match that of the lab.
 
 Items to be typed by the student should be wrapped in ++ markers (our lab "Copy Text").
 
