@@ -13,7 +13,8 @@
 
 # Set defaults
 $result = $false
-$ErrorActionPreference="Stop";
+$ErrorActionPreference = "Stop"  # Always stop on errors. Override with -SilentlyContinue per command.
+$wrapperLineCount = 104  # Line offset added by the lab platform's script runner preamble.
 
 # Debug toggle
 $scriptDebug = '@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True'
@@ -53,7 +54,7 @@ if ($scriptDebug) {
         $result = main
     } catch {
         Write-Output "ERROR: $($_.Exception.Message)"
-        Write-Output "At line $($_.InvocationInfo.ScriptLineNumber - 104): $($_.InvocationInfo.Line.Trim())"
+        Write-Output "At line $($_.InvocationInfo.ScriptLineNumber - $wrapperLineCount): $($_.InvocationInfo.Line.Trim())"
         $result = $false
     }
 } else {
