@@ -4,7 +4,8 @@
    Title: <Title>
    Description: Brief summary of what the script does.
    Target: <Target>
-   Version: <YYYY.MM.DD.hhmm> - Template.v4.0
+   Template: 5.0
+   Version: <YYYY.MM.DD.hhmm>
 #>
 
 # Parameters: Modify these to match the requirements of the lab environment
