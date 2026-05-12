@@ -47,7 +47,7 @@ function main {
     if ($scriptDebug) {Write-Output "End main routine."}
     
     # Return the result from the main function
-    return $Result
+    return $result
 }
 
 # Run the main routine - When debugging, no Try/Catch is used. Any Errors or debug messages will display.
