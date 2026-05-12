@@ -735,6 +735,32 @@
                     ]
                 },
                 {
+                  "allOf": [
+                      {
+                          "field": "type",
+                          "equals": "Microsoft.Automation/automationAccounts/Runbooks"
+                      },
+                      {
+                          "field": "name",
+                          "in": [
+                              "runbook1",
+                              "AzureAutomationTutorialWithIdentity",                      
+                              "AzureAutomationTutorialWithIdentityGraphical"
+                          ]
+                      },
+                      {
+                        "anyOf": [  
+                          { "field": "id", "contains": "/resourceGroups/RG1/"},
+                          { "field": "id", "contains": "/resourceGroups/RG2/"},
+                          { "field": "id", "contains": "/resourceGroups/RG3/"},
+                          { "field": "id", "contains": "[concat('/resourceGroups/RG1', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"},
+                          { "field": "id", "contains": "[concat('/resourceGroups/RG2', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"},
+                          { "field": "id", "contains": "[concat('/resourceGroups/RG3', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"}
+                        ]
+                      }                
+                  ]
+                },
+                {
                     "field": "type",
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
