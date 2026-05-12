@@ -11,12 +11,13 @@
  $file = 'C:\LabFiles\SomeFileName.txt'
  $queryString = '*string to find in file*'
 
-# Set default return value
+# Set defaults
 $result = $false
+$ErrorActionPreference="Stop";
 
 # Debug toggle
 $scriptDebug = '@lab.Variable(debug)' -in 'Yes','True' -or '@lab.Variable(Debug)' -in 'Yes','True'
-if ($scriptDebug) { $ErrorActionPreference="Continue"; Write-Output "Debug mode is enabled." }
+if ($scriptDebug) { Write-Output "Debug mode is enabled." }
 
 # Main function body for all validation code
 function main {
