@@ -68,5 +68,4 @@ if ($scriptDebug) {
     }
 }
 
-if ($scriptDebug) {Write-Output "The result returned is: $result"}
 return $result
