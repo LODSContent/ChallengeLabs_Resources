@@ -130,7 +130,7 @@
 ```
 
 > *Note*: `// location based upon the location of the current resource group`  
-> *Note*: `// Allowing alternate locations`
+> *Note*: The location property is no longer required by Security and can be removed from ACPs. However, the "notEquals": "global" should still be added.
 ---
 [Back to TOC:](#table-of-contents)
 <br><br>
