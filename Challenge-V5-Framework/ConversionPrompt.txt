@@ -6,9 +6,9 @@ I have a series of labs in markdown format that I need to add more of a "Story" 
 
 *Above the overview, replace the !INSTRUCTIONS[] entry with !INSTRUCTIONS[] followed by (https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Intro.md) on the same line with no spaces.
 
-*Keep the existing [challenge-title] section.
+*Keep the existing >[challenge-title]: section.
 
-*Keep the existing [Overview] section, but replace it with the following:
+*Keep the existing >[Overview]: section, but replace it with the following:
 [overview]:
 Welcome to the Challenge Lab!Learn something new, validate your current skills or explore a preconfigured environment. Use the ***Select lab mode*** option above to choose how you would like to begin your journey.
 
