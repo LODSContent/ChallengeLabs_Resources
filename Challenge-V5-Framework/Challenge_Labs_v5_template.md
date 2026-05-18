@@ -61,10 +61,13 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 <Requirement introduction goes here.>
 :::
 
-- Task 1.
 :::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
+### Task 1 title
+
+<Introduction to Task 1>
 :::
+
+- Task 1.
 
 **Developer note:(remove)** *Hint items are used in Guided labs to provide detailed instructions to complete a task and will be hidden when hints are off.*
 
@@ -91,10 +94,13 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 
 >[!help] Help items are useful for information that realates to using the lab environment or performing a task that is unique to the lab setup. Using these elements can help to break up the hint and knowledge items visually. These items will always be displayed and should not reveal details intended to be suppressed in Advanced or Expert labs.
 
-- Task 2.
 :::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
+### Task 2 title
+
+<Introduction to Task 2>
 :::
+
+- Task 2.
 
 :::ShowGuided(ShowGuided=Yes)
 >[+hint] Expand this hint for guidance on...
@@ -109,10 +115,13 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 
 >[!Alert] Alert items should be used whenever there is something that needs attention at this point in the lab. It could be something that is often missed, a message on the screen that should be ignored or anything else of importance. Using these elements can help to break up the hint and knowledge items visually. These items will always be displayed and should not reveal details intended to be suppressed in Advanced or Expert labs.
 
-- Task 3.
 :::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
+### Task 3 title
+
+<Introduction to Task 3>
 :::
+
+- Task 3.
 
 :::ShowGuided(ShowGuided=Yes)
 >[+hint] Expand this hint for guidance on...
@@ -157,10 +166,13 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 <Requirement introduction goes here.>
 :::
 
-- Task 1.
 :::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
+### Task 1 title
+
+<Introduction to Task 1>
 :::
+
+- Task 1.
 
 :::ShowGuided(ShowGuided=Yes) 
 >[+hint] Expand this hint for guidance on...
@@ -171,12 +183,15 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 
 :::ShowAdvanced(ShowAdvanced=Yes)
 >[!knowledge] Want to learn more? Review the documentation on [creating Task #](https://docs.microsoft.com/ "Create Task # Guidance"). Knowledge items are hidden when hints are off.
+:::
+
+:::ShowLearn(ShowLearn=Yes)
+### Task 2 title
+
+<Introduction to Task 2>
 :::
 
 - Task 2.
-:::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
-:::
 
 :::ShowGuided(ShowGuided=Yes) 
 >[+hint] Expand this hint for guidance on...
@@ -189,10 +204,13 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 >[!knowledge] Want to learn more? Review the documentation on [creating Task #](https://docs.microsoft.com/ "Create Task # Guidance"). Knowledge items are hidden when hints are off.
 :::
 
-- Task 3.
 :::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
+### Task 3 title
+
+<Introduction to Task 3>
 :::
+
+- Task 3.
 
 :::ShowGuided(ShowGuided=Yes) 
 >[+hint] Expand this hint for guidance on...
@@ -233,10 +251,13 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 <Requirement introduction goes here.>
 :::
 
-- Task 1.
 :::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
+### Task 2 title
+
+<Introduction to Task 2>
 :::
+
+- Task 2.
 
 :::ShowGuided(ShowGuided=Yes) 
 >[+hint] Expand this hint for guidance on...
@@ -249,10 +270,13 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 >[!knowledge] Want to learn more? Review the documentation on [creating Task #](https://docs.microsoft.com/ "Create Task # Guidance"). Knowledge items are hidden when hints are off.
 :::
 
-- Task 2.
 :::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
+### Task 3 title
+
+<Introduction to Task 3>
 :::
+
+- Task 2.
 
 :::ShowGuided(ShowGuided=Yes) 
 >[+hint] Expand this hint for guidance on...
@@ -266,9 +290,7 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 :::
 
 - Task 3.
-:::ShowLearn(ShowLearn=Yes)
-<Task introduction goes here.>
-:::
+
 
 :::ShowGuided(ShowGuided=Yes) 
 >[+hint] Expand this hint for guidance on...
