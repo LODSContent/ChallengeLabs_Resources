@@ -9,7 +9,7 @@ I have a series of labs in markdown format that I need to add more of a "Story" 
 *Keep the existing >[challenge-title]: section.
 
 *Keep the existing >[Overview]: section, but replace it with the following:
-[overview]:
+>[overview]:
 Welcome to the Challenge Lab!Learn something new, validate your current skills or explore a preconfigured environment. Use the ***Select lab mode*** option above to choose how you would like to begin your journey.
 
 *After that page break "===" below the overview, add a new page using the following format:
