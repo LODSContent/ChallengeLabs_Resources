@@ -71,7 +71,7 @@ ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["A
 ## Knowledge check
 >[+]Section Quiz:
 >
->ai-quiz[Section quiz]{"model_id":1,"num_questions":5,"prompt":"Generate a set of questions based upon <Detailed list of topics from this requirement>. Act as if you are an instructor and I am a beginner."}
+>ai-quiz[Section quiz]{"num_questions":5,"prompt":"Generate a set of questions based upon <Detailed list of topics from this requirement>. Act as if you are an instructor and I am a beginner."}
 :::
 
 *Replace the !INSTRUCTIONS[] entry at the bottom of each section, including the Introduction page,  with !INSTRUCTIONS[] followed by (https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Footer.md) on the same line with no spaces.
