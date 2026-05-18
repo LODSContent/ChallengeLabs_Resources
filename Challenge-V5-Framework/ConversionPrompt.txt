@@ -21,7 +21,7 @@ Welcome to the Challenge Lab!Learn something new, validate your current skills o
 ## Objectives
 > <Objectives>
 
-## Learn more about: <challenge-title>
+## Learn more about this lab: <challenge-title>
 <Introduction>
 :::
 !INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Footer.md)
