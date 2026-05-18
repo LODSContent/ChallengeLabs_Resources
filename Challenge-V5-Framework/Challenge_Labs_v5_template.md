@@ -12,6 +12,7 @@
 <!-- End Overview section -->
 ===
 <!-- Begin Introduction section -->
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Footer.md)
 
 # Introduction
 >You are a @lab.Variable(GlobalDeveloper) at @lab.Variable(GlobalCompany), a company that needs to... First, you will [REQUIREMENT 1]. Next, you will [REQUIREMENT 2], and then you will [REQUIREMENT 3]. Finally, you will [REQUIREMENT 4].
@@ -45,6 +46,8 @@
 ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["Answer questions about <Detailed list of topics from this lab>. Act as an Instructor. Use technical language. I am a beginner."]}
 
 :::
+
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Footer.md)
 
 <!-- End Introduction section -->
 ===
