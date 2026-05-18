@@ -2,5 +2,5 @@
 :::
 
 :::difficultybutton
-@lab.Variable(Difficulty)
+@lab.Variable(difficulty)
 :::
