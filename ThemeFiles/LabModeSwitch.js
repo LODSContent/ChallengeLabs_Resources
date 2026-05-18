@@ -89,11 +89,11 @@ function setLabVariable(name, value) {
 // Initialize the debug variable from the lab variable
 debug = ["true", "yes"].includes((getLabVariable("Debug") ?? getLabVariable("debug") ?? "").trim().toLowerCase());
 
-// Create and manage custom difficulty dropdown
+// Create and manage custom  dropdown
 function createCustomDifficultyDropdown() {
-    const difficultyButton = $('.difficultybutton [data-name="Difficulty"]');
+    const difficultyButton = $('.difficultybutton [data-name="difficulty"]');
     if (!difficultyButton.length) {
-        if (debug) { console.log("No difficultybutton [data-name=\"Difficulty\"] element found, skipping custom dropdown"); }
+        if (debug) { console.log("No difficultybutton [data-name=\"difficulty\"] element found, skipping custom dropdown"); }
         return;
     }
 
@@ -112,7 +112,7 @@ function createCustomDifficultyDropdown() {
 
     // Hide original button
     difficultyButton.hide();
-    if (debug) { console.log("Hid original difficultybutton [data-name=\"Difficulty\"]"); }
+    if (debug) { console.log("Hid original difficultybutton [data-name=\"difficulty\"]"); }
 
     // Create custom dropdown structure
     const $dropdown = $('<div class="select-Difficulty" data-name="select-Difficulty"></div>');
@@ -196,7 +196,7 @@ function createCustomDifficultyDropdown() {
             difficultyButton.each((index, element) => {
                 element.innerHTML = selectedMode;
             });
-            if (debug) { console.log(`Updated difficultybutton [data-name="Difficulty"] innerHTML to: ${selectedMode}`); }
+            if (debug) { console.log(`Updated difficultybutton [data-name="difficulty"] innerHTML to: ${selectedMode}`); }
         }
 
         // Apply mode settings
