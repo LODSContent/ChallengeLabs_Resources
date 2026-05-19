@@ -1,7 +1,7 @@
 /*
  * Script Name: AutoTranslate.js
  * Authors: Mark Morgan
- * Version: 2026.03.04.1620
+ * Version: 2026.05.19.1026
  * Description: Translates elements in the HTML to the target language.
  */
 
@@ -67,6 +67,9 @@ if (autoTranslate === 'no') {
 
     // Configuration
     const translatedElements = new Set();
+    const originalTextNodeValues = new Map();
+    const originalInputValues = new Map();
+    let translationObserver = null;
     const findElements = 'blockquote, table, a, p, h1, h2, h3, h4, ol, ul, li, details, span, button, input[type="button"], #labNotificationsHeader';
     const elementArray = findElements.replace('[type="button"]', '').split(',').map(s => s.trim().toLowerCase());
     const ignoreElements = 'no-xl8, code, strong, .codeTitle, .typeText, .copyable';
@@ -162,7 +165,12 @@ if (autoTranslate === 'no') {
         }
 
         for (const textNode of textNodes) {
-            const originalText = textNode.nodeValue;
+            const currentText = textNode.nodeValue;
+            if (!originalTextNodeValues.has(textNode)) {
+                originalTextNodeValues.set(textNode, currentText);
+            }
+
+            const originalText = originalTextNodeValues.get(textNode);
             const trimmedText = originalText.trim();
             if (!trimmedText) continue;
 
@@ -175,7 +183,11 @@ if (autoTranslate === 'no') {
         }
 
         if (element.tagName === 'INPUT' && element.type === 'button') {
-            const originalText = element.value;
+            if (!originalInputValues.has(element)) {
+                originalInputValues.set(element, element.value);
+            }
+
+            const originalText = originalInputValues.get(element);
             const trimmedText = originalText.trim();
             if (trimmedText) {
                 try {
@@ -201,12 +213,30 @@ if (autoTranslate === 'no') {
     }
 
     function revertTranslations() {
+        if (translationObserver) {
+            translationObserver.disconnect();
+            translationObserver = null;
+        }
+
         translatedElements.forEach(element => {
             const originalText = element.getAttribute('data-original-text');
             if (originalText) {
                 element.textContent = originalText;
             }
         });
+
+        originalTextNodeValues.forEach((originalText, textNode) => {
+            if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+                textNode.nodeValue = originalText;
+            }
+        });
+
+        originalInputValues.forEach((originalValue, inputElement) => {
+            if (inputElement && inputElement.tagName === 'INPUT') {
+                inputElement.value = originalValue;
+            }
+        });
+
         translatedElements.clear();
         if (debug) { console.log("Reverted all translations"); }
     }
@@ -361,7 +391,12 @@ if (autoTranslate === 'no') {
             console.log(`[initializeTranslation] Found ${count} candidate elements in ${parent}`);
         }
 
-        const observer = new MutationObserver(mutations => {
+        if (translationObserver) {
+            translationObserver.disconnect();
+            translationObserver = null;
+        }
+
+        translationObserver = new MutationObserver(mutations => {
             let newElementsTranslated = 0;
 
             mutations.forEach(mutation => {
@@ -389,7 +424,10 @@ if (autoTranslate === 'no') {
         // Delay to catch late updates
         setTimeout(() => {
             translateAllElements(parent);
-            observer.observe(document.body, { childList: true, subtree: true });
+            if (!shouldTranslate()) {
+                return;
+            }
+            translationObserver.observe(document.body, { childList: true, subtree: true });
             if (debug) { console.log(`Translation observer initialized for '${parent}'`); }
         }, 1000);
     }
