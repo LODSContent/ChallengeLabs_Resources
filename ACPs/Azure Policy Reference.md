@@ -2693,8 +2693,19 @@
                             ]
                         },
                         {
-                            "field": "properties.sqlImageSku",
-                            "equals": "Developer"
+                          "anyOf": [
+                              {
+                                  "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku",
+                                  "in": [
+                                    "Express",
+                                    "Developer"
+                                  ]
+                              },
+                              {
+                                  "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku",
+                                  "exists": false
+                              }
+                          ]
                         },
                         {
                             "field": "location",
