@@ -121,7 +121,7 @@ function Fail-Selection {
         Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
     }
 
-    throw "[Debug] $ScriptTitle:`n---------`n$Global:MessageBuffer"
+    throw "[Debug] ${ScriptTitle}:`n---------`n$($Global:MessageBuffer)"
 }
 
 function Get-NormalizedText {
