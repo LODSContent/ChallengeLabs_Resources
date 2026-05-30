@@ -2,7 +2,7 @@
  * Script Name: EOLReport.js
  * Authors: John Rice, Mark Morgan
  * Version: 2026.03.04.1620
- * Description: Translates elements in the HTML to the target language.
+ * Description: Formats the Challenge Labs End of Lab Report.
  */
 
 // Helper Functions
