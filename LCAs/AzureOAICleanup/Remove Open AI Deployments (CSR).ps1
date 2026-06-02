@@ -1,7 +1,7 @@
 <#
-   Title: <Title>
-   Description: Brief summary of what the script does.
-   Target: Cloud Subscription | PS 7.4.0 | Az 11.1.0 (RC)
+   Title: Remove Open AI Deployments (CSR)
+   Description: Script to remove Azure Open AI deployments in a CSR subscription.
+   Target: Cloud Subscription | PS 7.5.5 | Az 15.6.0
    Template: 5.0
    Version: 2026-06-02-1609
 #>
