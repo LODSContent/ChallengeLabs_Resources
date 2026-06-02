@@ -881,28 +881,30 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			    if ($scriptDebug) { Send-DebugMessage "Failed to create Owner role assignment: $($_.Exception.Message)" }
 			}
 
-			# Remove Resource Groups
-			$rgListUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups?api-version=2021-04-01"
-			
-			$rgs = (Invoke-RestMethod -Uri $rgListUri -Headers $headers -Method Get).value
-			
-			if ($rgs.Count -eq 0) {
-			    if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
-			} else {
-			    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
-			    
-			    foreach ($rg in $rgs) {
-			        $rgName = $rg.name
-			        $deleteRgUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups/$($rgName)?api-version=2021-04-01"
-			        
-			        try {
-			            Invoke-RestMethod -Uri $deleteRgUri -Headers $headers -Method Delete | Out-Null
-			            if ($scriptDebug) { Send-DebugMessage "Removed Resource Group: $rgName" }
-			        } catch {
-			            if ($scriptDebug) { Send-DebugMessage "Failed to remove Resource Group: $rgName - $($_.Exception.Message)" }
-			        }
-			    }
-			}			
+			if (!$SkipCleanup) {
+				# Remove Resource Groups
+				$rgListUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups?api-version=2021-04-01"
+				
+				$rgs = (Invoke-RestMethod -Uri $rgListUri -Headers $headers -Method Get).value
+				
+				if ($rgs.Count -eq 0) {
+				    if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
+				} else {
+				    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
+				    
+				    foreach ($rg in $rgs) {
+				        $rgName = $rg.name
+				        $deleteRgUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups/$($rgName)?api-version=2021-04-01"
+				        
+				        try {
+				            Invoke-RestMethod -Uri $deleteRgUri -Headers $headers -Method Delete | Out-Null
+				            if ($scriptDebug) { Send-DebugMessage "Removed Resource Group: $rgName" }
+				        } catch {
+				            if ($scriptDebug) { Send-DebugMessage "Failed to remove Resource Group: $rgName - $($_.Exception.Message)" }
+				        }
+				    }
+				}
+			}
 		} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
 	 	}
