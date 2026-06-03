@@ -2,6 +2,7 @@
    Title: Remove Open AI Deployments (CSR)
    Description: Script to remove Azure Open AI deployments in a CSR subscription.
    Target: Cloud Subscription | PS 7.5.5 | Az 15.6.0
+   Timeout: 10 min
    Template: 5.0
    Version: 2026-06-02-1609
 #>
