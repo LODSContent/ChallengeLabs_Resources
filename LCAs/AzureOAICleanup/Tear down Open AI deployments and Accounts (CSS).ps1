@@ -2,6 +2,7 @@
    Title: Tear down Open AI deployments and Accounts (CSS)
    Description: Script to remove Open AI resources at lab teardown to reduce ongoing cost.
    Target: Cloud Subscription | PS 7.4.0 | Az 11.1.0 (RC)
+   Timeout: 10 min
    Template: 5.0
    Version: 2026-06-02-1609
 #>
