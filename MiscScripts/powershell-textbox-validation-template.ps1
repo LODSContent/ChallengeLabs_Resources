@@ -9,6 +9,13 @@
 
 # Parameters: Modify these to match the requirements of the lab environment
 $queryVariable = '@lab.Variable(Req1Check1)'
+<#
+The queryVariable will be populated from an @lab.Variable that is established as an @lab.TextBox in the lab markdown with the same name. Below is an example of the Markdown:
+
+- Enter the name of the first service in the list on the screen into the following textbox:
+
+   @lab.TextBox(Req1Check1)
+#>
 $queryString = '*string to match from the variable*'
 # For the queryString, use * as a wildcard at the beginning and end to account for extra spaces.
 #    Use * as a wildcard in between words when the string content may vary.
