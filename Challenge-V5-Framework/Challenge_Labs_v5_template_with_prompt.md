@@ -2,6 +2,7 @@ AI instructions:
 
 Use the Markdown template below to format the structure of the lab instructions.
 
+*New labs:
 Use the Overview section from the template as the Introduction. Preserve the [challenge-title] and [overview] markers, but edit the content as appropriate. Do not add any content other than comments before the first !INSTRUCTIONS include and challenge-title entry. Do not add any markdown headers # or introductory text to the first page other than what should be included with the challenge-title and overview markers.
 
 Make sure to preserve all !INSTRUCTIONS entries by formatting them with !INSTRUCTIONS immediately followed by an empty square bracket, followed by the content in parenthesis.
@@ -18,11 +19,6 @@ Do not use numbering on any tasks or steps. The numbers in this template are jus
 
 The "Overview" section should be formatted EXACTLY as it is shown below, but updated with the particulars for this lab.
 
-If we are converting an existing lab that already has some of this structure (Overview, tasks, steps, summary), make sure to preserve the verbiage and order of the existing content, while adding the additional markdown structure and conten to align with this template format.
-
-During a conversion, if you encounter any image links like this: !IMAGEData source page Make sure that the descriptor in the square brackets [] is a true descriptor and not just a repeat of the file name from the parenthesis (). Infer from the content and steps prior to the image link what that descriptor should be. If there is already a good descriptor, do not modify it.
-Items to be typed by the student should be wrapped in ++ markers (our lab "Copy Text").
-
 Short lines of code to be typed in a command window or editor should be wrapped in single backticks.
 
 Long code blocks should be wrapped in triple back ticks.
@@ -33,7 +29,91 @@ Enter the name of the first service in the list on the screen into the following
 
 @lab.TextBox(Req1Check1)
 
-Below is the full markdown template:
+
+*Conversions:
+If we are converting an existing lab that already has some of this structure (Overview, tasks, steps, summary), make sure to preserve the verbiage and order of the existing content, while adding the additional markdown structure and conten to align with this template format.
+
+During a conversion, if you encounter any image links like this: !IMAGEData source page Make sure that the descriptor in the square brackets [] is a true descriptor and not just a repeat of the file name from the parenthesis (). Infer from the content and steps prior to the image link what that descriptor should be. If there is already a good descriptor, do not modify it.
+Items to be typed by the student should be wrapped in ++ markers (our lab "Copy Text").
+
+*You will notice in the existing overview, there is a token for GlobalAdministrator and a token for GlobalCompany. Feel free to use these where appropriate in designing the narrative for each of the Requirements and Major tasks.
+
+*Above the overview, replace the !INSTRUCTIONS[] entry with !INSTRUCTIONS[] followed by (https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Intro.md) on the same line with no spaces.
+
+*Keep the existing >[challenge-title]: section.
+
+*Keep the existing >[Overview]: section, but replace it with the following:
+>[overview]:
+Welcome to the Challenge Lab!Learn something new, validate your current skills or explore a preconfigured environment. Use the ***Select lab mode*** option above to choose how you would like to begin your journey.
+
+*After that page break "===" below the overview, add a new page using the following format:
+<!-- Begin Introduction section -->
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Header.md) 
+# Introduction
+<Old overview>
+:::ShowLearn(ShowLearn=Yes)
+## Objectives
+> <Objectives>
+
+## Learn more about this lab: <challenge-title>
+<Introduction>
+:::
+!INSTRUCTIONS[](https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Footer.md)
+<!-- End Introduction section -->
+===
+
+*Replace <Old overview> with just the text from the old [overview] section, but without the [overview] and > symbols.
+
+*Replace <Objectives> with a list of objectives that reflect the lab "Requirements". Preceed each line in the Objectives section with a > to make it a blockquote.
+
+*After the <Objectives>, replace <Introduction> with a training document that provides verbose details on each of the topics covered in the requirements for the lab. Teach these topics as if they were not being covered later in a hands-on manner. Explain and teach the topics as if this were a stand-alone documentation on these topics. Provide as much detail as you can on each topic. Do not include any step-by-step instructions. Use well-formatted markdown interjected with some fancy markdown elements to make the content visually appealing. Use our custom >[!hint] >[!note] and >[!knowlege] sections to add interesting details to the documentation. (Look at the existing markdown for examples.) Be verbose. Make sure to cover all of the requirements and topics from the entire lab. Include a "References" section at the bottom with links to official vendor documentation.
+
+*At the end of the <Introduction> section, but before the trailing ::: Add the following Skillable AI prompt, replacing <Title> with the title of the lab. Update the "<Detailed list of topics from this lab>" to help the AI set the context for the chat session.:  
+
+<br>
+
+----
+
+<br>
+ai-chat[<Title>] { placeholder:"Ask me questions to learn more...", messages:["Answer questions about <Detailed list of topics from this lab>. Act as an Instructor. Use technical language. I am a beginner."]}
+
+*For each of the requirements, add a section for an introduction to the requirement based upon the Title of that Requirement and the tasks being performed in that requirement. Keep the existing title at the top of the section. The introduction does not need a separate title. Add the requirement introduction just below the !INSTRUCTIONS[] tag at the top of each requirement section. Use the same @lab.Variable values that are used in the main introduction. Wrap the requirement introduction in the following ShowLearn section:
+:::ShowLearn(ShowLearn=Yes)
+<Requirement introduction goes here.>
+:::
+
+*After the Introduction, add an HR and line break as follows:
+---
+<br>
+
+*Replace the !INSTRUCTIONS[] entry containing Toggle.md at the top of each section, including the Introduction page, with !INSTRUCTIONS[] followed by (https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Header.md) on the same line with no spaces.
+
+*Preserve all of the existing tasks in each requirement as they are. Do not remove or add any tasks or [+hint] items.
+
+*For the individual tasks within the Requirement. Add an introduction to the task with a summary of what they are going to be doing. This introduction should occur just above the corresponding bullet. Keep existing bullets "-" in-place where they currently are in front of the individual tasks and do not place bullets in front of the :::ShowLearn sections. The title of the introduction does not need to contain the word Task:
+
+*Do not include specifics about the names of things to be created. You can be specific about the services/resources/technologies being utilized. Add the section for the task just above the bullet for that task.
+
+*The task introduction that you add should be placed within a section like below:
+:::ShowLearn(ShowLearn=Yes)
+<Task introduction goes here.>
+:::
+
+*At the end of each Requirement, add a section for multiple choice questions. Depending on the length of the Requirement Section and how many topics are covered generate from 3 to 10 questions. The questions will come from our own internal system using the "ShowMCQ" section below. Replace <Requirement Title> with the title of the current requirement. Update the "<Detailed list of topics from this Requirement>" to help the AI generate appropriate questions and responses. Add additional details to the list of topics for more granularity where needed. Update the "num_questions" value with a number from 3 to 10. This section should be placed just above the !INSTRUCTIONS[] tag at the bottom of each section and should look like the following:
+:::ShowMCQ(ShowMCQ=Yes)
+<br><br>
+## Knowledge check
+>[+]Section Quiz:
+>
+>ai-quiz[Section quiz]{"num_questions":5,"prompt":"Generate a set of questions based upon <Detailed list of topics from this requirement>. Act as if you are an instructor and I am a beginner."}
+:::
+
+*Replace the !INSTRUCTIONS[] entry at the bottom of each section, including the Introduction page,  with !INSTRUCTIONS[] followed by (https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Footer.md) on the same line with no spaces.
+
+*In the "Summary" section, replace the !INSTRUCTIONS[] entry at the top of the section with !INSTRUCTIONS[] followed by (https://raw.githubusercontent.com/LODSContent/ChallengeLabs_Resources/refs/heads/master/Challenge-V5-Framework/Includes/Summary.md) on the same line with no spaces. Update the "Congratulations" with a summary detailing what the student has just accomplished within the lab. Use the same format with the > symbols to keep the section in tact. Leave the "You have accomplished" section as-is with the list of requirements.
+
+
+*Below is the full markdown template:
 
 <!-- Current Challenge Lab Template v5 - as of - 05/18/2026 -->
 
