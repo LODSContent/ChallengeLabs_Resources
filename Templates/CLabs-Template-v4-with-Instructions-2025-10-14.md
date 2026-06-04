@@ -28,8 +28,13 @@ Short lines of code to be typed in a command window or editor should be wrapped 
 
 Long code blocks should be wrapped in triple back ticks.
 
+If there is a validation that can only be perfomed visually by the student, use a markdown element like the following to prompt for a value that will be validated in a PowerShell validation script:
 
-Below is the markdown template:
+- Enter the name of the first service in the list on the screen into the following textbox:
+
+   @lab.TextBox(Req1Check1)
+
+Below is the full markdown template:
 
 <!-- Current Challenge Lab Template v4 - as of - 10/14/2025 -->
 
