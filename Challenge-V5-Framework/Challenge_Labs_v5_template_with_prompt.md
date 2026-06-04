@@ -25,7 +25,7 @@ Long code blocks should be wrapped in triple back ticks.
 
 If there is a validation that can only be perfomed visually by the student, use a markdown element like the following to prompt for a value that will be validated in a PowerShell validation script:
 
-Enter the name of the first service in the list on the screen into the following textbox:
+- Enter the name of the first service in the list on the screen into the following textbox:
 
 @lab.TextBox(Req1Check1)
 
