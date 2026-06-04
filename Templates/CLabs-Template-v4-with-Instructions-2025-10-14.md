@@ -71,7 +71,7 @@ Below is the full markdown template:
 >
 :::
 
-**Developer note:(remove)** *Knowledge items are used in Advanced labs to provide links to official vendor documentation and will be hidden when hints are off.*
+**Developer note:(remove)** *Knowledge items are used in Advanced labs to provide links to official vendor documentation and will be hidden when hints are off. Do NOT include Parenthesis inside the description field of a link.*
 
 :::ShowAdvanced(ShowAdvanced=Yes)
 >[!knowledge] Want to learn more? Review the documentation on [using Windows system restore](https://support.microsoft.com/en-us/windows/use-system-restore-a5ae3ed9-07c4-fd56-45ee-096777ecd14e "using Windows system restore").
