@@ -29,6 +29,8 @@ apt install ./turbovnc_3.3_amd64.deb -y
 /opt/TurboVNC/bin/vncpasswd
 ```
 
+> Enter `Passw0rd` as the password and the confirmation. Do not set up a "view-only" password. Use the same password when configuring the Endpoint in the lab profile.
+
 ---
 
 ## Step 3: Install support tools
@@ -178,12 +180,14 @@ chmod +x /root/.vnc/xstartup
 tee /etc/systemd/system/turbovnc.service << 'EOF'
 [Unit]
 Description=TurboVNC Server
-After=network.target
+After=network.target sddm.service
+Requires=sddm.service
 
 [Service]
 Type=forking
 User=root
-ExecStart=/opt/TurboVNC/bin/vncserver :1 -geometry 1280x800 -depth 24 -rfbport 5901 -xstartup /root/.vnc/xstartup -novtswitch -nohttpd
+ExecStartPre=/bin/sleep 5
+ExecStart=/opt/TurboVNC/bin/vncserver :1 -geometry 1280x800 -depth 24 -rfbport 5901 -xstartup /root/.vnc/xstartup
 ExecStop=/opt/TurboVNC/bin/vncserver -kill :1
 Restart=on-failure
 
