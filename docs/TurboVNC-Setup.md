@@ -164,7 +164,7 @@ export XDG_SESSION_TYPE=x11
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 
-xhost +local:
+xhost +local: > /dev/null 2>&1
 /usr/local/bin/vnc-login
 EOF
 chmod +x /root/.vnc/xstartup
@@ -183,7 +183,7 @@ After=network.target
 [Service]
 Type=forking
 User=root
-ExecStart=/opt/TurboVNC/bin/vncserver :1 -geometry 1280x800 -depth 24 -rfbport 5901 -xstartup /root/.vnc/xstartup
+ExecStart=/opt/TurboVNC/bin/vncserver :1 -geometry 1280x800 -depth 24 -rfbport 5901 -xstartup /root/.vnc/xstartup -novtswitch -nohttpd
 ExecStop=/opt/TurboVNC/bin/vncserver -kill :1
 Restart=on-failure
 
