@@ -29,7 +29,7 @@ apt install ./turbovnc_3.3_amd64.deb -y
 /opt/TurboVNC/bin/vncpasswd
 ```
 
-> Enter `Passw0rd` as the password and the confirmation. Do not set up a "view-only" password. Use the same password when configuring the Endpoint in the lab profile.
+> Enter `Passw0rd` as the password and the confirmation. Do not set up a "view-only" password. This should be the first 8 characters of the labuser password. IE: If the labuser password is "Passw0rd!", this password should be "Password".
 
 ---
 
