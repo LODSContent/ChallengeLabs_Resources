@@ -19,6 +19,7 @@ sudo su
 ```bash
 wget https://github.com/TurboVNC/turbovnc/releases/download/3.3/turbovnc_3.3_amd64.deb
 apt install ./turbovnc_3.3_amd64.deb -y
+rm -f ./turbovnc_3.3_amd64.deb
 ```
 
 ---
@@ -29,19 +30,37 @@ apt install ./turbovnc_3.3_amd64.deb -y
 /opt/TurboVNC/bin/vncpasswd
 ```
 
-> Enter `Passw0rd` as the password and the confirmation. Do not set up a "view-only" password. This should be the first 8 characters of the labuser password. IE: If the labuser password is "Passw0rd!", this password should be "Password".
-
 ---
 
 ## Step 3: Install support tools
 
 ```bash
-apt install python3-gi gir1.2-gtk-3.0 gcc net-tools libxcb-cursor0 -y
+apt install -y python3-gi gir1.2-gtk-3.0 gcc net-tools libxcb-cursor0 openbox wmctrl
 ```
 
 ---
 
-## Step 4: Create the GTK login script
+## Step 4: Create the Openbox config for focus management
+
+This prevents the login dialog from losing focus when the mouse moves away, which is required for the Skillable Type Text feature to work correctly.
+
+```bash
+mkdir -p /root/.config/openbox
+tee /root/.config/openbox/rc.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config>
+  <focus>
+    <followMouse>no</followMouse>
+    <focusNew>yes</focusNew>
+    <focusLast>yes</focusLast>
+  </focus>
+</openbox_config>
+EOF
+```
+
+---
+
+## Step 5: Create the GTK login script
 
 ```bash
 tee /usr/local/bin/vnc-login << 'EOF'
@@ -58,7 +77,6 @@ def show_login():
     dialog.set_resizable(False)
     dialog.set_keep_above(True)
 
-    # Center on screen
     screen = Gdk.Screen.get_default()
     screen_w = screen.get_width()
     screen_h = screen.get_height()
@@ -108,6 +126,7 @@ def show_login():
     pass_entry.connect("activate", lambda w: dialog.response(Gtk.ResponseType.OK))
 
     dialog.show_all()
+    user_entry.grab_focus()
 
     while True:
         response = dialog.run()
@@ -155,7 +174,7 @@ chmod +x /usr/local/bin/vnc-login
 
 ---
 
-## Step 5: Create the VNC xstartup script
+## Step 6: Create the VNC xstartup script
 
 ```bash
 mkdir -p /root/.vnc
@@ -167,14 +186,29 @@ unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 
 xhost +local: > /dev/null 2>&1
+
+# Disable screensaver and DPMS to prevent login screen blanking
+xset s off > /dev/null 2>&1
+xset s noblank > /dev/null 2>&1
+xset -dpms > /dev/null 2>&1
+
+# Start Openbox with click-to-focus to retain field focus for Type Text
+openbox --config-file /root/.config/openbox/rc.xml &
+WM_PID=$!
+sleep 1
+
 /usr/local/bin/vnc-login
+
+kill $WM_PID 2>/dev/null
 EOF
 chmod +x /root/.vnc/xstartup
 ```
 
 ---
 
-## Step 6: Create the systemd service for autostart
+## Step 7: Create the systemd service for autostart
+
+TurboVNC is configured to start after SDDM with a short delay to prevent interference with the physical desktop.
 
 ```bash
 tee /etc/systemd/system/turbovnc.service << 'EOF'
@@ -202,7 +236,7 @@ systemctl start turbovnc
 
 ---
 
-## Step 7: Confirm VNC is listening
+## Step 8: Confirm VNC is listening
 
 ```bash
 ss -tlnp | grep 5901
@@ -212,7 +246,7 @@ You should see `0.0.0.0:5901` in the output.
 
 ---
 
-## Step 8: Configure default LXQt environment for new users
+## Step 9: Configure default LXQt environment for new users
 
 This copies the LXQt desktop configuration from the initial user account into `/etc/skel` so that any new user created on the system automatically gets a properly configured desktop with icons.
 
@@ -226,13 +260,30 @@ cp -r /home/labuser/.config/pcmanfm-qt /etc/skel/.config/
 
 ---
 
-## Step 9: Creating additional lab users
+## Step 10: Creating additional lab users
 
 Any new user created with the `-m` flag will automatically inherit the LXQt configuration from skel:
 
 ```bash
 useradd -m -s /bin/bash username
 passwd username
+```
+
+---
+
+## Troubleshooting
+
+**Check TurboVNC service status:**
+```bash
+systemctl status turbovnc
+```
+
+**Physical desktop went blank or disappeared:**
+Press `Ctrl + Alt + F2` to switch back to the SDDM login screen on the physical display.
+
+**Restart TurboVNC:**
+```bash
+systemctl restart turbovnc
 ```
 
 ---
@@ -244,3 +295,5 @@ passwd username
 - After a user logs out of LXQt, the login dialog automatically reappears for the next user.
 - TurboVNC supports dynamic screen resizing — the desktop will resize to fit the browser window automatically.
 - The VNC server runs as root solely to support the login screen. User sessions run under the authenticated user's account.
+- Openbox runs as a minimal window manager during the login screen only to enforce click-to-focus behavior. It is replaced by the LXQt window manager once a user logs in.
+- The physical Hyper-V desktop remains available on display `:0` via SDDM and is unaffected by the VNC session on `:1`.
