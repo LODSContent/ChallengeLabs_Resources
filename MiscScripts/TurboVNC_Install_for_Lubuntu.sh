@@ -11,22 +11,36 @@ echo " TurboVNC Installer for Lubuntu 26.04"
 echo "============================================"
 
 # ── Step 1: Download and install TurboVNC ──────────────────
-echo "[1/8] Installing TurboVNC..."
+echo "[1/9] Installing TurboVNC..."
 wget -q https://github.com/TurboVNC/turbovnc/releases/download/3.3/turbovnc_3.3_amd64.deb
 apt install ./turbovnc_3.3_amd64.deb -y
 rm -f ./turbovnc_3.3_amd64.deb
 
 # ── Step 2: Set VNC password non-interactively ─────────────
-echo "[2/8] Setting VNC password..."
+echo "[2/9] Setting VNC password..."
 mkdir -p /root/.vnc
 printf "Passw0rd\nPassw0rd\nn\n" | /opt/TurboVNC/bin/vncpasswd
 
 # ── Step 3: Install support tools ─────────────────────────
-echo "[3/8] Installing support tools..."
-apt install -y python3-gi gir1.2-gtk-3.0 gcc net-tools libxcb-cursor0
+echo "[3/9] Installing support tools..."
+apt install -y python3-gi gir1.2-gtk-3.0 gcc net-tools libxcb-cursor0 openbox wmctrl
 
-# ── Step 4: Create GTK login script ───────────────────────
-echo "[4/8] Creating GTK login script..."
+# ── Step 4: Create Openbox config ─────────────────────────
+echo "[4/9] Creating Openbox focus config..."
+mkdir -p /root/.config/openbox
+cat > /root/.config/openbox/rc.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config>
+  <focus>
+    <followMouse>no</followMouse>
+    <focusNew>yes</focusNew>
+    <focusLast>yes</focusLast>
+  </focus>
+</openbox_config>
+EOF
+
+# ── Step 5: Create GTK login script ───────────────────────
+echo "[5/9] Creating GTK login script..."
 cat > /usr/local/bin/vnc-login << 'EOF'
 #!/usr/bin/env python3
 import gi
@@ -90,6 +104,7 @@ def show_login():
     pass_entry.connect("activate", lambda w: dialog.response(Gtk.ResponseType.OK))
 
     dialog.show_all()
+    user_entry.grab_focus()
 
     while True:
         response = dialog.run()
@@ -134,8 +149,8 @@ if __name__ == "__main__":
 EOF
 chmod +x /usr/local/bin/vnc-login
 
-# ── Step 5: Create xstartup ────────────────────────────────
-echo "[5/8] Creating xstartup..."
+# ── Step 6: Create xstartup ────────────────────────────────
+echo "[6/9] Creating xstartup..."
 mkdir -p /root/.vnc
 cat > /root/.vnc/xstartup << 'EOF'
 #!/bin/bash
@@ -145,12 +160,25 @@ unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
 
 xhost +local: > /dev/null 2>&1
+
+# Disable screensaver and DPMS to prevent login screen blanking
+xset s off > /dev/null 2>&1
+xset s noblank > /dev/null 2>&1
+xset -dpms > /dev/null 2>&1
+
+# Start Openbox with click-to-focus to retain field focus for Type Text
+openbox --config-file /root/.config/openbox/rc.xml &
+WM_PID=$!
+sleep 1
+
 /usr/local/bin/vnc-login
+
+kill $WM_PID 2>/dev/null
 EOF
 chmod +x /root/.vnc/xstartup
 
-# ── Step 6: Create systemd service ────────────────────────
-echo "[6/8] Creating systemd service..."
+# ── Step 7: Create systemd service ────────────────────────
+echo "[7/9] Creating systemd service..."
 cat > /etc/systemd/system/turbovnc.service << 'EOF'
 [Unit]
 Description=TurboVNC Server
@@ -173,8 +201,8 @@ systemctl daemon-reload
 systemctl enable turbovnc
 systemctl start turbovnc
 
-# ── Step 7: Configure skel for new users ──────────────────
-echo "[7/8] Configuring default LXQt environment for new users..."
+# ── Step 8: Configure skel for new users ──────────────────
+echo "[8/9] Configuring default LXQt environment for new users..."
 BASEUSER=$(getent passwd 1000 | cut -d: -f1)
 if [ -n "$BASEUSER" ] && [ -d "/home/$BASEUSER/.config/lxqt" ]; then
     mkdir -p /etc/skel/.config
@@ -182,11 +210,13 @@ if [ -n "$BASEUSER" ] && [ -d "/home/$BASEUSER/.config/lxqt" ]; then
     cp -r /home/$BASEUSER/.config/pcmanfm-qt /etc/skel/.config/ 2>/dev/null || true
     echo "    Copied LXQt config from $BASEUSER to /etc/skel"
 else
-    echo "    WARNING: Could not find base user config. Run manually after setup."
+    echo "    WARNING: Could not find base user config. Run manually after setup:"
+    echo "    cp -r /home/<user>/.config/lxqt /etc/skel/.config/"
+    echo "    cp -r /home/<user>/.config/pcmanfm-qt /etc/skel/.config/"
 fi
 
-# ── Step 8: Verify ────────────────────────────────────────
-echo "[8/8] Verifying installation..."
+# ── Step 9: Verify ────────────────────────────────────────
+echo "[9/9] Verifying installation..."
 sleep 3
 if ss -tlnp | grep -q 5901; then
     echo ""
@@ -199,5 +229,5 @@ else
     echo ""
     echo "WARNING: Port 5901 not detected. Check status with:"
     echo "  systemctl status turbovnc"
-    echo "  cat /root/.vnc/lab-virtualmachine:1.log"
+    echo "  cat /root/.vnc/$(hostname):1.log"
 fi
