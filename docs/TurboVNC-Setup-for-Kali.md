@@ -70,6 +70,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 import subprocess
 import os
+import time
 
 def show_login():
     dialog = Gtk.Dialog(title="Login")
@@ -157,6 +158,8 @@ def show_login():
                     "LOGNAME": username,
                     "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
                 })
+                subprocess.run(["pkill", "-x", "openbox"])
+                time.sleep(0.5)
                 subprocess.run(["su", "-", username, "-c", "DISPLAY=:1 startxfce4"], env=env)
                 return
             else:
@@ -284,6 +287,14 @@ Press `Ctrl + Alt + F2` to switch back to the LightDM login screen on the physic
 
 **Restart TurboVNC:**
 ```bash
+systemctl restart turbovnc
+```
+
+**Login fails or desktop appears behind the login dialog:**
+This occurs when a user is simultaneously logged into the physical console and VNC. The console session's xfwm4 process conflicts with the VNC session. Log out of the console before connecting via VNC. If stale processes remain after logout, clean them up manually before restarting:
+
+```bash
+pkill -x xfwm4; pkill -x xfce4-session; pkill -x xfce4-panel; pkill -x xfsettingsd
 systemctl restart turbovnc
 ```
 
