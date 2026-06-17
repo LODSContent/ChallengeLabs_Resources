@@ -5,7 +5,9 @@
 - Select Improve Content.
 - Select **All Content**.
 - In the textbox, enter:
+  
   ``Convert the lab markdown to conform with the template and instructions provided in the Reference Material.``
+
 - Choose **Claude Opus 4.6** for the model.
 - Deselect the proofreading options.
 - Deselect the content block options.
