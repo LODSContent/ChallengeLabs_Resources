@@ -13,7 +13,7 @@
 - Deselect the content block options.
 - In Reference Material, add the following url:
 
-  `https://github.com/LODSContent/ChallengeLabs_Resources/raw/refs/heads/master/Templates/CLabs-Template-v4-with-Instructions-2025-10-14.md++`
+  `https://github.com/LODSContent/ChallengeLabs_Resources/raw/refs/heads/master/Templates/CLabs-Template-v4-with-Instructions-2025-10-14.md`
 
 - Select **Formatting/style guide**.
 - Choose **Submit**.
