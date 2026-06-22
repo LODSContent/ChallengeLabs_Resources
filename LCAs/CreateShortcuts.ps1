@@ -1,7 +1,6 @@
 $shortcuts = @(
     @{ Name = "Remote Desktop"; Target = "C:\Windows\System32\mstsc.exe";    Location = "Desktop" },
     @{ Name = "Remote Desktop"; Target = "C:\Windows\System32\mstsc.exe";    Location = "Start Menu" },
-    @{ Name = "Remote Desktop"; Target = "C:\Windows\System32\mstsc.exe";    Location = "Taskbar" },
     @{ Name = "Notepad";        Target = "C:\Windows\System32\notepad.exe";   Location = "Desktop" }
 )
 
@@ -13,17 +12,17 @@ $locations = @{
 $WshShell = New-Object -ComObject WScript.Shell
 
 foreach ($s in $shortcuts) {
-    if ($s.Location -eq "Taskbar") {
-        $tempLnk = "$env:TEMP\$($s.Name).lnk"
-        $Shortcut = $WshShell.CreateShortcut($tempLnk)
-        $Shortcut.TargetPath = $s.Target
-        $Shortcut.Save()
-        $shell = New-Object -ComObject Shell.Application
-        $shell.Namespace("shell:::{4234d49b-0245-4df3-b780-3893943456e1}").ParseName($tempLnk).InvokeVerb("taskbarpin")
-    } else {
+    try {
         $destPath = $locations[$s.Location]
+        if (-not $destPath) {
+            Write-Warning "Unknown location '$($s.Location)' for '$($s.Name)' - skipping"
+            continue
+        }
         $Shortcut = $WshShell.CreateShortcut("$destPath\$($s.Name).lnk")
         $Shortcut.TargetPath = $s.Target
         $Shortcut.Save()
+        Write-Host "Created '$($s.Name)' in $($s.Location)"
+    } catch {
+        Write-Warning "Failed to create '$($s.Name)': $_"
     }
 }
