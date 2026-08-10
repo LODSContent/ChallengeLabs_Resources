@@ -1,10 +1,10 @@
 <#
-   Title: DynamicVMSizer-v2.ps1
+   Title: DynamicVMSizer.ps1
    Description: Finds a VM size (SKU) that is available based upon constraints passed in the parameters.
                 This version adds quota-aware filtering so SKUs without remaining quota are skipped
                 before selection. The quota snapshot is fetched once per location and then reused for
                 the full candidate list.
-   Version: 2026.05.27
+   Version: 2026.08.10.1211
 #>
 
 param (
@@ -121,7 +121,7 @@ function Fail-Selection {
         Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
     }
 
-    throw "[Debug] ${ScriptTitle}:`n---------`n$($Global:MessageBuffer)"
+    Write-Output "[Debug] ${ScriptTitle}:`n---------`n$($Global:MessageBuffer)"
 }
 
 function Get-NormalizedText {
@@ -305,6 +305,22 @@ function Test-SkuQuotaAvailability {
 Send-DebugMessage "[INFO] Starting VM size selection in location: $Location"
 Send-DebugMessage "[INFO] Target spec: $TargetSpec | MaxCPU: $MaxCPU vCPU | MaxRAM: $MaxRAM GB"
 
+if ([string]::IsNullOrWhiteSpace($Location)) {
+    Fail-Selection "[ERROR] Location parameter is empty or missing. Falling back to default size: $DefaultSize"
+    Set-LabVariable -Name $VMSizeLabVariable -Value $DefaultSize
+    Set-LabVariable -Name VMPrice -Value 0
+    if ($ScriptDebug) {
+        Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
+    }
+    return $true
+}
+
+# Everything below is wrapped in a catch-all so that ANY unhandled exception
+# (unexpected API shape, null reference, transient failure not otherwise
+# retried, etc.) still results in the default size being set rather than
+# the script dying with the lab variable never populated.
+try {
+
 $targetCPU = 2
 $targetRAM = 4.0
 $requiredGen = '2'
@@ -350,6 +366,11 @@ while (-not $success -and $attempt -lt $maxRetries) {
         }
         else {
             Fail-Selection "[ERROR] Empty or invalid CSV content after cleaning. Falling back to default size: $DefaultSize"
+            Set-LabVariable -Name $VMSizeLabVariable -Value $DefaultSize
+            Set-LabVariable -Name VMPrice -Value 0
+            if ($ScriptDebug) {
+                Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
+            }
             return $true
         }
     }
@@ -367,20 +388,56 @@ if (-not $success) {
     $allowedSizes = @()
 }
 
-$allSkus = Get-AzComputeResourceSku -Location $Location | Where-Object {
-    $_.ResourceType -eq 'virtualMachines' -and
-    (
-        $_.Restrictions.Count -eq 0 -or
-        $_.Restrictions.Where({
-            $_.ReasonCode -eq 'NotAvailableForSubscription' -and
-            $_.Type -eq 'Location'
-        }).Count -eq 0
-    )
+$allSkus = $null
+$skuMaxRetries = 4
+$skuBaseDelaySeconds = 2
+$skuAttempt = 0
+$skuFetchSucceeded = $false
+
+while (-not $skuFetchSucceeded -and $skuAttempt -lt $skuMaxRetries) {
+    $skuAttempt++
+    Send-DebugMessage "[INFO] Attempt $skuAttempt/$skuMaxRetries to retrieve VM SKU catalog for $Location"
+
+    try {
+        $allSkus = Get-AzComputeResourceSku -Location $Location -ErrorAction Stop | Where-Object {
+            $_.ResourceType -eq 'virtualMachines' -and
+            (
+                $_.Restrictions.Count -eq 0 -or
+                $_.Restrictions.Where({
+                    $_.ReasonCode -eq 'NotAvailableForSubscription' -and
+                    $_.Type -eq 'Location'
+                }).Count -eq 0
+            )
+        }
+        $skuFetchSucceeded = $true
+    }
+    catch {
+        Send-DebugMessage "[WARN] SKU catalog fetch attempt $skuAttempt failed: $($_.Exception.Message)"
+        if ($skuAttempt -lt $skuMaxRetries) {
+            $delay = [Math]::Min(30, $skuBaseDelaySeconds * [Math]::Pow(2, $skuAttempt - 1))
+            Send-DebugMessage "[RETRY] Waiting $delay seconds before next attempt..."
+            Start-Sleep -Seconds $delay
+        }
+    }
+}
+
+if (-not $skuFetchSucceeded) {
+    Fail-Selection "[ERROR] Could not retrieve the VM SKU catalog for $Location after $skuMaxRetries attempts. Falling back to default size: $DefaultSize"
+    Set-LabVariable -Name $VMSizeLabVariable -Value $DefaultSize
+    Set-LabVariable -Name VMPrice -Value 0
+    if ($ScriptDebug) {
+        Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
+    }
+    return $true
 }
 
 if (-not $allSkus) {
     Fail-Selection "[ERROR] No VM sizes available in location $Location. Falling back to default size: $DefaultSize"
     Set-LabVariable -Name $VMSizeLabVariable -Value $DefaultSize
+    Set-LabVariable -Name VMPrice -Value 0
+    if ($ScriptDebug) {
+        Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
+    }
     return $true
 }
 
@@ -400,6 +457,10 @@ $allSkus = $allSkus | Where-Object {
 if (-not $allSkus) {
     Fail-Selection "[ERROR] No x64-compatible VM sizes remain after filtering. Falling back to default size: $DefaultSize"
     Set-LabVariable -Name $VMSizeLabVariable -Value $DefaultSize
+    Set-LabVariable -Name VMPrice -Value 0
+    if ($ScriptDebug) {
+        Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
+    }
     return $true
 }
 
@@ -453,25 +514,33 @@ function Get-VMHourlyPrice {
         return $priceDict[$SkuName]
     }
 
-    Start-Sleep -Milliseconds 250
     $filter = "serviceName eq 'Virtual Machines' and armRegionName eq '$Region' and armSkuName eq '$SkuName' and priceType eq 'Consumption'"
     $uri = "https://prices.azure.com/api/retail/prices?api-version=2023-01-01-preview&`$filter=$([uri]::EscapeDataString($filter))"
 
-    try {
-        $response = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 15
-        $validItems = $response.Items | Where-Object {
-            $_.unitPrice -gt 0.05 -and $_.unitPrice -lt 2 -and
-            $_.meterName -notmatch 'Spot|Low Priority|LowPriority|Partial|Reservation'
-        }
+    $priceMaxRetries = 2
+    for ($priceAttempt = 1; $priceAttempt -le $priceMaxRetries; $priceAttempt++) {
+        Start-Sleep -Milliseconds 250
+        try {
+            $response = Invoke-RestMethod -Uri $uri -Method Get -TimeoutSec 15
+            $validItems = $response.Items | Where-Object {
+                $_.unitPrice -gt 0.05 -and $_.unitPrice -lt 2 -and
+                $_.meterName -notmatch 'Spot|Low Priority|LowPriority|Partial|Reservation'
+            }
 
-        if ($validItems.Count -gt 0) {
-            $price = [double]($validItems | Sort-Object unitPrice -Descending | Select-Object -First 1).unitPrice
-            $priceDict[$SkuName] = $price
-            return $price
+            if ($validItems.Count -gt 0) {
+                $price = [double]($validItems | Sort-Object unitPrice -Descending | Select-Object -First 1).unitPrice
+                $priceDict[$SkuName] = $price
+                return $price
+            }
+
+            # Request succeeded but returned no usable price - no point retrying.
+            return $null
         }
-    }
-    catch {
-        return $null
+        catch {
+            if ($priceAttempt -eq $priceMaxRetries) {
+                return $null
+            }
+        }
     }
 
     return $null
@@ -484,16 +553,12 @@ foreach ($sku in $allSkus) {
     $caps = Get-SkuCapabilitiesMap -Sku $sku
 
     # Skip known specialized families that are not appropriate for most lab deployments.
-    $excludedPrefixes = @('DC', 'EC', 'HB', 'HC', 'HX', 'ND', 'NC', 'NV', 'NP', 'H')
-    $excluded = $false
-    foreach ($prefix in $excludedPrefixes) {
-        if ($sku.Name -like "*_$prefix*") {
-            $excluded = $true
-            break
-        }
-    }
-
-    if ($excluded) {
+    # Matched against the size code right after "Standard_" and only when immediately
+    # followed by a digit, so e.g. "H16" is excluded but a hypothetical "Hxyz"-named
+    # family token elsewhere in the SKU name is not falsely caught.
+    $excludedPrefixPattern = '^(DC|EC|HB|HC|HX|ND|NC|NV|NP|H)[0-9]'
+    $rawSizeCode = $sku.Name -replace '^Standard[_-]?', ''
+    if ($rawSizeCode -match $excludedPrefixPattern) {
         continue
     }
 
@@ -557,3 +622,19 @@ if ($ScriptDebug) {
 }
 
 return $true
+
+} # end of top-level try
+catch {
+    # Catch-all safety net: no matter what broke above (unexpected API shape,
+    # null reference, a transient failure that wasn't otherwise retried, etc.)
+    # the lab variable still ends up set to a usable value.
+    Send-DebugMessage "[FATAL] Unhandled exception during VM size selection: $($_.Exception.Message). Falling back to default size: $DefaultSize"
+    Set-LabVariable -Name $VMSizeLabVariable -Value $DefaultSize
+    Set-LabVariable -Name VMPrice -Value 0
+
+    if ($ScriptDebug) {
+        Send-LabNotificationChunks -ScriptTitle $ScriptTitle -Message $Global:MessageBuffer
+    }
+
+    return $true
+}
