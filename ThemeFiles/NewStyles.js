@@ -350,10 +350,27 @@ function initExpandableCodeBlocks() {
 
             pre.classList.add('collapsible-code');
 
-            // Match the haze gradient to the code block's actual background color
-            const bg = getComputedStyle(code).backgroundColor;
-            if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-                pre.style.setProperty('--code-haze-color', bg);
+            // Determine a tint (lighter or darker than the base background) so the
+            // haze is visible even on a blank trailing line, not just matching text
+            const bgRaw = getComputedStyle(code).backgroundColor;
+            const rgbMatch = bgRaw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+            
+            if (rgbMatch) {
+                const [, r, g, b] = rgbMatch.map(Number).length
+                    ? [null, parseInt(rgbMatch[1]), parseInt(rgbMatch[2]), parseInt(rgbMatch[3])]
+                    : [null, 0, 0, 0];
+            
+                // Perceived luminance (0 = black, 1 = white)
+                const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            
+                // Dark backgrounds get a light tint (lighten); light backgrounds get a dark tint (darken)
+                const tint = luminance < 0.5 ? [255, 255, 255] : [0, 0, 0];
+            
+                pre.style.setProperty('--code-haze-r', tint[0]);
+                pre.style.setProperty('--code-haze-g', tint[1]);
+                pre.style.setProperty('--code-haze-b', tint[2]);
+            
+                if (debug) console.log(`[initExpandableCodeBlocks] bg luminance: ${luminance.toFixed(2)} → tint: rgb(${tint.join(',')})`);
             }
 
             // Group existing right-side items (Copy, Type text) into one wrapper,
