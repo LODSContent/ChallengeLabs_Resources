@@ -1,8 +1,8 @@
 /*
  * Script Name: NewStyles.js
  * Authors: Mark Morgan
- * Version: 2026.03.05.1832
- * Blockquote styling code
+ * Version: 2026.08.13.2208
+ * Baseline Styling Code
 */
 
 // Helper Functions
@@ -315,3 +315,152 @@ setTimeout(() => {
 }, 2000);
 
 // End - Blockquote styling code
+
+// ────────────────────────────────────────────────
+// Expandable Code Blocks
+// Collapses long code blocks to a fixed number of visible lines,
+// with a rotating triangle toggle in the .codeTitle bar (matches
+// the existing <details>/blockquote expandable convention).
+// ────────────────────────────────────────────────
+
+function initExpandableCodeBlocks() {
+    // === CONFIG ===
+    const MAX_VISIBLE_LINES = 4; // number of lines shown before "expandable" kicks in
+    // ==============
+
+    if (debug) console.log(`[initExpandableCodeBlocks] Scanning for code blocks`);
+
+    let processedCount = 0;
+    let skippedCount = 0;
+
+    document.querySelectorAll('pre').forEach(pre => {
+        try {
+            const code = pre.querySelector('code.prettyprinted, code.prettyprint');
+            const codeTitle = pre.querySelector('.codeTitle');
+
+            if (!code || !codeTitle) {
+                skippedCount++;
+                return;
+            }
+
+            if (pre.dataset.collapsibleInit) {
+                return; // already processed
+            }
+            pre.dataset.collapsibleInit = 'true';
+
+            pre.classList.add('collapsible-code');
+
+            // Match the haze gradient to the code block's actual background color
+            const bg = getComputedStyle(code).backgroundColor;
+            if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                pre.style.setProperty('--code-haze-color', bg);
+            }
+
+            // Group existing right-side items (Copy, Type text) into one wrapper,
+            // so .codeTitle still only has 2 children and space-between still works
+            const titleEl = codeTitle.querySelector('.title');
+            let actionsWrapper = codeTitle.querySelector('.codeTitle-actions');
+
+            if (!actionsWrapper) {
+                actionsWrapper = document.createElement('span');
+                actionsWrapper.className = 'codeTitle-actions';
+
+                Array.from(codeTitle.children).forEach(child => {
+                    if (child !== titleEl) {
+                        actionsWrapper.appendChild(child);
+                    }
+                });
+
+                codeTitle.appendChild(actionsWrapper);
+            }
+
+            const toggle = document.createElement('span');
+            toggle.className = 'code-expand-toggle';
+            toggle.setAttribute('role', 'button');
+            toggle.setAttribute('tabindex', '0');
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'Show more of this code block');
+            toggle.setAttribute('title', 'Show more of this code block');
+
+            actionsWrapper.appendChild(toggle);
+
+            const checkOverflow = () => {
+                const trueHeight = code.scrollHeight;
+                if (trueHeight === 0) return; // still hidden (e.g. collapsed accordion) — recheck later
+
+                const lineHeight = parseFloat(getComputedStyle(code).lineHeight)
+                    || (parseFloat(getComputedStyle(code).fontSize) * 1.2);
+                const maxHeight = lineHeight * MAX_VISIBLE_LINES;
+                pre.style.setProperty('--collapsed-max-height', `${maxHeight}px`);
+
+                if (trueHeight > maxHeight + 1) {
+                    pre.classList.add('collapsible-active');
+                    toggle.style.display = 'inline-block';
+                } else {
+                    pre.classList.remove('collapsible-active');
+                    toggle.style.display = 'none';
+                }
+            };
+
+            const toggleExpanded = () => {
+                const expanded = pre.classList.toggle('expanded');
+                toggle.classList.toggle('expanded', expanded);
+                const aria = expanded ? 'Show less of this code block' : 'Show more of this code block';
+                toggle.setAttribute('aria-expanded', String(expanded));
+                toggle.setAttribute('aria-label', aria);
+                toggle.setAttribute('title', aria);
+                if (debug) console.log(`[initExpandableCodeBlocks] Toggled → expanded: ${expanded}`);
+            };
+
+            toggle.addEventListener('click', toggleExpanded);
+            toggle.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleExpanded();
+                }
+            });
+
+            // Re-check whenever this element becomes visible (e.g. accordion/tab opens)
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) checkOverflow();
+                });
+            }, { threshold: 0.01 });
+            observer.observe(pre);
+
+            checkOverflow(); // also try immediately, in case already visible
+            window.addEventListener('resize', checkOverflow);
+
+            processedCount++;
+        } catch (err) {
+            if (debug) console.error(`[initExpandableCodeBlocks] Failed on a code block: ${err.message}`);
+        }
+    });
+
+    if (debug) console.log(`[initExpandableCodeBlocks] Done. Processed: ${processedCount}, Skipped: ${skippedCount}`);
+}
+
+// Initial run
+try {
+    if (debug) console.log(`Initial initExpandableCodeBlocks()`);
+    initExpandableCodeBlocks();
+} catch (err) {
+    if (debug) console.error(`Initial initExpandableCodeBlocks failed: ${err.message}`);
+}
+
+// Observer setup (delayed) — re-scan for late-loaded / accordion-revealed code blocks
+setTimeout(() => {
+    if (debug) console.log(`Setting up MutationObserver for expandable code blocks`);
+    try {
+        const codeBlockObserver = new MutationObserver((mutations) => {
+            initExpandableCodeBlocks();
+        });
+
+        codeBlockObserver.observe(document.body, { childList: true, subtree: true });
+        if (debug) console.log(`Observer attached for expandable code blocks (document.body)`);
+    } catch (err) {
+        if (debug) console.error(`Expandable code block observer setup failed: ${err.message}`);
+    }
+}, 2000);
+
+// End - Expandable Code Blocks
