@@ -1,7 +1,7 @@
 /*
  * Script Name: NewStyles.js
  * Authors: Mark Morgan
- * Version: 2026.08.13.2208
+ * Version: 2026.08.13.2226
  * Baseline Styling Code
 */
 
