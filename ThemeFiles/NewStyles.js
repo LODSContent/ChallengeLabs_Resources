@@ -387,13 +387,17 @@ function initExpandableCodeBlocks() {
             const checkOverflow = () => {
                 const trueHeight = code.scrollHeight;
                 if (trueHeight === 0) return; // still hidden (e.g. collapsed accordion) — recheck later
-
+            
                 const lineHeight = parseFloat(getComputedStyle(code).lineHeight)
                     || (parseFloat(getComputedStyle(code).fontSize) * 1.2);
                 const maxHeight = lineHeight * MAX_VISIBLE_LINES;
                 pre.style.setProperty('--collapsed-max-height', `${maxHeight}px`);
-
-                if (trueHeight > maxHeight + 1) {
+            
+                // Round to the nearest whole line to avoid sub-pixel rounding false positives —
+                // only expand if content actually reaches into the line AFTER MAX_VISIBLE_LINES
+                const actualLineCount = Math.round(trueHeight / lineHeight);
+            
+                if (actualLineCount > MAX_VISIBLE_LINES) {
                     pre.classList.add('collapsible-active');
                     toggle.style.display = 'inline-block';
                 } else {
