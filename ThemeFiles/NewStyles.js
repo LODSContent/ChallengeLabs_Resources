@@ -319,7 +319,7 @@ setTimeout(() => {
 // ────────────────────────────────────────────────
 // Expandable Code Blocks
 // Collapses long code blocks to a fixed number of visible lines,
-// with a rotating triangle toggle in the .codeTitle bar (matches
+// with a rotating triangle toggle + label in the .codeTitle bar (matches
 // the existing <details>/blockquote expandable convention).
 // ────────────────────────────────────────────────
 
@@ -354,22 +354,22 @@ function initExpandableCodeBlocks() {
             // haze is visible even on a blank trailing line, not just matching text
             const bgRaw = getComputedStyle(code).backgroundColor;
             const rgbMatch = bgRaw.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-            
+
             if (rgbMatch) {
-                const [, r, g, b] = rgbMatch.map(Number).length
-                    ? [null, parseInt(rgbMatch[1]), parseInt(rgbMatch[2]), parseInt(rgbMatch[3])]
-                    : [null, 0, 0, 0];
-            
+                const r = parseInt(rgbMatch[1]);
+                const g = parseInt(rgbMatch[2]);
+                const b = parseInt(rgbMatch[3]);
+
                 // Perceived luminance (0 = black, 1 = white)
                 const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-            
+
                 // Dark backgrounds get a light tint (lighten); light backgrounds get a dark tint (darken)
                 const tint = luminance < 0.5 ? [255, 255, 255] : [0, 0, 0];
-            
+
                 pre.style.setProperty('--code-haze-r', tint[0]);
                 pre.style.setProperty('--code-haze-g', tint[1]);
                 pre.style.setProperty('--code-haze-b', tint[2]);
-            
+
                 if (debug) console.log(`[initExpandableCodeBlocks] bg luminance: ${luminance.toFixed(2)} → tint: rgb(${tint.join(',')})`);
             }
 
@@ -391,6 +391,7 @@ function initExpandableCodeBlocks() {
                 codeTitle.appendChild(actionsWrapper);
             }
 
+            // Toggle = label ("Show more"/"Show less") + rotating triangle arrow
             const toggle = document.createElement('span');
             toggle.className = 'code-expand-toggle';
             toggle.setAttribute('role', 'button');
@@ -399,24 +400,33 @@ function initExpandableCodeBlocks() {
             toggle.setAttribute('aria-label', 'Show more of this code block');
             toggle.setAttribute('title', 'Show more of this code block');
 
+            const toggleLabel = document.createElement('span');
+            toggleLabel.className = 'code-expand-toggle-label';
+            toggleLabel.textContent = 'Show more';
+
+            const toggleArrow = document.createElement('span');
+            toggleArrow.className = 'code-expand-toggle-arrow';
+
+            toggle.appendChild(toggleLabel);
+            toggle.appendChild(toggleArrow);
             actionsWrapper.appendChild(toggle);
 
             const checkOverflow = () => {
                 const trueHeight = code.scrollHeight;
                 if (trueHeight === 0) return; // still hidden (e.g. collapsed accordion) — recheck later
-            
+
                 const lineHeight = parseFloat(getComputedStyle(code).lineHeight)
                     || (parseFloat(getComputedStyle(code).fontSize) * 1.2);
                 const maxHeight = lineHeight * MAX_VISIBLE_LINES;
                 pre.style.setProperty('--collapsed-max-height', `${maxHeight}px`);
-            
-                // Round to the nearest whole line to avoid sub-pixel rounding false positives —
+
+                // Round to nearest whole line to avoid sub-pixel rounding false positives —
                 // only expand if content actually reaches into the line AFTER MAX_VISIBLE_LINES
                 const actualLineCount = Math.round(trueHeight / lineHeight);
-            
+
                 if (actualLineCount > MAX_VISIBLE_LINES) {
                     pre.classList.add('collapsible-active');
-                    toggle.style.display = 'inline-block';
+                    toggle.style.display = 'inline-flex';
                 } else {
                     pre.classList.remove('collapsible-active');
                     toggle.style.display = 'none';
@@ -426,6 +436,7 @@ function initExpandableCodeBlocks() {
             const toggleExpanded = () => {
                 const expanded = pre.classList.toggle('expanded');
                 toggle.classList.toggle('expanded', expanded);
+                toggleLabel.textContent = expanded ? 'Show less' : 'Show more';
                 const aria = expanded ? 'Show less of this code block' : 'Show more of this code block';
                 toggle.setAttribute('aria-expanded', String(expanded));
                 toggle.setAttribute('aria-label', aria);
