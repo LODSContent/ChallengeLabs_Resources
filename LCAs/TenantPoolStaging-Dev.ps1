@@ -2,6 +2,7 @@
    Title: Create TAP enabled user, establish credential variables and configure the Tenant for lab use
    Description: Creates a new user with a Temporary Access Password and establishes credential variables for the lab. Also configures the Tenant for lab use.
    Target: Cloud Subscription - PowerShell - 7.4.0 | Az 11.1.0 (RC)
+   Version: 2026.08.19.1123
 #>
 
 param (
@@ -238,11 +239,11 @@ try {
 
 # Tenant validation to ensure script is running in the proper Tenant
 $VerifiedDomain = (Get-MgOrganization).VerifiedDomains.Name
-if ($VerifiedDomain -Like "*Hexelo*") {
-	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains 'Hexelo'. Continuing script." }
+if ($VerifiedDomain -eq $TenantName) {
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain contains '$TenantName'. Continuing script." }
 } else {
-	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain 'Hexelo'. Exiting script." }
-	Throw-Error "$VerifiedDomain does not contain 'Hexelo'. Exiting script."
+	if ($ScriptDebug) { Send-DebugMessage "$VerifiedDomain does not contain '$TenantName'. Exiting script." }
+	Throw-Error "$VerifiedDomain does not contain '$TenantName'. Exiting script."
 }
 
 # Update Service Principal Permissions
@@ -371,7 +372,7 @@ $Permissions = @{
     "Microsoft Cloud App Security" = @{
         AppId = "05a65629-4c1b-48c1-a78b-804c4abdd4af"
         Permissions = @("discovery.manage", "investigation.manage", "settings.manage")
-    }    
+    }    	
     "WindowsDefenderATP" = @{
         AppId = "fc780465-2017-40d4-a0c5-307022471b92"
         Permissions = @("Machine.Read.All", "Machine.ReadWrite.All")
@@ -881,28 +882,30 @@ LoriP,Lori,Penor,Lori Penor,Finance,Boston,MA,Manager
 			    if ($scriptDebug) { Send-DebugMessage "Failed to create Owner role assignment: $($_.Exception.Message)" }
 			}
 
-			# Remove Resource Groups
-			$rgListUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups?api-version=2021-04-01"
-			
-			$rgs = (Invoke-RestMethod -Uri $rgListUri -Headers $headers -Method Get).value
-			
-			if ($rgs.Count -eq 0) {
-			    if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
-			} else {
-			    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
-			    
-			    foreach ($rg in $rgs) {
-			        $rgName = $rg.name
-			        $deleteRgUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups/$($rgName)?api-version=2021-04-01"
-			        
-			        try {
-			            Invoke-RestMethod -Uri $deleteRgUri -Headers $headers -Method Delete | Out-Null
-			            if ($scriptDebug) { Send-DebugMessage "Removed Resource Group: $rgName" }
-			        } catch {
-			            if ($scriptDebug) { Send-DebugMessage "Failed to remove Resource Group: $rgName - $($_.Exception.Message)" }
-			        }
-			    }
-			}			
+			if (!$SkipCleanup) {
+				# Remove Resource Groups
+				$rgListUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups?api-version=2021-04-01"
+				
+				$rgs = (Invoke-RestMethod -Uri $rgListUri -Headers $headers -Method Get).value
+				
+				if ($rgs.Count -eq 0) {
+				    if ($scriptDebug) { Send-DebugMessage "Resource Groups not found." }
+				} else {
+				    if ($scriptDebug) { Send-DebugMessage "Removing resource groups." }
+				    
+				    foreach ($rg in $rgs) {
+				        $rgName = $rg.name
+				        $deleteRgUri = "https://management.azure.com/subscriptions/$SubscriptionId/resourcegroups/$($rgName)?api-version=2021-04-01"
+				        
+				        try {
+				            Invoke-RestMethod -Uri $deleteRgUri -Headers $headers -Method Delete | Out-Null
+				            if ($scriptDebug) { Send-DebugMessage "Removed Resource Group: $rgName" }
+				        } catch {
+				            if ($scriptDebug) { Send-DebugMessage "Failed to remove Resource Group: $rgName - $($_.Exception.Message)" }
+				        }
+				    }
+				}
+			}
 		} catch {
 			if ($scriptDebug) { Send-DebugMessage "Failed to clean and configure Trial Subscription." }
 	 	}
