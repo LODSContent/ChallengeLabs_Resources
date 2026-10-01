@@ -223,7 +223,7 @@
         ],
         "inboundNatRules": [
           {
-            "name": "RDP-VM0",
+            "name": "RDP-VM1",
             "properties": {
               "frontendIPConfiguration": {
                 "id": "[variables('frontEndIPConfigID')]"
@@ -235,7 +235,7 @@
             }
           },
           {
-            "name": "RDP-VM1",
+            "name": "RDP-VM2",
             "properties": {
               "frontendIPConfiguration": {
                 "id": "[variables('frontEndIPConfigID')]"
