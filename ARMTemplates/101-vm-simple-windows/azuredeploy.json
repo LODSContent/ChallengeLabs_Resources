@@ -66,13 +66,13 @@
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-06-01",
       "name": "[variables('storageAccountName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Standard_LRS"
       },
-      "kind": "Storage",
+      "kind": "StorageV2",
       "properties": {}
     },
     {
