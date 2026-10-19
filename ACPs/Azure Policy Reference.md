@@ -167,12 +167,6 @@
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
-                        },
-                        {
-                            "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
                         }
                     ]
                 },
@@ -724,12 +718,6 @@
                         },
                         {
                             "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -902,14 +890,6 @@
                         },
                         {
                             "field": "location",
-                            "In": [
-                                "eastus",
-                                "westus2",
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -1069,12 +1049,6 @@
                         },
                         {
                             "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -1218,12 +1192,6 @@
                         },
                         {
                             "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -1329,12 +1297,6 @@
                         {
                             "field": "name",
                             "contains": "[concat('vmfe',resourcegroup().tags.LabInstance)]"
-                        },
-                        {
-                            "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
                         },
                         {
                             "field": "location",
@@ -1461,12 +1423,6 @@
                         },
                         {
                             "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -1558,12 +1514,6 @@
                         {
                             "field": "Microsoft.ContainerInstance/containerGroups/containers[*].image",
                             "contains": "aci-helloworld:latest"
-                        },
-                        {
-                            "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
                         },
                         {
                             "anyOf": [
@@ -1660,10 +1610,6 @@
                         },
                         {
                             "field": "location",
-                            "equals": "[resourceGroup().location]"
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -1714,10 +1660,6 @@
                         {
                             "field": "name",
                             "equals": "[concat('factory',resourcegroup().tags.LabInstance)]"
-                        },
-                        {
-                            "field": "location",
-                            "equals": "[resourceGroup().location]"
                         },
                         {
                             "field": "location",
@@ -1781,10 +1723,6 @@
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
-                        },
-                        {
-                            "field": "location",
-                            "equals": "[resourceGroup().location]"
                         },
                         {
                             "field": "location",
@@ -1977,10 +1915,6 @@
                         },
                         {
                             "field": "location",
-                            "equals": "[resourceGroup().location]"
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -2043,10 +1977,6 @@
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
-                        },
-                        {
-                            "field": "location",
-                            "equals": "[resourceGroup().location]"
                         },
                         {
                             "field": "location",
@@ -2123,12 +2053,6 @@
                         },
                         {
                             "field": "location",
-                            "in": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -2190,12 +2114,6 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "[resourceGroup().location]"
                             ]
                         },
                         {
@@ -2277,12 +2195,6 @@
                         },
                         {
                             "field": "location",
-                            "in": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -2344,12 +2256,6 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "[resourceGroup().location]"
                             ]
                         },
                         {
@@ -2496,12 +2402,6 @@
                         },
                         {
                             "field": "location",
-                            "in": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -2566,13 +2466,6 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "westus",
-                                "[resourceGroup().location]"
                             ]
                         },
                         {
@@ -2709,12 +2602,6 @@
                         },
                         {
                             "field": "location",
-                            "in": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -2768,14 +2655,6 @@
                         },
                         {
                             "field": "location",
-                            "in": [
-                                "[resourceGroup().location]",
-                                "eastus",
-                                "eastus2"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -2809,14 +2688,6 @@
                         {
                             "field": "name",
                             "equals": "[concat('syn',resourcegroup().tags.LabInstance)]"
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "[resourceGroup().location]",
-                                "eastus",
-                                "eastus2"
-                            ]
                         },
                         {
                             "field": "location",
@@ -2972,12 +2843,6 @@
                         },
                         {
                             "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -3004,12 +2869,6 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
                             ]
                         },
                         {
@@ -3132,12 +2991,6 @@
                         },
                         {
                             "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -3164,12 +3017,6 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
                             ]
                         },
                         {
@@ -3248,12 +3095,6 @@
                         },
                         {
                             "field": "location",
-                            "in": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -3325,12 +3166,6 @@
                         },
                         {
                             "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
-                            ]
-                        },
-                        {
-                            "field": "location",
                             "notEquals": "global"
                         }
                     ]
@@ -3374,12 +3209,6 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "In": [
-                                "[resourceGroup().location]"
                             ]
                         },
                         {
