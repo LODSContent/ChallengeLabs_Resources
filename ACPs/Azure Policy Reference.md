@@ -5,8 +5,8 @@
 - [Resource Group id Examples](#resource-group-id-examples)
 - [Location (region) examples](#location-region-examples)
 - [Microsoft.App/containerApps](#microsoftappcontainerapps)
-- [Microsoft.Automation](#microsoftautomation)
 - [Microsoft.CognitiveServices](#microsoftcognitiveservices)
+- [Microsoft.Automation](#microsoftautomation)
 - [Microsoft.Compute/virtualMachines](#microsoftcomputevirtualmachines)
 - [Microsoft.Compute/virtualMachineScaleSets](#microsoftcomputevirtualmachinescalesets)
 - [Microsoft.ContainerInstance/containerGroups](#microsoftcontainerinstancecontainergroups)
@@ -218,10 +218,6 @@
                             "equals": "[concat('OpenAI',resourcegroup().tags.LabInstance)]"
                         },
                         {
-                            "field": "Microsoft.CognitiveServices/accounts/sku.name",
-                            "equals": "S0"
-                        },
-                        {
                             "anyOf": [
                                 {
                                     "field": "id",
@@ -233,6 +229,11 @@
                                 }
                             ]
                         },
+                        {
+                            "field": "Microsoft.CognitiveServices/accounts/sku.name",
+                            "equals": "S0"
+                        },
+
                         {
                             "field": "location",
                             "notEquals": "global"
@@ -334,14 +335,6 @@
                             ]
                         },
                         {
-                            "field": "Microsoft.Automation/automationAccounts/sku.name",
-                            "equals": "Basic"
-                        },
-                        {
-                            "field": "Microsoft.Automation/automationAccounts/sku.capacity",
-                            "exists": "false"
-                        },
-                        {
                             "anyOf": [
                                 {
                                     "field": "id",
@@ -353,6 +346,15 @@
                                 }
                             ]
                         },
+                        {
+                            "field": "Microsoft.Automation/automationAccounts/sku.name",
+                            "equals": "Basic"
+                        },
+                        {
+                            "field": "Microsoft.Automation/automationAccounts/sku.capacity",
+                            "exists": "false"
+                        },
+
                         {
                             "field": "location",
                             "notEquals": "global"
@@ -813,6 +815,18 @@
                             ]
                         },
                         {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        },
+                        {
                             "field": "Microsoft.Compute/virtualMachineScaleSets/sku.name",
                             "in": [
                                 "Standard_B2als_v2",
@@ -904,18 +918,7 @@
                             "field": "Microsoft.Compute/virtualMachineScaleSets/sku.capacity",
                             "lessOrEquals": 4
                         },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        },
+
                         {
                             "field": "location",
                             "notEquals": "global"
@@ -1272,18 +1275,7 @@
                             "field": "name",
                             "equals": "[concat('mysql',resourceGroup().tags.LabInstance)]"
                         },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        },
+
                         {
                             "field": "Microsoft.DBForMySql/flexibleServers/sku.tier",
                             "equals": "Burstable"
@@ -1656,9 +1648,9 @@
 
 ## Microsoft.Network
 
-> **Purpose**: Allows only standard networking resources required for lab deployments: Virtual Networks, Subnets, NICs, NSGs, Public IPs (Basic or Standard SKU only), Load Balancers (Basic or Standard SKU only), Private DNS Zones, Private Endpoints, and Route Tables. All are placement-restricted to allowed Resource Groups.
+> **Purpose**: Allows only standard networking resources required for lab deployments. The policy uses an explicit type allowlist (not `contains`) to deny high-cost resources by omission — VPN Gateways, ExpressRoute Circuits, Application Gateways, Azure Firewalls, Bastion Hosts, NAT Gateways, Virtual WAN, and DDoS Protection Plans are all denied because they are not in the list. Public IPs and Load Balancers are further restricted to Basic/Standard SKU only.
 >
-> **Explicitly excluded (not in allowed list — denied by policy)**: VPN Gateways, ExpressRoute Circuits, Application Gateways, Azure Firewalls, Bastion Hosts, NAT Gateways, Virtual WAN components, DDoS Protection Plans, and VPN/local network connections. These resources carry significant cost and are not required for standard lab scenarios.
+> **Note**: Per Skillable security guidelines, `Microsoft.Network` is rated **Low risk**. Resource Group and name restrictions are **Recommended** but not Required. Add them when the lab scenario warrants tighter placement control.
 
 ```json
 {
@@ -1666,78 +1658,17 @@
         "not": {
             "anyOf": [
                 {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Network/virtualNetworks"
-                        },
-                        {
-                            "field": "name",
-                            "in": [
-                                "vnet1",
-                                "[concat('vnet',resourcegroup().tags.LabInstance)]"
-                            ]
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "notEquals": "global"
-                        }
-                    ]
-                },
-                {
                     "field": "type",
-                    "equals": "Microsoft.Network/virtualNetworks/subnets"
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Network/networkInterfaces"
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Network/networkSecurityGroups"
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        }
+                    "in": [
+                        "Microsoft.Network/virtualNetworks",
+                        "Microsoft.Network/virtualNetworks/subnets",
+                        "Microsoft.Network/networkInterfaces",
+                        "Microsoft.Network/networkSecurityGroups",
+                        "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "Microsoft.Network/privateDnsZones",
+                        "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                        "Microsoft.Network/privateEndpoints",
+                        "Microsoft.Network/routeTables"
                     ]
                 },
                 {
@@ -1751,18 +1682,6 @@
                             "in": [
                                 "Basic",
                                 "Standard"
-                            ]
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
                             ]
                         }
                     ]
@@ -1779,82 +1698,6 @@
                                 "Basic",
                                 "Standard"
                             ]
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Network/privateDnsZones"
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "equals": "Microsoft.Network/privateDnsZones/virtualNetworkLinks"
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Network/privateEndpoints"
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Network/routeTables"
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
                         }
                     ]
                 }
@@ -1866,9 +1709,6 @@
     }
 }
 ```
-
-> *Note*: This policy uses explicit `equals` matching on resource types (not `contains`) to prevent unintended passthrough of high-cost resources such as `Microsoft.Network/virtualNetworkGateways`, `Microsoft.Network/applicationGateways`, `Microsoft.Network/azureFirewalls`, `Microsoft.Network/bastionHosts`, `Microsoft.Network/natGateways`, and `Microsoft.Network/expressRouteCircuits`. Any network resource type not listed above is denied.  
-> *Note*: Subnets and Private DNS Zone VNet links are sub-resources and inherit placement from their parent; a separate Resource Group check is not required for them.
 ---
 [Back to TOC:](#table-of-contents)
 <br><br>
@@ -1962,10 +1802,6 @@
                                 {
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
                         }
@@ -2007,10 +1843,6 @@
                             "equals": "[concat('srch',resourceGroup().tags.LabInstance)]"
                         },
                         {
-                            "field": "Microsoft.Search/searchServices/sku.name",
-                            "equals": "basic"
-                        },
-                        {
                             "anyOf": [
                                 {
                                     "field": "id",
@@ -2022,6 +1854,11 @@
                                 }
                             ]
                         },
+                        {
+                            "field": "Microsoft.Search/searchServices/sku.name",
+                            "equals": "basic"
+                        },
+
                         {
                             "field": "location",
                             "notEquals": "global"
@@ -2080,13 +1917,6 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "westus",
-                                "[resourceGroup().location]"
                             ]
                         },
                         {
@@ -2247,26 +2077,6 @@
                             "equals": "[concat('synws',resourcegroup().tags.LabInstance)]"
                         },
                         {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "[resourceGroup().location]",
-                                "eastus",
-                                "eastus2"
-                            ]
-                        },
-                        {
                             "field": "location",
                             "notEquals": "global"
                         }
@@ -2312,14 +2122,6 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "in": [
-                                "[resourceGroup().location]",
-                                "eastus",
-                                "eastus2"
                             ]
                         },
                         {
@@ -2450,18 +2252,7 @@
                             "field": "name",
                             "contains": "[concat('ASP-corpdata',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance)]"
                         },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        },
+
                         {
                             "field": "location",
                             "notEquals": "global"
@@ -2478,18 +2269,6 @@
                             "field": "name",
                             "in": [
                                 "[concat('fa-',resourcegroup().tags.LabInstance)]"
-                            ]
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
                             ]
                         },
                         {
