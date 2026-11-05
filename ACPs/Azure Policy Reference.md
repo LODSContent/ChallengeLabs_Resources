@@ -177,8 +177,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -297,8 +310,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -402,8 +428,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -551,8 +590,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -926,8 +978,21 @@
                     ]
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 },
                 {
                     "field": "type",
@@ -1032,8 +1097,21 @@
                     ]
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1089,8 +1167,21 @@
                     ]
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1241,8 +1332,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1375,8 +1479,21 @@
                     ]
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1428,8 +1545,21 @@
                     ]
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1497,8 +1627,21 @@
                     "contains": "Microsoft.EventGrid"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1558,8 +1701,21 @@
                     "contains": "Microsoft.EventGrid"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1631,8 +1787,21 @@
                     "contains": "Microsoft.EventHub"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1759,8 +1928,21 @@
                     "contains": "Microsoft.Monitor"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1808,8 +1990,21 @@
                     ]
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1870,8 +2065,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -1965,8 +2173,21 @@
                     ]
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -2042,8 +2263,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -2167,8 +2401,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -2282,8 +2529,21 @@
                     "contains": "Microsoft.Storage/storageaccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -2352,8 +2612,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
@@ -2462,8 +2735,21 @@
                     "contains": "Microsoft.Storage/storageAccounts"
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
+                    "anyOf": [
+                        { "field": "type", "in": [
+                            "Microsoft.Network/virtualNetworks",
+                            "Microsoft.Network/virtualNetworks/subnets",
+                            "Microsoft.Network/networkInterfaces",
+                            "Microsoft.Network/networkSecurityGroups",
+                            "Microsoft.Network/networkSecurityGroups/securityRules",
+                            "Microsoft.Network/privateDnsZones",
+                            "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                            "Microsoft.Network/privateEndpoints",
+                            "Microsoft.Network/routeTables"
+                        ]},
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/publicIPAddresses" }, { "field": "Microsoft.Network/publicIPAddresses/sku.name", "in": ["Basic","Standard"] }] },
+                        { "allOf": [{ "field": "type", "equals": "Microsoft.Network/loadBalancers" }, { "field": "Microsoft.Network/loadBalancers/sku.name", "in": ["Basic","Standard"] }] }
+                    ]
                 }
             ]
         }
