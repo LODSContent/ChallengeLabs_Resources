@@ -5,8 +5,8 @@
 - [Resource Group id Examples](#resource-group-id-examples)
 - [Location (region) examples](#location-region-examples)
 - [Microsoft.App/containerApps](#microsoftappcontainerapps)
-- [Microsoft.CognitiveServices](#microsoftcognitiveservices)
 - [Microsoft.Automation](#microsoftautomation)
+- [Microsoft.CognitiveServices](#microsoftcognitiveservices)
 - [Microsoft.Compute/virtualMachines](#microsoftcomputevirtualmachines)
 - [Microsoft.Compute/virtualMachineScaleSets](#microsoftcomputevirtualmachinescalesets)
 - [Microsoft.ContainerInstance/containerGroups](#microsoftcontainerinstancecontainergroups)
@@ -261,6 +261,22 @@
                                 "S1",
                                 "F0"
                             ]
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "notEquals": "global"
                         }
                     ]
                 },
