@@ -17,6 +17,7 @@
 - [Microsoft.EventGrid/topics](#microsofteventgridtopics)
 - [Microsoft.EventGrid/systemTopics](#microsofteventgridsystemtopics)
 - [Microsoft.EventHub](#microsofteventhub)
+- [Microsoft.Network](#microsoftnetwork)
 - [Microsoft.OperationalInsights](#microsoftoperationalinsights) (Log Analytics Workspace - Azure Monitor Workspace)
 - [Microsoft.RecoveryServices](#microsoftrecoveryservices)
 - [Microsoft.Search](#microsoftsearch)
@@ -96,31 +97,7 @@
 >
 > In general, only the `[resourceGroup().location]` should be used for the resource's region. The only time an alternate region should be used is if a secondary region is used as part of the lab itself.
 
-```json
-{
-    "field": "location",
-    "In": [
-        "[resourceGroup().location]"
-    ]
-}
-```
-
-```json
-{
-    "field": "location",
-    "notEquals": "global"
-}
-```
-
-```json
-{
-    "field": "location",
-    "In": [
-        "eastus2",
-        "[resourceGroup().location]"
-    ]
-}
-```
+```json```
 
 ```json
 {
@@ -137,7 +114,7 @@
 
 ## Microsoft.App/containerApps
 
-> **Purpose**: Allows only approved Azure Container Apps and Managed Environments with strict naming (`ca{LabInstance}`, `env{LabInstance}`), placement in allowed Resource Groups, and same-region deployment. Supporting resources (Storage, EventHub, EventGrid, Network) are permitted.
+> **Purpose**: Allows only approved Azure Container Apps and Managed Environments with strict naming (`ca{LabInstance}`, `env{LabInstance}`), placement in allowed Resource Groups, and same-region deployment. Supporting resources (Storage, Network) are permitted.
 
 ```json
 {
@@ -167,8 +144,7 @@
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
                             ]
-                        }
-                    ]
+                        },]
                 },
                 {
                     "allOf": [
@@ -202,14 +178,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -226,7 +194,9 @@
 
 ## Microsoft.CognitiveServices
 
-> **Purpose**: Restricts Cognitive Services to only Immersive Reader and Text Translation kinds with specific names (`hexelo-immersive{LabInstance}`, `TranslationService{LabInstance}`) and allowed SKUs (S, S0, S1, F0). Supporting infrastructure is permitted.
+> **Purpose**: Allows Azure OpenAI service (`OpenAI{LabInstance}`, kind `OpenAI`, SKU `S0`) in allowed RG and region. Model deployments are explicitly restricted by model name, SKU name, SKU capacity, and SKU tier using `allOf` in ALL mode — the narrowest allowable set of models and a capacity no higher than required for lab objectives. Supporting infrastructure (Storage, Network) is permitted.
+>
+> **Note**: ACPs that allow `Microsoft.CognitiveServices/accounts/deployments` **must** be implemented in ALL mode and **must** restrict `model.name`, `sku.name`, `sku.capacity`, and `sku.tier` using an `allOf` block. The model list should be as narrow as possible. CSR/CSS-R profiles must also implement an LCA that purges soft-deleted Cognitive Services resources.
 
 ```json
 {
@@ -241,26 +211,15 @@
                         },
                         {
                             "field": "kind",
-                            "in": [
-                                "ImmersiveReader",
-                                "TextTranslation"
-                            ]
+                            "equals": "OpenAI"
                         },
                         {
                             "field": "name",
-                            "in": [
-                                "[concat('hexelo-immersive',resourcegroup().tags.LabInstance)]",
-                                "[concat('TranslationService',resourcegroup().tags.LabInstance)]"
-                            ]
+                            "equals": "[concat('OpenAI',resourcegroup().tags.LabInstance)]"
                         },
                         {
                             "field": "Microsoft.CognitiveServices/accounts/sku.name",
-                            "in": [
-                                "S",
-                                "S0",
-                                "S1",
-                                "F0"
-                            ]
+                            "equals": "S0"
                         },
                         {
                             "anyOf": [
@@ -281,398 +240,60 @@
                     ]
                 },
                 {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "deny"
-    }
-}
-```
----
-
-> **Purpose**: Allows only one Azure Cognitive Search service named `search-realestate{LabInstance}` on the `basic` SKU. Supporting resources allowed.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
                     "allOf": [
                         {
                             "field": "type",
-                            "equals": "Microsoft.Search/searchServices"
+                            "equals": "Microsoft.CognitiveServices/accounts/deployments"
                         },
                         {
                             "field": "name",
                             "in": [
-                                "[concat('search-realestate',resourcegroup().tags.LabInstance)]"
+                                "[concat('gpt-4o-',resourcegroup().tags.LabInstance)]",
+                                "[concat('gpt-35-turbo-',resourcegroup().tags.LabInstance)]"
                             ]
                         },
                         {
-                            "field": "Microsoft.Search/searchServices/sku.name",
-                            "in": [
-                                "basic"
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
                             ]
+                        },
+                        {
+                            "field": "Microsoft.CognitiveServices/accounts/deployments/model.name",
+                            "in": [
+                                "gpt-4o",
+                                "gpt-35-turbo"
+                            ]
+                        },
+                        {
+                            "field": "Microsoft.CognitiveServices/accounts/deployments/sku.name",
+                            "in": [
+                                "Standard",
+                                "GlobalStandard"
+                            ]
+                        },
+                        {
+                            "field": "Microsoft.CognitiveServices/accounts/deployments/sku.tier",
+                            "in": [
+                                "Standard",
+                                "Enterprise"
+                            ]
+                        },
+                        {
+                            "field": "Microsoft.CognitiveServices/accounts/deployments/sku.capacity",
+                            "lessOrEquals": 10
                         }
                     ]
                 },
                 {
                     "field": "type",
                     "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "deny"
-    }
-}
-```
----
-
-> **Purpose**: Permits only a specific AML workspace (`HexeloAML-workspace{LabInstance}`) and compute instance (`hexelo-aai-mls{LabInstance}`), plus required supporting services: Storage, Key Vault, Log Analytics, App Insights.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.MachineLearningServices/workspaces"
-                        },
-                        {
-                            "field": "name",
-                            "equals": "[concat('HexeloAML-workspace',resourcegroup().tags.LabInstance)]"
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.MachineLearningServices/workspaces/computes"
-                        },
-                        {
-                            "field": "name",
-                            "equals": "[concat('hexelo-aai-mls',resourcegroup().tags.LabInstance)]"
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "equals": "Microsoft.KeyVault/vaults"
-                },
-                {
-                    "field": "type",
-                    "equals": "Microsoft.OperationalInsights/workspaces"
-                },
-                {
-                    "field": "type",
-                    "equals": "Microsoft.Insights/components"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "deny"
-    }
-}
-```
----
-
-> **Purpose**: Allows Document Intelligence services (Text Analytics, Form Recognizer, Computer Vision) under a single name `Hexelo-Doc-Intel{LabInstance}` and SKUs S, S0, S1, F0. Storage support included.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.CognitiveServices/accounts"
-                        },
-                        {
-                            "field": "kind",
-                            "in": [
-                                "TextAnalytics",
-                                "FormRecognizer",
-                                "ComputerVision"
-                            ]
-                        },
-                        {
-                            "field": "name",
-                            "in": [
-                                "[concat('Hexelo-Doc-Intel',resourcegroup().tags.LabInstance)]"
-                            ]
-                        },
-                        {
-                            "field": "Microsoft.CognitiveServices/accounts/sku.name",
-                            "in": [
-                                "S",
-                                "S0",
-                                "S1",
-                                "F0"
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "equals": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "deny"
-    }
-}
-```
----
-
-> **Purpose**: Allows specific Computer Vision instances and their deployments with names like `AITan-`, `ExtractiveSummarization`, or `ComputerVision` + `labInstance`. SKUs S and F0.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.CognitiveServices/accounts"
-                        },
-                        {
-                            "field": "kind",
-                            "in": [
-                                "ComputerVision"
-                            ]
-                        },
-                        {
-                            "field": "Microsoft.CognitiveServices/accounts/sku.name",
-                            "in": [
-                                "S",
-                                "F0"
-                            ]
-                        },
-                        {
-                            "field": "name",
-                            "in": [
-                                "[concat('AITan-', resourceGroup().tags.labInstance)]",
-                                "[concat('ExtractiveSummarization', resourceGroup().tags.labInstance)]",
-                                "[concat('ComputerVision', resourceGroup().tags.labInstance)]"
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "equals": "Microsoft.CognitiveServices/accounts/deployments"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "deny"
-    }
-}
-```
----
-
-> **Purpose**: Permits Vision-related Cognitive Services (`VisionResource`, `ComputerVision`) + `labInstance` with SKUs S, F0, S1, S0. Includes deployments and Storage.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.CognitiveServices/accounts"
-                        },
-                        {
-                            "field": "Microsoft.CognitiveServices/accounts/sku.name",
-                            "in": [
-                                "S",
-                                "F0",
-                                "S1",
-                                "S0"
-                            ]
-                        },
-                        {
-                            "field": "name",
-                            "in": [
-                                "[concat('VisionResource', resourceGroup().tags.labInstance)]",
-                                "[concat('ComputerVision', resourceGroup().tags.labInstance)]"
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "equals": "Microsoft.CognitiveServices/accounts/deployments"
-                },
-                {
-                    "field": "type",
-                    "equals": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "deny"
-    }
-}
-```
----
-
-> **Purpose**: Allows OpenAI (`OpenAI{LabInstance}`, S0) and Azure Cognitive Search (`azuresearch{LabInstance}`, basic) with storage support.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "contains": "Microsoft.CognitiveServices"
-                        },
-                        {
-                            "field": "name",
-                            "equals": "[concat('OpenAI',resourcegroup().tags.LabInstance)]"
-                        },
-                        {
-                            "field": "Microsoft.CognitiveServices/accounts/sku.name",
-                            "equals": "S0"
-                        },
-                        {
-                            "field": "kind",
-                            "equals": "OpenAI"
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "contains": "Microsoft.Search/searchServices"
-                        },
-                        {
-                            "field": "name",
-                            "equals": "[concat('azuresearch',resourcegroup().tags.LabInstance)]"
-                        },
-                        {
-                            "field": "Microsoft.Search/searchServices/sku.name",
-                            "equals": "basic"
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageaccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
                 },
                 {
                     "field": "type",
@@ -692,7 +313,7 @@
 
 ## Microsoft.Automation
 
-> **Purpose**: Allows Automation Accounts with names `autoacct` or `lab{LODManaged}{LabInstance}-autoacct`, Basic SKU, no capacity, in allowed RGs and region.
+> **Purpose**: Allows Automation Accounts with names `autoacct` or `lab{LODManaged}{LabInstance}-autoacct`, Basic SKU, no capacity, in allowed RGs and region. Permits specific runbooks (`runbook1`, tutorial scripts) of types Python, PowerShell, GraphPowerShell.
 
 ```json
 {
@@ -739,65 +360,6 @@
                     ]
                 },
                 {
-                  "allOf": [
-                      {
-                          "field": "type",
-                          "equals": "Microsoft.Automation/automationAccounts/Runbooks"
-                      },
-                      {
-                          "field": "name",
-                          "in": [
-                              "runbook1",
-                              "AzureAutomationTutorialWithIdentity",                      
-                              "AzureAutomationTutorialWithIdentityGraphical"
-                          ]
-                      },
-                      {
-                        "anyOf": [  
-                          { "field": "id", "contains": "/resourceGroups/RG1/"},
-                          { "field": "id", "contains": "/resourceGroups/RG2/"},
-                          { "field": "id", "contains": "/resourceGroups/RG3/"},
-                          { "field": "id", "contains": "[concat('/resourceGroups/RG1', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"},
-                          { "field": "id", "contains": "[concat('/resourceGroups/RG2', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"},
-                          { "field": "id", "contains": "[concat('/resourceGroups/RG3', resourcegroup().tags.LODManaged, resourcegroup().tags.LabInstance, '/')]"}
-                        ]
-                      }                
-                  ]
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "Deny"
-    }
-}
-```
----
-
-> **Purpose**: Permits specific runbooks (`runbook1`, tutorial scripts) of types Python, PowerShell, GraphPowerShell in approved Automation Accounts.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
                     "allOf": [
                         {
                             "field": "type",
@@ -807,8 +369,8 @@
                             "field": "name",
                             "in": [
                                 "runbook1",
-                                "azureautomationtutorialwithidentitygraphical",
-                                "azureautomationtutorialwithidentity"
+                                "AzureAutomationTutorialWithIdentity",
+                                "AzureAutomationTutorialWithIdentityGraphical"
                             ]
                         },
                         {
@@ -839,14 +401,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -857,92 +411,13 @@
     }
 }
 ```
----
-
-> **Purpose**: Allows ASR recovery Automation Accounts named `remoterec-*-asr-automationaccount` in RG1 or RG2, Basic SKU, in `eastus`, `westus2`, or RG region.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Automation/automationAccounts"
-                        },
-                        {
-                            "field": "name",
-                            "like": "remoterec-*-asr-automationaccount"
-                        },
-                        {
-                            "field": "Microsoft.Automation/automationAccounts/sku.name",
-                            "equals": "Basic"
-                        },
-                        {
-                            "field": "Microsoft.Automation/automationAccounts/sku.capacity",
-                            "exists": "false"
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG2/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG2',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "notEquals": "global"
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "Deny"
-    }
-}
-```
-
-> *Note*: `------------------------------------`
 ---
 [Back to TOC:](#table-of-contents)
 <br><br>
 
 ## Microsoft.Compute/virtualMachines
 
-> **Purpose**: Allows only approved VM SKUs (B-series, D-series) and names (`VM1`, `VM2`, `VM1-{LabInstance}`) in allowed RGs and same region. Supporting resources permitted.
+> **Purpose**: Allows only approved VM SKUs (B-series, D-series, E-series, F-series, L-series) and names (`VM1`, `VM2`, `VM1-{LabInstance}`) in allowed RGs and same region. Supporting resources (Storage for boot diagnostics, Network) are permitted.
 
 ```json
 {
@@ -1075,14 +550,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -1204,6 +671,18 @@
                             "field": "name",
                             "in": [
                                 "[concat('vm',resourcegroup().tags.LabInstance,'jbox')]"
+                            ]
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
                             ]
                         },
                         {
@@ -1481,18 +960,6 @@
                 {
                     "field": "type",
                     "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
                 }
             ]
         }
@@ -1508,7 +975,7 @@
 
 ## Microsoft.ContainerInstance/containerGroups
 
-> **Purpose**: Allows only one ACI container group named `ca{LabInstance}` using image `aci-helloworld:latest`, 1.5 GB memory, 1 CPU, no GPU, in allowed RG and region.
+> **Purpose**: Allows only one ACI container group named `ca{LabInstance}` using image `aci-helloworld:latest`, 1.5 GB memory, 1 CPU, no GPU, in allowed RG and region. Network is permitted for virtual network integration.
 
 ```json
 {
@@ -1563,18 +1030,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -1591,7 +1046,7 @@
 
 ## Microsoft.ContainerRegistry
 
-> **Purpose**: Allows Premium Azure Container Registry with names starting `crpyritlab*` in allowed RGs and same region.
+> **Purpose**: Allows Standard Azure Container Registry named `labregistry{LabInstance}` in allowed RGs and same region. Network is permitted for private endpoint and firewall rule configuration.
 
 ```json
 {
@@ -1632,18 +1087,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -1660,7 +1103,7 @@
 
 ## Microsoft.DataFactory
 
-> **Purpose**: Allows complete ADF solution: factory, managed integration runtime (≤8 cores), linked services (Azure SQL, HTTP), SQL server, and S0 database (≤10 DTU).
+> **Purpose**: Allows complete ADF solution: factory (`factory{LabInstance}`), managed integration runtime (≤8 cores), linked services (Azure SQL, HTTP), SQL server (`svr{LabInstance}`), and S0 Standard database (≤10 DTU) in allowed RG and region.
 
 ```json
 {
@@ -1676,6 +1119,18 @@
                         {
                             "field": "name",
                             "equals": "[concat('factory',resourcegroup().tags.LabInstance)]"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
                         },
                         {
                             "field": "location",
@@ -1784,14 +1239,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -1808,7 +1255,7 @@
 
 ## Microsoft.DBforMySQL
 
-> **Purpose**: Allows MySQL Flexible Server named `mysql{LabInstance}` with burstable tier and approved SKUs (B-series, D-series).
+> **Purpose**: Allows MySQL Flexible Server named `mysql{LabInstance}` with Burstable tier and approved SKUs (B-series, D-series) in allowed RG and region. Network is required for VNet integration and private endpoint.
 
 ```json
 {
@@ -1937,18 +1384,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -1965,7 +1400,7 @@
 
 ## Microsoft.DocumentDB
 
-> **Purpose**: Allows Cosmos DB account named `cdb{LabInstance}` in allowed RG and same region.
+> **Purpose**: Allows Cosmos DB account named `cdb{LabInstance}` in allowed RG and same region. Network is permitted for private endpoint connectivity.
 
 ```json
 {
@@ -2002,18 +1437,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -2030,7 +1453,7 @@
 
 ## Microsoft.EventGrid/topics
 
-> **Purpose**: Allows Event Grid Topic `egt{LabInstance}` with Standard SKU and capacity ≤20.
+> **Purpose**: Allows Event Grid Topic `egt{LabInstance}` with Standard SKU and capacity ≤20 in allowed RG and region. Storage (as an event destination) and additional EventGrid sub-resources are permitted.
 
 ```json
 {
@@ -2079,10 +1502,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.EventGrid"
                 },
                 {
@@ -2103,7 +1522,7 @@
 
 ## Microsoft.EventGrid/systemTopics
 
-> **Purpose**: Allows System Topics with name `egt{LabInstance}` in matching region.
+> **Purpose**: Allows System Topics with name `egt{LabInstance}` in allowed RG and matching region. Storage (as an event destination) and additional EventGrid sub-resources are permitted.
 
 ```json
 {
@@ -2144,10 +1563,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.EventGrid"
                 },
                 {
@@ -2168,7 +1583,7 @@
 
 ## Microsoft.EventHub
 
-> **Purpose**: Allows Event Hubs Namespace `ehn{LabInstance}` with Standard tier and capacity ≤20.
+> **Purpose**: Allows Event Hubs Namespace `ehn{LabInstance}` with Standard tier and capacity ≤20 in allowed RG and region. Storage (for Event Capture) and additional EventHub sub-resources are permitted.
 
 ```json
 {
@@ -2225,10 +1640,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -2243,9 +1654,228 @@
 [Back to TOC:](#table-of-contents)
 <br><br>
 
+## Microsoft.Network
+
+> **Purpose**: Allows only standard networking resources required for lab deployments: Virtual Networks, Subnets, NICs, NSGs, Public IPs (Basic or Standard SKU only), Load Balancers (Basic or Standard SKU only), Private DNS Zones, Private Endpoints, and Route Tables. All are placement-restricted to allowed Resource Groups.
+>
+> **Explicitly excluded (not in allowed list — denied by policy)**: VPN Gateways, ExpressRoute Circuits, Application Gateways, Azure Firewalls, Bastion Hosts, NAT Gateways, Virtual WAN components, DDoS Protection Plans, and VPN/local network connections. These resources carry significant cost and are not required for standard lab scenarios.
+
+```json
+{
+    "if": {
+        "not": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/virtualNetworks"
+                        },
+                        {
+                            "field": "name",
+                            "in": [
+                                "vnet1",
+                                "[concat('vnet',resourcegroup().tags.LabInstance)]"
+                            ]
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "notEquals": "global"
+                        }
+                    ]
+                },
+                {
+                    "field": "type",
+                    "equals": "Microsoft.Network/virtualNetworks/subnets"
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/networkInterfaces"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/networkSecurityGroups"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/publicIPAddresses"
+                        },
+                        {
+                            "field": "Microsoft.Network/publicIPAddresses/sku.name",
+                            "in": [
+                                "Basic",
+                                "Standard"
+                            ]
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/loadBalancers"
+                        },
+                        {
+                            "field": "Microsoft.Network/loadBalancers/sku.name",
+                            "in": [
+                                "Basic",
+                                "Standard"
+                            ]
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/privateDnsZones"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "field": "type",
+                    "equals": "Microsoft.Network/privateDnsZones/virtualNetworkLinks"
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/privateEndpoints"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Network/routeTables"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "then": {
+        "effect": "Deny"
+    }
+}
+```
+
+> *Note*: This policy uses explicit `equals` matching on resource types (not `contains`) to prevent unintended passthrough of high-cost resources such as `Microsoft.Network/virtualNetworkGateways`, `Microsoft.Network/applicationGateways`, `Microsoft.Network/azureFirewalls`, `Microsoft.Network/bastionHosts`, `Microsoft.Network/natGateways`, and `Microsoft.Network/expressRouteCircuits`. Any network resource type not listed above is denied.  
+> *Note*: Subnets and Private DNS Zone VNet links are sub-resources and inherit placement from their parent; a separate Resource Group check is not required for them.
+---
+[Back to TOC:](#table-of-contents)
+<br><br>
+
 ## Microsoft.OperationalInsights
 
-> **Purpose**: Allows Log Analytics workspace and Azure Monitor workspace.
+> **Purpose**: Allows Log Analytics workspace named `hexeloamlworks*` in allowed RG and region. Azure Monitor (Microsoft.Monitor) and Application Insights (Microsoft.Insights) sub-resources are permitted to support diagnostics and monitoring scenarios.
 
 ```json
 {
@@ -2282,18 +1912,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Insights"
                 },
                 {
@@ -2318,7 +1936,7 @@
 
 ## Microsoft.RecoveryServices
 
-> **Purpose**: Allows Recovery Services Vault creation.
+> **Purpose**: Allows Recovery Services Vault named `MyVault{LabInstance}` in allowed RGs (including CSS hyphenated variant) and same region. Network is permitted for backup policy and protected item configuration.
 
 ```json
 {
@@ -2355,18 +1973,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -2383,7 +1989,7 @@
 
 ## Microsoft.Search
 
-> **Purpose**: Allows Azure Cognitive Search service `srch{LabInstance}` on `basic` SKU in same region.
+> **Purpose**: Allows Azure Cognitive Search service `srch{LabInstance}` on `basic` SKU in allowed RG and same region. Storage is permitted for indexer data sources.
 
 ```json
 {
@@ -2428,14 +2034,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -2452,7 +2050,7 @@
 
 ## Microsoft.Sql/servers
 
-> **Purpose**: Allows SQL servers (`sql{LabInstance}`, `geo{LabInstance}`) and databases (`SalesDB`, `master`) with S0 Standard tier (≤1 DTU) in `westus` or RG region.
+> **Purpose**: Allows SQL servers (`sql{LabInstance}`, `geo{LabInstance}`) and databases (`SalesDB`, `master`) with S0 Standard tier (≤1 DTU) in allowed RG and `westus` or RG region. Network is required for firewall rules and private endpoint configuration.
 
 ```json
 {
@@ -2482,6 +2080,13 @@
                                     "field": "id",
                                     "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
                                 }
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "in": [
+                                "westus",
+                                "[resourceGroup().location]"
                             ]
                         },
                         {
@@ -2531,25 +2136,6 @@
                 },
                 {
                     "field": "type",
-                    "in": [
-                        "Microsoft.Network/storageAccounts",
-                        "Microsoft.DBforMySQL/servers/firewallRules"
-                    ]
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -2561,16 +2147,15 @@
 }
 ```
 
-> *Note*: The “master” database “name” property must always be present in addition to whatever DB name the student will be creating.  
-> *Note*: To get the current list of Microsoft.Sql/servers/databases Sku Data, run the following command:  
-> o   Get-AzSqlServerServiceObjective -Location <location>
+> *Note*: The "master" database "name" property must always be present in addition to whatever DB name the student will be creating.  
+> *Note*: To get the current list of Microsoft.Sql/servers/databases SKU data, run: `Get-AzSqlServerServiceObjective -Location <location>`
 ---
 [Back to TOC:](#table-of-contents)
 <br><br>
 
 ## Microsoft.SqlVirtualMachines
 
-> **Purpose**: Allows SQL VM named `SQLVM1` with Developer edition in allowed RG and region.
+> **Purpose**: Allows SQL VM named `SQLVM1` with Developer or Express edition in allowed RG and region. Storage (for SQL data/log files) and Network (required for the underlying VM infrastructure) are permitted.
 
 ```json
 {
@@ -2602,19 +2187,19 @@
                             ]
                         },
                         {
-                          "anyOf": [
-                              {
-                                  "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku",
-                                  "in": [
-                                    "Express",
-                                    "Developer"
-                                  ]
-                              },
-                              {
-                                  "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku",
-                                  "exists": false
-                              }
-                          ]
+                            "anyOf": [
+                                {
+                                    "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku",
+                                    "in": [
+                                        "Express",
+                                        "Developer"
+                                    ]
+                                },
+                                {
+                                    "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku",
+                                    "exists": false
+                                }
+                            ]
                         },
                         {
                             "field": "location",
@@ -2625,14 +2210,6 @@
                 {
                     "field": "type",
                     "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
                 },
                 {
                     "field": "type",
@@ -2652,7 +2229,7 @@
 
 ## Microsoft.Synapse
 
-> **Purpose**: Allows full Synapse solution: SQL server, DW databases, workspace, small Spark pool (≤10 nodes), and supporting Data Factory, Storage, EventHub, EventGrid, Network.
+> **Purpose**: Allows full Synapse solution: SQL server (`syn{LabInstance}`), DataWarehouse databases (DW100c, ≤900 capacity), workspace (`synws{LabInstance}`), small Spark pool (Small nodes, ≤10, no autoscale), and supporting Data Factory and Storage. All primary resources are restricted to allowed RG and approved regions.
 
 ```json
 {
@@ -2668,6 +2245,26 @@
                         {
                             "field": "name",
                             "equals": "[concat('synws',resourcegroup().tags.LabInstance)]"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "in": [
+                                "[resourceGroup().location]",
+                                "eastus",
+                                "eastus2"
+                            ]
                         },
                         {
                             "field": "location",
@@ -2704,6 +2301,26 @@
                         {
                             "field": "name",
                             "equals": "[concat('syn',resourcegroup().tags.LabInstance)]"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "id",
+                                    "contains": "/resourceGroups/RG1/"
+                                },
+                                {
+                                    "field": "id",
+                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
+                                }
+                            ]
+                        },
+                        {
+                            "field": "location",
+                            "in": [
+                                "[resourceGroup().location]",
+                                "eastus",
+                                "eastus2"
+                            ]
                         },
                         {
                             "field": "location",
@@ -2745,19 +2362,7 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.Network"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
                 },
                 {
                     "field": "type",
@@ -2777,7 +2382,7 @@
 
 ## Microsoft.Web - Function App
 
-> **Purpose**: Allows Function App `fa-{LabInstance}` with Y1 plan, APIM (Basic/Developer/Consumption), and storage. Both `functionapp` and empty `kind` must be present.
+> **Purpose**: Allows Function App `fa-{LabInstance}` with Consumption (Y1) plan named `ASP-corpdata{LODManaged}{LabInstance}`, APIM (`apim{LabInstance}`, Basic/Developer/Consumption), and required Storage. Both `functionapp` and empty `kind` must be present on the serverfarm.
 
 ```json
 {
@@ -2899,14 +2504,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -2918,158 +2515,14 @@
 }
 ```
 
-> *Note*: When a “function app” is being created, the “kind” - “functionapp” AND the blank value must be present.
+> *Note*: When a "function app" is being created, the "kind" - "functionapp" AND the blank value must be present.
 ---
 [Back to TOC:](#table-of-contents)
 <br><br>
 
 ## Microsoft.Web/serverfarms
 
-> **Purpose**: Allows App Service Plan for Function Apps (Y1, dynamic scaling). Used with Function App policies.
-
-```json
-{
-    "if": {
-        "not": {
-            "anyOf": [
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.ApiManagement/service"
-                        },
-                        {
-                            "field": "name",
-                            "in": [
-                                "[concat('apim',resourcegroup().tags.LabInstance)]"
-                            ]
-                        },
-                        {
-                            "field": "Microsoft.ApiManagement/service/sku.name",
-                            "in": [
-                                "Basic",
-                                "Developer",
-                                "Consumption"
-                            ]
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Web/serverfarms"
-                        },
-                        {
-                            "field": "kind",
-                            "in": [
-                                "functionapp",
-                                ""
-                            ]
-                        },
-                        {
-                            "field": "Microsoft.Web/serverFarms/sku.name",
-                            "in": [
-                                "Y1"
-                            ]
-                        },
-                        {
-                            "field": "Microsoft.web/serverfarms/sku.capacity",
-                            "lessOrEquals": 1
-                        },
-                        {
-                            "field": "name",
-                            "equals": "[concat('ASP-corpdata',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance)]"
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "notEquals": "global"
-                        }
-                    ]
-                },
-                {
-                    "allOf": [
-                        {
-                            "field": "type",
-                            "equals": "Microsoft.Web/sites"
-                        },
-                        {
-                            "field": "name",
-                            "in": [
-                                "[concat('fa-',resourcegroup().tags.LabInstance)]"
-                            ]
-                        },
-                        {
-                            "anyOf": [
-                                {
-                                    "field": "id",
-                                    "contains": "/resourceGroups/RG1/"
-                                },
-                                {
-                                    "field": "id",
-                                    "contains": "[concat('/resourceGroups/RG1',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]"
-                                }
-                            ]
-                        },
-                        {
-                            "field": "location",
-                            "notEquals": "global"
-                        }
-                    ]
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Storage/storageaccounts"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.Network"
-                }
-            ]
-        }
-    },
-    "then": {
-        "effect": "Deny"
-    }
-}
-```
-
-> *Note*: From Azure: “If the value of the kind property is null, empty, or not on this list, the portal treats the resource as Web App.”
----
-
-> **Purpose**: Allows B1/S1 App Service Plan named `asp-AIApp{LabInstance}` for AI apps (e.g., OpenAI Chat Playground). Do not use `id` field when deployed from OpenAI.
+> **Purpose**: Allows B1/S1 App Service Plan named `asp-AIApp{LabInstance}` for AI app deployments (e.g., OpenAI Chat Playground). Storage and Network are permitted for app content and VNet integration.
 
 ```json
 {
@@ -3121,14 +2574,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -3140,16 +2585,16 @@
 }
 ```
 
-> *Note*: Note: this is for when creating a web app through the Chat Playground in an OpenAI service.  
-> *Note*: Note: Do not include the field: id when Microsoft.web/serverfarms is deployed as a web app from an OpenAI service (chat playground).
-
+> *Note*: This is for when creating a web app through the Chat Playground in an OpenAI service.  
+> *Note*: Do not include the `field: id` restriction when `Microsoft.web/serverfarms` is deployed as a web app from an OpenAI service (chat playground), as the deployment originates outside the lab RG context.  
+> *Note*: From Azure: "If the value of the kind property is null, empty, or not on this list, the portal treats the resource as Web App."
 ---
 [Back to TOC:](#table-of-contents)
 <br><br>
 
 ## Microsoft.Web/sites
 
-> **Purpose**: Allows Function App site `fa-{LabInstance}` and its S1 Dynamic App Service Plan `dataASP`.
+> **Purpose**: Allows Function App site `fa-{LabInstance}` and its Dynamic/S1 App Service Plan `dataASP` in allowed RG and region. Storage (required by Function Apps) and Network are permitted.
 
 ```json
 {
@@ -3239,14 +2684,6 @@
                 },
                 {
                     "field": "type",
-                    "contains": "Microsoft.EventHub"
-                },
-                {
-                    "field": "type",
-                    "contains": "Microsoft.EventGrid"
-                },
-                {
-                    "field": "type",
                     "contains": "Microsoft.Network"
                 }
             ]
@@ -3258,9 +2695,7 @@
 }
 ```
 
-> *Note*: Notes: the empty quotes "" in field: kind are necessary.
+> *Note*: The empty quotes `""` in `field: kind` are necessary.
 ---
 [Back to TOC:](#table-of-contents)
 <br><br>
-
-
